@@ -16,7 +16,7 @@ const room = () => {
     ["room", roomId],
     async () => {
       const data = await axios.get(
-        "http://192.168.7.131:8000/room/" + roomId + "?userid=" + user.userid
+        "https://192.168.7.131:8000/room/" + roomId + "?userid=" + user.userid
       );
       return data.data;
     },
@@ -27,7 +27,7 @@ const room = () => {
     ["permissions", roomId],
     async () => {
       const data = await axios.get(
-        "http://192.168.7.131:8000/room/" +
+        "https://192.168.7.131:8000/room/" +
           roomId +
           "/permissions/?userid=" +
           user.userid
