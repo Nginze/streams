@@ -17,7 +17,7 @@ export const WebSocketProvider = ({ children }: Props) => {
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
-  const conn = io("ws://192.168.7.131:8000", opts);
+  const conn = io("wss://192.168.7.131:8000", opts);
   return (
     <WebSocketContext.Provider value={{ conn }}>
       {children}

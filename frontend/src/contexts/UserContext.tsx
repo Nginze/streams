@@ -24,7 +24,7 @@ const UserProvider = ({ children }: Props) => {
   const getUser = async () => {
     const user = await axios({
       method: "get",
-      url: "http://192.168.7.131:8000/user",
+      url: "https://192.168.7.131:8000/user",
       withCredentials: true,
     });
     return user.data.user;
