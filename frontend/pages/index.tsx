@@ -5,7 +5,7 @@ import { Router, useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useIdStore } from "../src/global-stores/useIdStore";
 
-const BACKEND_URI = "http://192.168.7.131:8000";
+const BACKEND_URI = "https://192.168.7.131:8000";
 const width = 600;
 const height = 600;
 
