@@ -18,12 +18,12 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "http://192.168.7.131:3000", credentials: true },
+  cors: { origin: "https://drop-next.vercel.app/", credentials: true },
 });
 const RedisStore = Store(session);
 
 const corsMiddleware: CorsOptions = {
-  origin: "http://192.168.7.131:3000",
+  origin: "https://drop-next.vercel.app/",
   credentials: true,
 };
 
