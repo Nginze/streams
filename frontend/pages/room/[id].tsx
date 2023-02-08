@@ -1,10 +1,10 @@
-import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import { useQuery } from "react-query";
 import { userContext } from "../../src/contexts/UserContext";
 import { WebSocketContext } from "../../src/contexts/WebsocketContext";
+import { apiClient } from "../../src/lib/apiclient/client";
 import useSplitUsersIntoSections from "../../src/lib/room/useSplitUsersIntoSections";
 
 const room = () => {
@@ -12,46 +12,50 @@ const room = () => {
   const { id: roomId } = router.query;
   const { data: user, isLoading: userLoading } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
-  const { isLoading, data: room } = useQuery(
-    ["room", roomId],
-    async () => {
-      const data = await axios.get(
-        "https://192.168.7.131:8000/room/" + roomId + "?userid=" + user.userid
-      );
-      return data.data;
-    },
-    { enabled: !!user, refetchOnWindowFocus: false }
-  );
+  // room info of the room we want to connect to 
+  // after it has been confirmed we actually setup the room info
+  // Connect to webrtc voice server to join call
 
-  const { isLoading: permissionsLoading, data: roomPermissions } = useQuery(
-    ["permissions", roomId],
-    async () => {
-      const data = await axios.get(
-        "https://192.168.7.131:8000/room/" +
-          roomId +
-          "/permissions/?userid=" +
-          user.userid
-      );
-      return data.data;
-    },
-    { enabled: !!room, refetchOnWindowFocus: false }
-  );
+  // const { isLoading, data: room } = useQuery(
+  //   ["room", roomId],
+  //   async () => {
+  //     const data = await apiClient.get(
+  //       "/room/" + roomId + "?userid=" + user.userid
+  //     );
+  //     return data.data;
+  //   },
+  //   { enabled: !!user, refetchOnWindowFocus: false }
+  // );
 
-  const { askedToSpeak, listeners, speakers } = useSplitUsersIntoSections(room);
-  useEffect(() => {
-    if (!conn || userLoading || permissionsLoading) {
-      return;
-    }
-    conn.emit("join-as-speaker", {
-      roomId,
-      peerId: user.userid,
-      peer: { ...user, ...roomPermissions },
-    });
-  }, [conn, userLoading, roomId, permissionsLoading]);
+  // const { isLoading: permissionsLoading, data: roomPermissions } = useQuery(
+  //   ["permissions", roomId],
+  //   async () => {
+  //     const data = await apiClient.get(
+  //       "/room/" +
+  //         roomId +
+  //         "/permissions/?userid=" +
+  //         user.userid
+  //     );
+  //     return data.data;
+  //   },
+  //   { enabled: !!room, refetchOnWindowFocus: false }
+  // );
 
-  if (isLoading || userLoading || !conn || !roomId) {
-    return <p>Loading....</p>;
-  }
+  // const { askedToSpeak, listeners, speakers } = useSplitUsersIntoSections(room);
+  // useEffect(() => {
+  //   if (!conn || userLoading || permissionsLoading) {
+  //     return;
+  //   }
+  //   conn.emit("join-as-speaker", {
+  //     roomId,
+  //     peerId: user.userid,
+  //     peer: { ...user, ...roomPermissions },
+  //   });
+  // }, [conn, userLoading, roomId, permissionsLoading]);
+
+  // if (isLoading || userLoading || !conn || !roomId) {
+  //   return <p>Loading....</p>;
+  // }
   return (
     <>
       <Head>

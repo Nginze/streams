@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import { Socket, Server } from "socket.io";
 import { redisClient } from "./config/redis";
 import http from "http";
-import https from "https";
 import passport from "passport";
 import session, { SessionOptions } from "express-session";
 import Store from "connect-redis";
@@ -14,25 +13,17 @@ import "./config/redis";
 import "./config/psql";
 import { main } from "./modules/voice_server";
 import { wrap } from "./utils/wrap";
-import fs from "fs";
-
-const key = fs.readFileSync("/mnt/c/Users/User/Desktop/drop/server/src/key.pem", "utf8");
-const cert = fs.readFileSync("/mnt/c/Users/User/Desktop/drop/server/src/server.crt", "utf8");
-const options = {
-  key: key,
-  cert: cert,
-};
 
 dotenv.config();
 const app = express();
-const server = https.createServer(options, app);
+const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "https://drop-next.vercel.app", credentials: true },
+  cors: { origin: process.env.CLIENT_URI, credentials: true },
 });
 const RedisStore = Store(session);
 
 const corsMiddleware: CorsOptions = {
-  origin: "https://drop-next.vercel.app",
+  origin: process.env.CLIENT_URI,
   credentials: true,
 };
 
@@ -52,7 +43,6 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/auth", authRoutes);
 app.use("/room", roomRoutes);
 
-// io.use(wrap(cors(corsMiddleware)));
 io.use(wrap(session(sessionMiddleware)));
 io.use(wrap(passport.initialize()));
 io.use(wrap(passport.session()));

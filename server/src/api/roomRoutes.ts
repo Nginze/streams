@@ -35,8 +35,8 @@ router.get("/:roomid", async (req: Request, res: Response) => {
 
     await client.query(
       `insert into room_permission(roomid, userid, isspeaker) 
-      values ($1, $2, $3)
-     on conflict do nothing`,
+      values ($1, $2, $3) on conflict do nothing 
+     `,
       [roomid, userid, room[0].autospeaker]
     );
     const { rows: participants } = await client.query(
@@ -49,6 +49,7 @@ router.get("/:roomid", async (req: Request, res: Response) => {
     );
     res.status(200).json({ ...room[0], participants });
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
@@ -64,6 +65,43 @@ router.get("/:roomid/permissions", async (req: Request, res: Response) => {
     res.status(200).json(rows[0]);
   } catch (err) {
     res.status(500).json(err);
+  }
+});
+
+router.put("/:roomid/permissions", async (req: Request, res: Response) => {
+  const { roomid } = req.params;
+  const { userid, askedtospeak, ismod, isspeaker } = req.query;
+
+  if (askedtospeak !== undefined) {
+    try {
+      const { rows } = await client.query(
+        `update room_permission set askedtospeak = $1 where userid = $2 and roomid = $3`,
+        [askedtospeak, userid, roomid]
+      );
+      res.status(200).json({ msg: "success" });
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else if (ismod !== undefined) {
+    try {
+      const { rows } = await client.query(
+        `update room_permission set ismod = $1 where userid = $2 and roomid = $3`,
+        [ismod, userid, roomid]
+      );
+      res.status(200).json({ msg: "success" });
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  } else if (isspeaker !== undefined) {
+    try {
+      const { rows } = await client.query(
+        `update room_permission set isspeaker = $1 where userid = $2 and roomid = $3`,
+        [isspeaker, userid, roomid]
+      );
+      res.status(200).json({ msg: "success" });
+    } catch (err) {
+      res.status(500).json(err);
+    }
   }
 });
 

@@ -1,5 +1,6 @@
 import axios from "axios";
-import { createContext } from "react";
+import { Router, useRouter } from "next/router";
+import { createContext, useEffect } from "react";
 import { useQuery } from "react-query";
 
 type Props = {
@@ -20,16 +21,16 @@ interface Context {
 export const userContext = createContext<Context>({} as Context);
 
 const UserProvider = ({ children }: Props) => {
-  const BASE_URL = "http://localhost:8000/auth/callback";
   const getUser = async () => {
     const user = await axios({
       method: "get",
-      url: "https://192.168.7.131:8000/user",
+      url: "http://localhost:8000/user",
       withCredentials: true,
     });
     return user.data.user;
   };
 
+  const router = useRouter()
   const { data, isLoading } = useQuery("user", getUser);
 
   return (

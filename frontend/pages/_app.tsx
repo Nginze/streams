@@ -13,14 +13,14 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WebSocketProvider>
-        <MainWsHandler>
-          <UserProvider>
+      <UserProvider>
+        <WebSocketProvider>
+          <MainWsHandler>
             <Component {...pageProps} />
             <WebrtcApp />
-          </UserProvider>
-        </MainWsHandler>
-      </WebSocketProvider>
+          </MainWsHandler>
+        </WebSocketProvider>
+      </UserProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
