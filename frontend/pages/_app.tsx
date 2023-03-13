@@ -7,6 +7,7 @@ import { WebSocketProvider } from "../src/contexts/WebsocketContext";
 import WebrtcApp from "../src/lib/webrtc/WebrtcApp";
 import UserProvider from "../src/contexts/UserContext";
 import { MainWsHandler } from "../src/modules/MainWsHandler";
+import { ChatWsHandler } from "../src/modules/ChatWsHandler";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
@@ -16,9 +17,10 @@ function MyApp({ Component, pageProps }: AppProps) {
       <UserProvider>
         <WebSocketProvider>
           <MainWsHandler>
-            <Component {...pageProps} />
             <WebrtcApp />
+            <Component {...pageProps} />
           </MainWsHandler>
+          <ChatWsHandler />
         </WebSocketProvider>
       </UserProvider>
       <ReactQueryDevtools initialIsOpen={false} />

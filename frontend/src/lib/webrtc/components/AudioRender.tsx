@@ -35,11 +35,7 @@ const AudioRender: React.FC<AudioRenderProps> = () => {
   const audioRefs = useRef<Array<[string, HTMLAudioElement]>>([]);
   const [showAutoPlayModal, setShowAutoPlayModal] = useState(false);
   return (
-    <div
-      className={`absolute top-0 w-full h-full flex z-50 bg-primary-900 ${
-        showAutoPlayModal ? "" : "hidden"
-      }`}
-    >
+    <>
       {Object.keys(consumerMap).map(k => {
         const { consumer, volume: peerVolume } = consumerMap[k];
         return (
@@ -51,30 +47,36 @@ const AudioRender: React.FC<AudioRenderProps> = () => {
               audioRefs.current.push([k, a]);
               a.srcObject = new MediaStream([consumer.track]);
               console.log("about to play track from on ref");
-              a.play().catch(err => console.log(err));
+              a.play().catch(err => {
+                console.log(err);
+                setShowAutoPlayModal(true);
+              });
             }}
           />
         );
       })}
-      {/* <div className={`flex p-8 rounded m-auto bg-primary-700 flex-col`}>
-        <div className={`flex text-center mb-4 text-primary-100`}>
-          Browsers require user interaction before they will play audio. Just
-          click okay to continue.
-        </div>
-        <button
-          onClick={() => {
-            setShowAutoPlayModal(false);
-            audioRefs.current.forEach(([_, a]) => {
-              a.play().catch(err => {
-                console.warn(err);
+      {showAutoPlayModal && (
+        <div className="w-96 h-auto absolute right-0 mt-5 bg-neutral-800 z-50 text-white px-5 py-4">
+          <div className={`flex text-center mb-4 text-primary-100`}>
+            Browsers require user interaction before they will play audio. Just
+            click okay to continue.
+          </div>
+          <button
+            className="w-full mb-3 bg-blue-600 px-2 py-3"
+            onClick={() => {
+              setShowAutoPlayModal(false);
+              audioRefs.current.forEach(([_, a]) => {
+                a.play().catch(err => {
+                  console.warn(err);
+                });
               });
-            });
-          }}
-        >
-          okay
-        </button>
-      </div> */}
-    </div>
+            }}
+          >
+            okay
+          </button>
+        </div>
+      )}
+    </>
   );
 };
 

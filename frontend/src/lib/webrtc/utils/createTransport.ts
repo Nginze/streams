@@ -53,7 +53,10 @@ export async function createTransport(
         // up a server-side producer object, and get back a
         // producer.id. call callback() on success or errback() on
         // failure.
-
+        conn.once("@send-track-done", (d: any) => {
+          console.log("@send-track-done")
+          callback({ id: d.id });
+        });
         conn.emit(
           "send-track",
           {

@@ -1,25 +1,37 @@
 import { Request, Response, Router } from "express";
 import { client } from "../config/psql";
+import { user } from "../types/user";
 
 export const router = Router();
 
 router.post("/create", (req: Request, res: Response) => {
   const roomInfo = req.body;
+  roomInfo.isprivate = false;
+  roomInfo.chatmode = false;
+  roomInfo.creatorid = (req.user as user).userid;
+  const { roomname, roomdesc, isprivate, autospeaker, chatmode, creatorid } =
+    roomInfo;
+
+  console.log(roomInfo);
   client
     .query(
       `
-        insert into room (roomname, roomdesc, isprivate, autospeaker, chatmode, creatorid)
-        values ($1, $2, $3, $4, $5, $6) returning roomid
+        insert into room (roomname, roomdesc, isprivate, autospeaker, creatorid)
+        values ($1, $2, $3, $4, $5) returning roomid
       `,
-      [...Object.values(roomInfo)]
+      [roomname, roomdesc, isprivate, autospeaker, creatorid]
     )
     .then(result => {
       if (result.rows.length > 0) {
         res.status(200).json(result.rows[0]);
       }
     })
-    .catch(err => res.status(500).json(err));
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
+
 router.get("/:roomid", async (req: Request, res: Response) => {
   const { roomid } = req.params;
   const { userid } = req.query;
@@ -34,16 +46,22 @@ router.get("/:roomid", async (req: Request, res: Response) => {
     );
 
     await client.query(
-      `insert into room_permission(roomid, userid, isspeaker) 
-      values ($1, $2, $3) on conflict do nothing 
+      `insert into room_permission(roomid, userid, isspeaker, ismod, askedtospeak) 
+      values ($1, $2, $3, $4, $5) on conflict do nothing 
      `,
-      [roomid, userid, room[0].autospeaker]
+      [
+        roomid,
+        userid,
+        room[0].autospeaker || room[0].creatorid == userid,
+        room[0].creatorid === userid,
+        false,
+      ]
     );
     const { rows: participants } = await client.query(
       `select * from "user"
      inner join room_permission as rp
      on rp.userid = "user".userid
-     where currentroomid = $1
+     where rp.roomid = $1
     `,
       [roomid]
     );
@@ -54,68 +72,92 @@ router.get("/:roomid", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/:roomid/permissions", async (req: Request, res: Response) => {
-  const { roomid } = req.params;
-  const { userid } = req.query;
+router.get("/rooms/live", async (req: Request, res: Response) => {
   try {
-    const { rows } = await client.query(
-      `select * from room_permission where userid = $1 and roomid = $2`,
-      [userid, roomid]
+    const { rows: rooms } = await client.query(
+      `select *, array(select username from "user" where currentroomid = room.roomid) as participants from room`
     );
-    res.status(200).json(rows[0]);
+    res.status(200).json(rooms);
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
 
-router.put("/:roomid/permissions", async (req: Request, res: Response) => {
-  const { roomid } = req.params;
-  const { userid, askedtospeak, ismod, isspeaker } = req.query;
+router.get(
+  "/room-permission/:roomId/:userId",
+  async (req: Request, res: Response) => {
+    try {
+      const { roomId, userId } = req.params;
+      const { rows } = await client.query(
+        `select u.userid, isspeaker, ismod, askedtospeak, muted
+         from room_permission as rp 
+         inner join "user" as u
+         on rp.userid = u.userid 
+         where rp.userid = $1 and roomid = $2`,
+        [userId, roomId]
+      );
+      res.status(200).json(rows[0]);
+    } catch (err) {
+      res.status(500).json(err);
+      console.log(err);
+    }
+  }
+);
 
-  if (askedtospeak !== undefined) {
-    try {
-      const { rows } = await client.query(
-        `update room_permission set askedtospeak = $1 where userid = $2 and roomid = $3`,
-        [askedtospeak, userid, roomid]
-      );
-      res.status(200).json({ msg: "success" });
-    } catch (err) {
-      res.status(500).json(err);
-    }
-  } else if (ismod !== undefined) {
-    try {
-      const { rows } = await client.query(
-        `update room_permission set ismod = $1 where userid = $2 and roomid = $3`,
-        [ismod, userid, roomid]
-      );
-      res.status(200).json({ msg: "success" });
-    } catch (err) {
-      res.status(500).json(err);
-    }
-  } else if (isspeaker !== undefined) {
-    try {
-      const { rows } = await client.query(
-        `update room_permission set isspeaker = $1 where userid = $2 and roomid = $3`,
-        [isspeaker, userid, roomid]
-      );
-      res.status(200).json({ msg: "success" });
-    } catch (err) {
-      res.status(500).json(err);
-    }
+router.post("/leave", async (req: Request, res: Response) => {
+  console.log("leave called");
+  try {
+    const { userid } = req.user as user;
+    console.log("[server]: ", req.query, userid);
+    const { roomId } = req.query;
+    await client.query(
+      `update "user" set currentroomid = $1, muted = false where userid = $2`,
+      [null, userid]
+    );
+    await client.query(
+      `delete from room_permission where userid = $1 and roomid = $2 `,
+      [userid, roomId]
+    );
+    res.status(200).json({ msg: "user session cleaned up" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
-// router.get("/:id/participants", (req: Request, res: Response) => {
-//   const { id } = req.params;
+router.put("/room-permission/update", async (req: Request, res: Response) => {
+  try {
+    const column = req.query.permission;
+    const val = req.query.val;
+    const roomId = req.query.roomId;
+    const actionId = req.query.actionId as string;
+    let { userid } = req.user as user;
 
-//   client
-//     .query(
-//       `select * from "user"
-//        inner join room_permission as rp
-//        on rp.userid = "user".userid
-//        where currentroomid = $1`,
-//       [id]
-//     )
-//     .then(result => console.log(result.rows[0]))
-//     .catch(err => res.status(500).json(err));
-// });
+    if (actionId) {
+      userid = actionId;
+    }
+
+    console.log(column, val, roomId, userid);
+    if (column === "muted") {
+      await client.query(`update "user" set ${column} = $1 where userid = $2`, [
+        val,
+        userid,
+      ]);
+    } else {
+      val
+        ? await client.query(
+            `update room_permission set ${column} = $1 where userid = $2 and roomid = $3`,
+            [val, userid, roomId]
+          )
+        : await client.query(
+            `update room_permission set ${column} = NOT ${column} where userid = $1 and roomid = $2`,
+            [userid, roomId]
+          );
+    }
+    res.status(200).json({ msg: "Permissions updated" });
+  } catch (err) {
+    res.status(500).json(err);
+    console.log(err);
+  }
+});

@@ -9,9 +9,8 @@ interface IProps {}
 
 export const ActiveSpeakerListener: React.FC<IProps> = ({}) => {
   const { conn } = useContext(WebSocketContext);
-  const { micStream, roomId } = useVoiceStore();
+  const { micStream, roomId} = useVoiceStore();
   const { data: user, isLoading: userLoading } = useContext(userContext);
-  console.log("this is our room id", roomId)
   useEffect(() => {
     if (!micStream || !conn || userLoading) {
       return;
@@ -21,7 +20,7 @@ export const ActiveSpeakerListener: React.FC<IProps> = ({}) => {
 
     harker.on("speaking", () => {
       console.log('speaking')
-      conn.emit("user-speaking", { userId: user.userid, roomId });
+      conn.emit("user-started-speaking", { userId: user.userid, roomId });
     });
     harker.on("stopped_speaking", () => {
       conn.emit("user-stopped-speaking", { userId: user.userid, roomId });

@@ -1,7 +1,6 @@
 import axios from "axios";
-
+const isTunnel = true
 export const apiClient = axios.create({
-  baseURL: "http://localhost:8000",
-  timeout: 1000,
+  baseURL: isTunnel ? "https://enclosure-popularity-beads-amount.trycloudflare.com" :"http://localhost:8000",
   withCredentials: true,
 });

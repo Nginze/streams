@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import React, { useContext, useEffect } from "react";
 import { userContext } from "../../contexts/UserContext";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
@@ -29,21 +30,23 @@ export function closeVoiceConnections(_roomId: string | null) {
 const WebrtcApp: React.FC<IProps> = () => {
   const { conn } = useContext(WebSocketContext);
   const { data: user, isLoading } = useContext(userContext);
+  const router = useRouter()
   const { consumerMap } = useConsumerStore();
 
-  useEffect(() => console.log(consumerMap), [consumerMap]);
   useEffect(() => {
     if (!conn || isLoading) {
       return;
     }
 
+    conn.on("room-created", async d => {
+       router.push(`/room/${d.roomId}`)
+    })
+
     conn.on("new-peer-speaker", async d => {
       const { roomId, recvTransport } = useVoiceStore.getState();
       console.log("received new speaker params");
       if (recvTransport && roomId === d.roomId) {
-        console.log("does it even run");
         await consumeAudio(d.consumerParameters, d.peerId);
-        console.log("new map", consumerMap);
       }
     });
     conn.on("you-are-now-a-speaker", async d => {
@@ -70,6 +73,7 @@ const WebrtcApp: React.FC<IProps> = () => {
       }
     });
     conn.on("you-joined-as-a-peer", async d => {
+      console.log("you-joined as a peer");
       closeVoiceConnections(null);
       useVoiceStore.getState().set({ roomId: d.roomId });
 
@@ -84,7 +88,7 @@ const WebrtcApp: React.FC<IProps> = () => {
         await createTransport(
           conn,
           d.roomId,
-          user.userid,
+          d.userid,
           "recv",
           d.recvTransportOptions
         );
@@ -111,7 +115,7 @@ const WebrtcApp: React.FC<IProps> = () => {
         await createTransport(
           conn,
           d.roomId,
-          user.userid,
+          d.userid,
           "send",
           d.sendTransportOptions
         );
@@ -138,7 +142,6 @@ const WebrtcApp: React.FC<IProps> = () => {
 
       receiveVoice(conn, () => {}, user.userid);
     });
-
 
     return () => {
       conn.off("new-peer-speaker");

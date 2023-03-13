@@ -3,7 +3,7 @@ import { consumeAudio } from "./consumeAudio";
 
 export const receiveVoice = (conn: any, flushQueue: () => void, userid: string) => {
   const {roomId} = useVoiceStore.getState()
-  conn.once("get-recv-tracks-done", ({ consumerParametersArr }: any) => {
+  conn.once("@get-recv-tracks-done", ({ consumerParametersArr }: any) => {
     console.log('consumerparamsrecv', consumerParametersArr)
     try {
       for (const { peerId, consumerParameters } of consumerParametersArr) {

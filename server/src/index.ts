@@ -11,19 +11,25 @@ import { router as authRoutes } from "./api/authRoutes";
 import { router as roomRoutes } from "./api/roomRoutes";
 import "./config/redis";
 import "./config/psql";
-import { main } from "./modules/voice_server";
+import "./config/rabbit";
+import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
 
+const isTunnel = true;
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: process.env.CLIENT_URI, credentials: true },
+  cors: {
+    origin: isTunnel ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
+    credentials: true,
+  },
 });
+
 const RedisStore = Store(session);
 
 const corsMiddleware: CorsOptions = {
-  origin: process.env.CLIENT_URI,
+  origin: isTunnel ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
   credentials: true,
 };
 
@@ -32,8 +38,10 @@ const sessionMiddleware: SessionOptions = {
   resave: false,
   saveUninitialized: true,
   store: new RedisStore({ client: redisClient }),
-  cookie: { maxAge: 24 * 60 * 60 * 1000 },
+  cookie: { maxAge: 24 * 60 * 60 * 1000, secure: true},
 };
+
+app.set("trust-proxy", 1);
 app.use(cors(corsMiddleware));
 app.use(session(sessionMiddleware));
 app.use(passport.initialize());
@@ -56,8 +64,12 @@ app.get("/user", (req: Request, res: Response) => {
   res.status(200).json({ user: req.user });
 });
 
-server.listen(process.env.PORT, () => {
-  console.log(`[server]: listening on port ${process.env.PORT}`);
+// app.listen(process.env.PORT, () => {
+//   console.log(`[server]: listening on port ${process.env.PORT}`);
+// });
+
+server.listen(8000, () => {
+  console.log(`[socket && server]: listening on port 8000`);
 });
 
 main(io);
