@@ -37,12 +37,14 @@ const corsMiddleware: CorsOptions = {
 const sessionMiddleware: SessionOptions = {
   secret: "secret",
   resave: false,
+  
   saveUninitialized: true,
   store: new RedisStore({ client: redisClient }),
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     sameSite: "none",
-    secure: false,
+    secure: true,
+    httpOnly: true
   },
 };
 
