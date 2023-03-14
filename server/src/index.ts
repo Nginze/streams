@@ -41,9 +41,6 @@ const sessionMiddleware: SessionOptions = {
   store: new RedisStore({ client: redisClient }),
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: "none",
-    secure: true,
-    httpOnly: false,
   },
 };
 
