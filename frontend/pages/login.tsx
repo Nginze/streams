@@ -5,7 +5,7 @@ import { Router, useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import { WebSocketContext } from "../src/contexts/WebsocketContext";
 
-const BACKEND_URI = "https://enclosure-popularity-beads-amount.trycloudflare.com";
+const BACKEND_URI = "https://drop.up.railway.app";
 const width = 600;
 const height = 600;
 
