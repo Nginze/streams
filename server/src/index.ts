@@ -65,8 +65,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/user", (req: Request, res: Response) => {
-  // console.log(req.session)
-  res.status(200).json({ user: req.session});
+  console.log(req.user)
+  res.status(200).json({ user: req.user});
 });
 
 // app.listen(process.env.PORT, () => {
