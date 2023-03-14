@@ -22,7 +22,7 @@ export const WebSocketProvider = ({ children }: Props) => {
   useEffect(() => {
     const ws = io(
       isTunnel
-        ? "wss://enclosure-popularity-beads-amount.trycloudflare.com/"
+        ? "wss://drop.up.railway.app"
         : "ws://localhost:8001",
       opts
     );
