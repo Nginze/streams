@@ -65,7 +65,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/user", (req: Request, res: Response) => {
-  console.log(req.user)
+  // console.log(req.user)
   res.status(200).json({ user: req.user});
 });
 

@@ -51,7 +51,6 @@ const serializeMiddleware = (user: Partial<user>, done: any) => {
 };
 
 const deserializeMiddleware = async (userId: string, done: any) => {
-  console.log("deserialize", userId)
   client
     .query(
       `select userid, email, username, avatarurl, displayname, bio from "user" where userId = $1`,
