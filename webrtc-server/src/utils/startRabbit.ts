@@ -5,7 +5,8 @@ import {
   RtpParameters,
   MediaKind,
 } from "mediasoup/node/lib/types";
-import "dotenv";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 type handlerParams = {
   roomId: string;

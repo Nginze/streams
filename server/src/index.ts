@@ -16,12 +16,13 @@ import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
 
 const isTunnel = true;
+const isProduction = process.env.NODE_ENV === "production"
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: isTunnel ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
+    origin: isProduction ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
     credentials: true,
   },
 });
@@ -38,10 +39,13 @@ const sessionMiddleware: SessionOptions = {
   resave: false,
   saveUninitialized: true,
   store: new RedisStore({ client: redisClient }),
-  cookie: { maxAge: 24 * 60 * 60 * 1000, secure: true},
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: "none",
+    secure: true,
+  },
 };
 
-app.set("trust-proxy", 1);
 app.use(cors(corsMiddleware));
 app.use(session(sessionMiddleware));
 app.use(passport.initialize());

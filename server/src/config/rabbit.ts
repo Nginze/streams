@@ -1,4 +1,6 @@
 import amqplib, { Channel, Connection } from "amqplib";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const recvQueue = "sendqueue";
 const sendQueue = "recvqueue";
@@ -28,16 +30,6 @@ let channel: Channel;
   ]);
 
   await channel.purgeQueue(recvQueue);
-
-  // channel.sendToQueue(
-  //   sendQueue,
-  //   Buffer.from(JSON.stringify({ op: "sent from backend sever" }))
-  // );
-
-  // await channel.consume(onlineQueue, e => {
-  //   const msg = e?.content.toString();
-  //   console.log(JSON.parse(msg as string));
-  // });
 })();
 
 export { channel };
