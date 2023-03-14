@@ -72,7 +72,7 @@ app.get("/user", (req: Request, res: Response) => {
 //   console.log(`[server]: listening on port ${process.env.PORT}`);
 // });
 
-server.listen(8000, () => {
+server.listen(process.env.PORT || 8000, () => {
   console.log(`[socket && server]: listening on port 8000`);
 });
 
