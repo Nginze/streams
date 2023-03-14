@@ -16,7 +16,7 @@ import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
 
 const isTunnel = true;
-const isProduction = process.env.NODE_ENV === "production"
+const isProduction = process.env.NODE_ENV === "production";
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
@@ -37,14 +37,13 @@ const corsMiddleware: CorsOptions = {
 const sessionMiddleware: SessionOptions = {
   secret: "secret",
   resave: false,
-  
   saveUninitialized: true,
   store: new RedisStore({ client: redisClient }),
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     sameSite: "none",
     secure: true,
-    httpOnly: true
+    httpOnly: false,
   },
 };
 
