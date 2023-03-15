@@ -102,13 +102,14 @@ export const startRabbit = async (handler: handlerMap) => {
       const m = e?.content.toString();
       const data = JSON.parse(m as string);
       const { op, d } = data;
+      console.log(op)
       handler[op as keyof handlerMap](d, send);
     },
     { noAck: true }
   );
 
-  channel.sendToQueue(
-    onlineQueue,
-    Buffer.from(JSON.stringify({ op: "online" }))
-  );
+  // channel.sendToQueue(
+  //   onlineQueue,
+  //   Buffer.from(JSON.stringify({ op: "online" }))
+  // );
 };

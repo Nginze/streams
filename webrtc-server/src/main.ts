@@ -184,6 +184,7 @@ export async function main() {
       });
     },
     "get-recv-tracks": async ({ roomId, peerId, rtpCapabilities }, send) => {
+      console.log("getting recv tracks for ", roomId, peerId)
       const consumerParametersArr = [];
       if (!rooms[roomId]?.state[peerId]?.recvTransport) {
         return;

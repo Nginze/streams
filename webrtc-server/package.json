@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "preinstall": "sudo apt update && sudo apt install -y curl python python3-pip build-essential openssl libssl-dev pkg-config",
     "start": "ts-node ./src/index.ts",
     "dev": "nodemon ./src/index.ts"
   },
