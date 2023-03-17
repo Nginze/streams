@@ -1,6 +1,5 @@
-import axios from "axios";
-import { createContext, useContext, useEffect } from "react";
-import { useQuery, useQueryClient } from "react-query";
+import { useContext, useEffect } from "react";
+import { useQueryClient } from "react-query";
 import { userContext } from "../contexts/UserContext";
 import { WebSocketContext } from "../contexts/WebsocketContext";
 
@@ -17,7 +16,6 @@ export const ChatWsHandler: React.FC<IProps> = ({}) => {
     }
     conn.on("new-chat-message", ({ message, roomId }) => {
       console.log("new-chat-message-received");
-      console.log(message);
       const colors = [
         "#4ade80",
         "#22d3ee",

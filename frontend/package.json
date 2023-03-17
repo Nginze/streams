@@ -6,12 +6,18 @@
     "start": "next start"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.1.2",
+    "@emoji-mart/react": "^1.1.1",
     "axios": "^1.2.4",
+    "emoji-mart": "^5.5.2",
+    "emoji-picker-react": "^4.4.7",
     "hark": "^1.2.3",
     "mediasoup-client": "^3.6.71",
     "next": "latest",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hot-toast": "^2.4.0",
+    "react-icons": "^4.8.0",
     "react-query": "^3.39.2",
     "socket.io-client": "^4.5.4",
     "zustand": "^4.3.2"

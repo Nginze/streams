@@ -58,7 +58,9 @@ router.get("/:roomid", async (req: Request, res: Response) => {
       ]
     );
     const { rows: participants } = await client.query(
-      `select * from "user"
+      `select *, 
+      (select count(receiverid) from user_follow where receiverid = "user".userid) as followers, 
+      (select count(causerid) from user_follow where causerid = "user".userid) as following from "user"
      inner join room_permission as rp
      on rp.userid = "user".userid
      where rp.roomid = $1

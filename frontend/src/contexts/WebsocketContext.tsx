@@ -16,14 +16,14 @@ export const WebSocketProvider = ({ children }: Props) => {
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
-  const isTunnel = true;
+  const isTunnel = false;
   const conn = useRef<Socket | null>(null);
   // const [conn, setConn] = useState<Socket | null>(null);
   useEffect(() => {
     const ws = io(
       isTunnel
         ? "wss://drop.up.railway.app"
-        : "ws://localhost:8001",
+        : "ws://localhost:8000",
       opts
     );
     // setConn(ws);

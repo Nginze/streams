@@ -15,7 +15,7 @@ import "./config/rabbit";
 import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
 
-const isTunnel = true;
+const isTunnel = false;
 const isProduction = process.env.NODE_ENV === "production";
 dotenv.config();
 const app = express();
@@ -41,8 +41,8 @@ const sessionMiddleware: SessionOptions = {
   store: new RedisStore({ client: redisClient }),
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: "none",
-    secure: true
+    // sameSite: "none",
+    // secure: true
   },
 };
 app.set("trust proxy", 1)
