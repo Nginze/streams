@@ -1,6 +1,5 @@
-import axios from "axios";
-import { createContext, useContext, useEffect } from "react";
-import { useQuery, useQueryClient } from "react-query";
+import { useContext, useEffect } from "react";
+import { useQueryClient } from "react-query";
 import { userContext } from "../contexts/UserContext";
 import { WebSocketContext } from "../contexts/WebsocketContext";
 
@@ -26,7 +25,7 @@ export const MainWsHandler = ({ children }: Props) => {
             u.userid === userId
               ? {
                   ...u,
-                  isSpeaking:
+                  active:
                     u.isspeaker || data.creatorid === userId ? true : false,
                 }
               : u
@@ -39,7 +38,7 @@ export const MainWsHandler = ({ children }: Props) => {
             u.userid === userId
               ? {
                   ...u,
-                  isSpeaking: false,
+                  active: false,
                 }
               : u
           ),
@@ -49,7 +48,6 @@ export const MainWsHandler = ({ children }: Props) => {
     conn.on("room-destroyed", () => {});
     conn.on("speaker-removed", ({ roomId, userId }) => {
       console.log("speaker-removed");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions"] });
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -63,8 +61,7 @@ export const MainWsHandler = ({ children }: Props) => {
       }));
     });
     conn.on("speaker-added", ({ userId, roomId }) => {
-      console.log("new-speaker-added");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions"] });
+      console.log("new-speaker-added", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -117,7 +114,6 @@ export const MainWsHandler = ({ children }: Props) => {
     });
     conn.on("mute-changed", ({ userId, roomId }) => {
       console.log("User muted mic");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions", roomId] });
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -162,17 +158,17 @@ export const MainWsHandler = ({ children }: Props) => {
     });
 
     conn.on("you-are-now-a-mod", ({ roomId }) => {
-      console.log('i am now a mod')
+      console.log("i am now a mod");
       queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
         ...data,
-        ismod: true
+        ismod: true,
       }));
     });
 
     conn.on("you-are-no-longer-a-mod", ({ roomId }) => {
       queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
         ...data,
-        ismod: false 
+        ismod: false,
       }));
     });
     return () => {

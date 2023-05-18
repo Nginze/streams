@@ -12,18 +12,18 @@ export const WebSocketContext = createContext<Context>({} as Context);
 
 export const WebSocketProvider = ({ children }: Props) => {
   const opts = {
-    // transports: ["websocket","polling"],
+    transports: ["polling"],
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
-  const isTunnel = true;
+  const isTunnel = false;
   const conn = useRef<Socket | null>(null);
   // const [conn, setConn] = useState<Socket | null>(null);
   useEffect(() => {
     const ws = io(
       isTunnel
-        ? "wss://enclosure-popularity-beads-amount.trycloudflare.com/"
-        : "ws://localhost:8001",
+        ? "wss://drop.up.railway.app"
+        : "http://localhost:8000",
       opts
     );
     // setConn(ws);

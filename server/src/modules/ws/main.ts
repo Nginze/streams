@@ -25,6 +25,8 @@ export async function main(
       { noAck: false }
     );
     console.log(`[socket.io]: peer (${socket.id}) connected to socket server`);
+    const user = (socket.request as any).user;
+    redisClient.set(user?.userId, socket.id);
 
     socket.on("disconnecting", () => {
       console.log(
@@ -60,6 +62,7 @@ export async function main(
           )
         );
       }
+      redisClient.del(user.userid)
     });
 
     socket.on("disconnect", () => {
@@ -111,6 +114,7 @@ export async function main(
         )
       );
     });
+
     socket.on(
       "join-room",
       async ({ roomId, roomMeta: { isAutospeaker, isCreator } }) => {
@@ -196,26 +200,28 @@ export async function main(
     );
 
     socket.on("add-speaker", async ({ roomId, userId }) => {
-      console.log("attempting to add speaker");
+      const peerSocketId = await redisClient.get(userId) 
+      console.log("attempting to add speaker , userid: ", peerSocketId);
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "add-speaker",
-            d: { roomId, peerId: socket.id },
+            d: { roomId, peerId: peerSocketId },
           })
         )
       );
-      io.to(roomId).emit("speaker-added", { roomId, userId });
+      io.to(roomId).emit("speaker-added", { roomId, userId});
     });
 
-    socket.on("remove-speaker", ({ roomId, userId }) => {
+    socket.on("remove-speaker", async ({ roomId, userId }) => {
+      const peerSocketId = await redisClient.get(userId) 
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "remove-speaker",
-            d: { roomId, peerId: socket.id },
+            d: { roomId, peerId: peerSocketId },
           })
         )
       );

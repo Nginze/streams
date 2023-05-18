@@ -8,6 +8,7 @@ import WebrtcApp from "../src/lib/webrtc/WebrtcApp";
 import UserProvider from "../src/contexts/UserContext";
 import { MainWsHandler } from "../src/modules/MainWsHandler";
 import { ChatWsHandler } from "../src/modules/ChatWsHandler";
+import { Toaster } from "react-hot-toast";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
@@ -23,6 +24,10 @@ function MyApp({ Component, pageProps }: AppProps) {
           <ChatWsHandler />
         </WebSocketProvider>
       </UserProvider>
+      <Toaster
+        position="bottom-center"
+        reverseOrder={true}
+      />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
