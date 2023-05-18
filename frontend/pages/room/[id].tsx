@@ -7,16 +7,14 @@ import { toast } from "react-hot-toast";
 import { AiOutlineClose } from "react-icons/ai";
 import {
   BsChatLeft,
-  BsChatRight,
   BsGear,
   BsMic,
   BsMicMute,
   BsPersonPlus,
   BsTelephoneX,
 } from "react-icons/bs";
-import { HiOutlineHand } from "react-icons/hi";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
-import { useQuery, useQueryClient } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../src/contexts/UserContext";
 import { WebSocketContext } from "../../src/contexts/WebsocketContext";
 import { useRoomProfileModalStore } from "../../src/global-stores/useRoomProfileModal";
@@ -38,16 +36,18 @@ const room = () => {
   const { closeAll } = useConsumerStore();
   const { close } = useProducerStore();
   const [chatContent, setMessage] = useState<string>("");
-  const [chatOpen, setChat] = useState<Boolean>(true);
+  const [chatOpen, setChat] = useState<boolean>(true);
   const [showLeave, setLeave] = useState<boolean>(false);
   const [showPicker, setPicker] = useState<boolean>(false);
   const [showInvite, setInvite] = useState<boolean>(false);
   const [showSettings, setSettings] = useState<boolean>(false);
+
   const { setOptions, showOptions, setModalUser, modalProfile } =
     useRoomProfileModalStore();
+
   const { isLoading: chatLoading, data: chatMessages } = useQuery(
     ["roomchat", roomId],
-    () => {}
+    { refetchInterval: false, refetchOnWindowFocus: false }
   );
 
   const { isLoading: roomLoading, data: room } = useQuery(
@@ -59,24 +59,28 @@ const room = () => {
     { enabled: !!user && !!roomId, refetchOnWindowFocus: false }
   );
 
-  const { isLoading: permissionsLoading, data: roomPermissions } = useQuery(
-    ["room-permissions", roomId],
-    async () => {
-      const data = await apiClient.get(
-        `/room/room-permission/${roomId}/${user.userid}`
-      );
-      return data.data;
+  const permissionMutation = useMutation({
+    mutationFn: async (params: any) => {
+      params.actionId
+        ? await apiClient.put(
+            `/room/room-permission/update?permission=${params.permission}&val=${params.value}&roomId=${roomId}&actionId=${params.actionId}`
+          )
+        : await apiClient.put(
+            `/room/room-permission/update?permission=${params.permission}&val=${params.value}&roomId=${roomId}`
+          );
     },
-    { enabled: !!room }
-  );
+    onMutate: variables => {
+      queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
+        ...data,
+        [variables.permission]: variables.value,
+      }));
+    },
+  });
 
   const handleHandRaise = async () => {
     if (conn) {
       conn.emit("user-asked-to-speak", { roomId, userId: user.userid });
       try {
-        await apiClient.put(
-          `/room/room-permission/update?permission=askedtospeak&roomId=${roomId}`
-        );
       } catch (err) {
         console.log(err);
         toast("Connection Failed. Try again", {
@@ -101,28 +105,30 @@ const room = () => {
   };
 
   const handleMute = async () => {
-    if (conn) {
-      if (!mic) {
-        return;
-      }
-      conn.emit("user-muted-mic", { roomId, userId: user.userid });
-      mic.enabled = !mic.enabled;
-      try {
-        await apiClient.put(
-          `/room/room-permission/update?permission=muted&val=${!mic.enabled}&roomId=${roomId}`
-        );
-      } catch (err) {
-        console.log(err);
-        toast("Connection Failed. Try again", {
-          icon: "",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
-      }
-    } else {
+    if (!conn || !mic) {
+      toast("Connection Failed. Try again", {
+        icon: "",
+        style: {
+          borderRadius: "10px",
+          background: "#333",
+          color: "#fff",
+        },
+      });
+      return;
+    }
+
+    const muteState = mic.enabled;
+    conn.emit("user-muted-mic", { roomId, userId: user.userid });
+    mic.enabled = !mic.enabled;
+    console.log(muteState);
+
+    try {
+      permissionMutation.mutate({
+        permission: "muted",
+        value: !roomPermissions.muted,
+      });
+    } catch (err) {
+      console.log(err);
       toast("Connection Failed. Try again", {
         icon: "",
         style: {
@@ -139,9 +145,14 @@ const room = () => {
     if (conn) {
       conn.emit("add-speaker", { roomId, userId: modalProfile.userid });
       try {
-        await apiClient.put(
-          `/room/room-permission/update?permission=isspeaker&val=true&roomId=${roomId}&actionId=${modalProfile.userid}`
-        );
+        permissionMutation.mutate({
+          permission: "isspeaker",
+          value: true,
+          actionId: modalProfile.userid,
+        });
+        // await apiClient.put(
+        //   `/room/room-permission/update?permission=isspeaker&val=true&roomId=${roomId}&actionId=${modalProfile.userid}`
+        // );
       } catch (err) {
         console.log(err);
         toast("Connection Failed. Try again", {
@@ -170,9 +181,14 @@ const room = () => {
     if (conn) {
       conn.emit("remove-speaker", { roomId, userId: modalProfile.userid });
       try {
-        await apiClient.put(
-          `/room/room-permission/update?permission=isspeaker&val=false&roomId=${roomId}&actionId=${modalProfile.userid}`
-        );
+        permissionMutation.mutate({
+          permission: "isspeaker",
+          value: false,
+          actionId: modalProfile.userid,
+        });
+        // await apiClient.put(
+        //   `/room/room-permission/update?permission=isspeaker&val=false&roomId=${roomId}&actionId=${modalProfile.userid}`
+        // );
       } catch (err) {
         console.log(err);
 
@@ -278,6 +294,7 @@ const room = () => {
       timestamp: new Date().toDateString(),
     };
     conn?.emit("new-chat-message", { roomId, message });
+    setMessage("")
   };
 
   const handleLeave = async () => {
@@ -332,6 +349,17 @@ const room = () => {
 
   const { askedToSpeak, listeners, speakers } = useSplitUsersIntoSections(room);
 
+  const { isLoading: permissionsLoading, data: roomPermissions } = useQuery(
+    ["room-permissions", roomId],
+    async () => {
+      const data = await apiClient.get(
+        `/room/room-permission/${roomId}/${user.userid}`
+      );
+      return data.data;
+    },
+    { enabled: !!room, refetchOnWindowFocus: false, refetchInterval: false }
+  );
+
   useEffect(() => {
     const cleanupConn = async (e: Event) => {
       e.preventDefault();
@@ -356,6 +384,7 @@ const room = () => {
     if (!roomId || !conn || userLoading || roomLoading) {
       return;
     }
+    console.log("about to emit");
     conn.emit("join-room", {
       roomId,
       roomMeta: {
@@ -366,6 +395,7 @@ const room = () => {
 
     chatInputRef.current?.focus();
   }, [roomId, userLoading, conn, roomLoading]);
+  // return <>Hello</>
   return room ? (
     <>
       <Head>

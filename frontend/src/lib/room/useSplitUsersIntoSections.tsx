@@ -6,6 +6,7 @@ import { userContext } from "../../contexts/UserContext";
 import { apiClient } from "../apiclient/client";
 
 const useSplitUsersIntoSections = (room: any) => {
+  const { data: user, isLoading: userLoading } = useContext(userContext);
   const speakers: React.ReactNode[] = [];
   const listeners: React.ReactNode[] = [];
   const askedToSpeak: React.ReactNode[] = [];
@@ -14,7 +15,6 @@ const useSplitUsersIntoSections = (room: any) => {
     return { listeners, askedToSpeak, speakers };
   }
 
-  const { data: user, isLoading: userLoading } = useContext(userContext);
   const roomPermissions: any = queryClient.getQueryData([
     "room-permissions",
     room.roomid,

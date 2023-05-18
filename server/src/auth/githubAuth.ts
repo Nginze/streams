@@ -5,7 +5,7 @@ import {
   Strategy as GithubStrategy,
   StrategyOptions,
 } from "passport-github2";
-import { client } from "../config/psql";
+import { pool } from "../config/psql";
 import { user } from "../types/user";
 
 dotenv.config();
@@ -17,17 +17,17 @@ const githubStrategyMiddleware = new GithubStrategy(
     scope: ["user"],
   } as StrategyOptions,
   (accessToken: string, refreshToken: string, profile: any, done: any) => {
-    client
+    pool
       .query(`select * from "user" where githubid = $1`, [profile.id])
       .then(async (result: any) => {
-        console.log(result)
+        console.log(result);
         if (result.rows.length !== 0) {
           done(null, result.rows[0]);
         } else {
           console.log("here");
           if (profile.photos && profile.emails) {
             console.log("inserted data");
-            client
+            pool
               .query(
                 `insert into "user" (githubid, email, username, avatarurl, displayname, bio) values ($1, $2, $3, $4, $5, $6) returning userid, githubid, email, username, avatarurl, displayname, bio `,
                 [
@@ -51,7 +51,7 @@ const serializeMiddleware = (user: Partial<user>, done: any) => {
 };
 
 const deserializeMiddleware = async (userId: string, done: any) => {
-  client
+  pool
     .query(
       `select userid, email, username, avatarurl, displayname, bio from "user" where userId = $1`,
       [userId]

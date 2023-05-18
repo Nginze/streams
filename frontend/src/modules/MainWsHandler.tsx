@@ -48,7 +48,6 @@ export const MainWsHandler = ({ children }: Props) => {
     conn.on("room-destroyed", () => {});
     conn.on("speaker-removed", ({ roomId, userId }) => {
       console.log("speaker-removed");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions"] });
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -62,8 +61,7 @@ export const MainWsHandler = ({ children }: Props) => {
       }));
     });
     conn.on("speaker-added", ({ userId, roomId }) => {
-      console.log("new-speaker-added");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions"] });
+      console.log("new-speaker-added", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -116,7 +114,6 @@ export const MainWsHandler = ({ children }: Props) => {
     });
     conn.on("mute-changed", ({ userId, roomId }) => {
       console.log("User muted mic");
-      queryClient.invalidateQueries({ queryKey: ["room-permissions", roomId] });
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>

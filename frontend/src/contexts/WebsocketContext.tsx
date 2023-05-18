@@ -12,7 +12,7 @@ export const WebSocketContext = createContext<Context>({} as Context);
 
 export const WebSocketProvider = ({ children }: Props) => {
   const opts = {
-    // transports: ["websocket","polling"],
+    transports: ["polling"],
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
@@ -23,7 +23,7 @@ export const WebSocketProvider = ({ children }: Props) => {
     const ws = io(
       isTunnel
         ? "wss://drop.up.railway.app"
-        : "ws://localhost:8000",
+        : "http://localhost:8000",
       opts
     );
     // setConn(ws);

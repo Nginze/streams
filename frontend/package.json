@@ -11,6 +11,8 @@
     "axios": "^1.2.4",
     "emoji-mart": "^5.5.2",
     "emoji-picker-react": "^4.4.7",
+    "eslint": "^8.39.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "hark": "^1.2.3",
     "mediasoup-client": "^3.6.71",
     "next": "latest",
