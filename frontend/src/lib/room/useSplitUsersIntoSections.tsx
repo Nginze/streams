@@ -44,20 +44,20 @@ const useSplitUsersIntoSections = (room: any) => {
       />
     );
   });
-  if ((roomPermissions && !roomPermissions.isspeaker ) && (user.userid != room.creatorid)) {
-    speakers.push(
-      <>
-        <div className="cursor-pointer w-full h-16 flex flex-col items-center mb-6">
-          <button
-            style={{ width: "3.5rem", height: "3.5rem" }}
-            className={`flex rounded-full ring-1 ring-white items-center mt-2 justify-center cursor-pointer bg-zinc-600 active:opacity-80 `}
-          >
-            <HiOutlineHand fontSize={"1.6rem"} />
-          </button>
-        </div>
-      </>
-    );
-  }
+  // if ((roomPermissions && !roomPermissions.isspeaker ) && (user.userid != room.creatorid)) {
+  //   speakers.push(
+  //     <>
+  //       <div className="cursor-pointer w-full h-16 flex flex-col items-center mb-6">
+  //         <button
+  //           style={{ width: "3.5rem", height: "3.5rem" }}
+  //           className={`flex rounded-full ring-1 ring-white items-center mt-2 justify-center cursor-pointer bg-zinc-600 active:opacity-80 `}
+  //         >
+  //           <HiOutlineHand fontSize={"1.6rem"} />
+  //         </button>
+  //       </div>
+  //     </>
+  //   );
+  // }
   return { speakers, listeners, askedToSpeak };
 };
 

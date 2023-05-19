@@ -212,10 +212,14 @@ export async function main(
         )
       );
       io.to(roomId).emit("speaker-added", { roomId, userId});
+      io.to(peerSocketId as string).emit("add-speaker-permissions", {roomId, userId})
     });
 
+
     socket.on("remove-speaker", async ({ roomId, userId }) => {
+      console.log(userId)
       const peerSocketId = await redisClient.get(userId) 
+      console.log(peerSocketId)
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
@@ -226,6 +230,7 @@ export async function main(
         )
       );
       io.to(roomId).emit("speaker-removed", { roomId, userId });
+      io.to(peerSocketId as string).emit("remove-speaker-permissions", {roomId, userId})
     });
 
     socket.on("user-started-speaking", ({ userId, roomId }) => {

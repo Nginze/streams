@@ -76,7 +76,7 @@ const Avatar = ({
           src={avatarurl}
           alt=""
         />
-        {muted && (
+        {muted && isspeaker && (
           <div
             style={{
               backgroundColor: "#0084c7",
