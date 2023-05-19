@@ -8,6 +8,7 @@ import { apiClient } from "../../src/lib/apiclient/client";
 import { AiOutlineClose } from "react-icons/ai";
 import { BsPeopleFill } from "react-icons/bs";
 import { VscPerson } from "react-icons/vsc";
+import { toast } from "react-hot-toast";
 interface IProps {}
 
 const home: React.FC<IProps> = () => {
@@ -15,8 +16,11 @@ const home: React.FC<IProps> = () => {
   const { conn } = useContext(WebSocketContext);
   const router = useRouter();
   const [showCreate, setCreate] = useState<boolean>(false);
+  const [showEdit, setEdit] = useState<boolean>(false);
   const [roomname, setRoomName] = useState<string>("");
   const [roomdesc, setRoomDesc] = useState<string>("");
+  const [newImgUrl, setImageUrl] = useState<string>("");
+  const [newBio, setBio] = useState<string>("");
   const [autospeaker, setAutoSpeaker] = useState<boolean>(false);
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery(
     ["live-rooms"],
@@ -43,6 +47,37 @@ const home: React.FC<IProps> = () => {
     }
   };
 
+  const handleEditProfile = async () => {
+    try {
+      const { status } = await apiClient.patch("/profile/update", {
+        bio: newBio ? newBio : user.bio,
+        avatarurl: newImgUrl ? newImgUrl : user.avatarurl,
+      });
+
+      if (status == 200) {
+        toast("Profile Updated", {
+          icon: "✔",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
+      } else {
+        toast("Something went wrong", {
+          icon: "❌",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <>
       <Head>
@@ -61,6 +96,80 @@ const home: React.FC<IProps> = () => {
           rel="stylesheet"
         />
       </Head>
+      {showEdit && user && (
+        <>
+          <div
+            onClick={() => setEdit(false)}
+            className="w-screen h-screen bg-black opacity-50 rounded-md absolute z-40"
+          ></div>
+
+          <div className="w-[500px] h-auto top-1/4 left-1/3 absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
+            <button
+              onClick={() => setEdit(false)}
+              className="absolute right-5 cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
+            >
+              <AiOutlineClose fontSize={"1.2rem"} />
+            </button>
+            <div className="mt-4">
+              <div>
+                <div className="flex items-center space-x-3">
+                  <img
+                    className="inline-block h-12 w-12 rounded-2xl active:opacity-80"
+                    src={user.avatarurl}
+                    alt=""
+                  />
+
+                  {/* {user.userid !== user.userid && (
+                    <button
+                      onClick={handleFollow}
+                      className="bg-gray-600 px-2 py-1 flex items-center justify-center rounded-md w-1/4 active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300"
+                    >
+                      Follow
+                    </button>
+                  )} */}
+                </div>
+                <div className="flex flex-col items-start space-y-2 mt-2 mb-4 text-sm">
+                  <div className="flex flex-col items-start">
+                    <span>{user.username}</span>
+                    <span>@{user.username}</span>
+                  </div>
+                  <div>
+                    <span className="mr-3">0 Followers</span>
+                    <span>0 Following</span>
+                  </div>
+                  <span>{user.bio}</span>
+                </div>
+              </div>
+            </div>
+            <div className="font-normal">
+              <input
+                className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md"
+                placeholder={user.username}
+                disabled
+              />
+              <input
+                value={newBio}
+                onChange={e => setBio(e.target.value)}
+                className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md"
+                placeholder={user.bio}
+              />
+              <input
+                value={newImgUrl}
+                onChange={e => setImageUrl(e.target.value)}
+                className="w-full mb-4 p-3 mt-4 text-white bg-zinc-700 rounded-md"
+                placeholder={user.avatarurl}
+              />
+
+              <button
+                onClick={handleEditProfile}
+                className="bg-sky-600 p-3 mb-4 flex items-center justify-center font-bold rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       {showCreate && (
         <div>
           <div
@@ -141,7 +250,10 @@ const home: React.FC<IProps> = () => {
             <button className="flex items-center bg-zinc-700 justify-center mr-6 h-12 w-12 rounded-full ring-2 ring-white active:bg-zinc-500 focus:outline-none focus:ring focus:ring-sky-300">
               <BsPeopleFill fontSize={"1.5rem"} />
             </button>
-            <button className="focus:outline-none focus:ring focus:ring-sky-300 rounded-full">
+            <button
+              onClick={() => setEdit(true)}
+              className="focus:outline-none focus:ring focus:ring-sky-300 rounded-full"
+            >
               {user ? (
                 <img
                   className="inline-block h-12 w-12 rounded-full ring-2 active:opacity-80"

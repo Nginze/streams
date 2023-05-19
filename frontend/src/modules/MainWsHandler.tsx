@@ -47,7 +47,7 @@ export const MainWsHandler = ({ children }: Props) => {
     });
     conn.on("room-destroyed", () => {});
     conn.on("speaker-removed", ({ roomId, userId }) => {
-      console.log("speaker-removed");
+      console.log("speaker-removed", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -55,6 +55,7 @@ export const MainWsHandler = ({ children }: Props) => {
             ? {
                 ...u,
                 isspeaker: false,
+                askedtospeak: false,
               }
             : u
         ),
@@ -75,6 +76,24 @@ export const MainWsHandler = ({ children }: Props) => {
         ),
       }));
     });
+
+    conn.on("add-speaker-permissions", ({ userId, roomId }) => {
+      console.log("i just received a request to add speaker permissions");
+      queryClient.setQueriesData(["room-permissions", roomId], (data: any) => ({
+        ...data,
+        isspeaker: true,
+        askedtospeak: false,
+      }));
+    });
+
+    conn.on("remove-speaker-permissions", ({ userId, roomId }) => {
+      console.log("i just received a request to remove speaker permissions");
+      queryClient.setQueriesData(["room-permissions", roomId], (data: any) => ({
+        ...data,
+        isspeaker: false,
+      }));
+    });
+
     conn.on("user-left-room", ({ userId, roomId }) => {
       console.log("user-left-room received", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
@@ -100,6 +119,7 @@ export const MainWsHandler = ({ children }: Props) => {
     });
     conn.on("hand-raised", ({ userId, roomId }) => {
       console.log("You raised your hand");
+
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((u: any) =>
@@ -171,6 +191,7 @@ export const MainWsHandler = ({ children }: Props) => {
         ismod: false,
       }));
     });
+
     return () => {
       conn.off("mod-added");
       conn.off("you-are-now-a-mod");
@@ -182,6 +203,8 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("new-user-joined-room");
       conn.off("hand-raised");
       conn.off("mute-changed");
+      conn.off("add-speaker-permissions");
+      conn.off("remove-speaker-permissions");
     };
   }, [conn, isLoading]);
   return <>{children}</>;

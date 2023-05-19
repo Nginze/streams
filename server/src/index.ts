@@ -9,6 +9,7 @@ import cors, { CorsOptions } from "cors";
 import * as dotenv from "dotenv";
 import { router as authRoutes } from "./api/authRoutes";
 import { router as roomRoutes } from "./api/roomRoutes";
+import { router as userRoutes } from "./api/userRoutes";
 import "./config/redis";
 import "./config/psql";
 import "./config/rabbit";
@@ -45,7 +46,7 @@ const sessionMiddleware: SessionOptions = {
     // secure: true
   },
 };
-app.set("trust proxy", 1)
+app.set("trust proxy", 1);
 app.use(cors(corsMiddleware));
 app.use(session(sessionMiddleware));
 app.use(passport.initialize());
@@ -54,6 +55,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/auth", authRoutes);
 app.use("/room", roomRoutes);
+app.use("/profile", userRoutes);
 
 io.use(wrap(session(sessionMiddleware)));
 io.use(wrap(passport.initialize()));
@@ -66,7 +68,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.get("/user", (req: Request, res: Response) => {
   // console.log(req.user)
-  res.status(200).json({ user: req.user});
+  res.status(200).json({ user: req.user });
 });
 
 // app.listen(process.env.PORT, () => {

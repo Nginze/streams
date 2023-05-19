@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { AiOutlineClose } from "react-icons/ai";
+import { TbHandOff } from "react-icons/tb";
 import {
   BsChatLeft,
   BsGear,
@@ -13,7 +14,7 @@ import {
   BsPersonPlus,
   BsTelephoneX,
 } from "react-icons/bs";
-import { MdOutlineEmojiEmotions } from "react-icons/md";
+import { MdOutlineEmojiEmotions, MdOutlineWavingHand } from "react-icons/md";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../src/contexts/UserContext";
 import { WebSocketContext } from "../../src/contexts/WebsocketContext";
@@ -24,6 +25,7 @@ import useSplitUsersIntoSections from "../../src/lib/room/useSplitUsersIntoSecti
 import { useConsumerStore } from "../../src/lib/webrtc/store/useConsumerStore";
 import { useProducerStore } from "../../src/lib/webrtc/store/useProducerStore";
 import { useVoiceStore } from "../../src/lib/webrtc/store/useVoiceStore";
+import { HiHand, HiOutlineHand } from "react-icons/hi";
 
 const room = () => {
   const router = useRouter();
@@ -70,10 +72,12 @@ const room = () => {
           );
     },
     onMutate: variables => {
-      queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
-        ...data,
-        [variables.permission]: variables.value,
-      }));
+      if (variables.actionId === user.userid || !variables.actionId) {
+        queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
+          ...data,
+          [variables.permission]: variables.value,
+        }));
+      }
     },
   });
 
@@ -81,6 +85,10 @@ const room = () => {
     if (conn) {
       conn.emit("user-asked-to-speak", { roomId, userId: user.userid });
       try {
+        permissionMutation.mutate({
+          permission: "askedtospeak",
+          value: !roomPermissions.askedtospeak,
+        });
       } catch (err) {
         console.log(err);
         toast("Connection Failed. Try again", {
@@ -178,6 +186,7 @@ const room = () => {
 
   const handleRemoveSpeaker = async () => {
     setOptions(false);
+    console.log(modalProfile.username);
     if (conn) {
       conn.emit("remove-speaker", { roomId, userId: modalProfile.userid });
       try {
@@ -294,7 +303,7 @@ const room = () => {
       timestamp: new Date().toDateString(),
     };
     conn?.emit("new-chat-message", { roomId, message });
-    setMessage("")
+    setMessage("");
   };
 
   const handleLeave = async () => {
@@ -396,7 +405,7 @@ const room = () => {
     chatInputRef.current?.focus();
   }, [roomId, userLoading, conn, roomLoading]);
   // return <>Hello</>
-  return room ? (
+  return room && roomPermissions ? (
     <>
       <Head>
         <title>{room?.roomname}</title>
@@ -429,12 +438,13 @@ const room = () => {
               <div className="grid grid-cols-5 gap-2">{speakers}</div>
             </div>
 
-            {askedToSpeak.length > 0 && (
-              <div className="mb-6 w-full">
-                <p className="mb-4">Asked to speak ({askedToSpeak.length})</p>
-                <div className="grid grid-cols-5 gap-x-2">{askedToSpeak}</div>
-              </div>
-            )}
+            {askedToSpeak.length > 0 &&
+              (roomPermissions.ismod || room.creatorid == user.userid) && (
+                <div className="mb-6 w-full">
+                  <p className="mb-4">Requests ({askedToSpeak.length})</p>
+                  <div className="grid grid-cols-5 gap-x-2">{askedToSpeak}</div>
+                </div>
+              )}
 
             <div className="mb-6 w-full">
               <p className="mb-4">Listeners ({listeners.length})</p>
@@ -451,19 +461,35 @@ const room = () => {
                 <span className="text-xs">Leave</span>
               </button>
 
-              <button
-                onClick={handleMute}
-                className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-              >
-                {!roomPermissions?.muted ? (
-                  <BsMic fontSize={"1.2rem"} />
-                ) : (
-                  <BsMicMute fontSize={"1.2rem"} />
-                )}
-                <span className="text-xs">
-                  {!roomPermissions?.muted ? "Mute" : "Unmute"}
-                </span>
-              </button>
+              {roomPermissions.isspeaker ? (
+                <button
+                  onClick={handleMute}
+                  className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+                >
+                  {!roomPermissions?.muted ? (
+                    <BsMic fontSize={"1.2rem"} />
+                  ) : (
+                    <BsMicMute fontSize={"1.2rem"} />
+                  )}
+                  <span className="text-xs">
+                    {!roomPermissions?.muted ? "Mute" : "Unmute"}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleHandRaise}
+                  className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+                >
+                  {!roomPermissions?.askedtospeak ? (
+                    <MdOutlineWavingHand fontSize={"1.2rem"} />
+                  ) : (
+                    <TbHandOff fontSize={"1.2rem"} />
+                  )}
+                  <span className="text-xs">
+                    {!roomPermissions?.askedtospeak ? "Raise" : "Unraise"}
+                  </span>
+                </button>
+              )}
 
               <button
                 onClick={() => setChat(!chatOpen)}
@@ -480,13 +506,15 @@ const room = () => {
                 <span className="text-xs">Invite</span>
               </button>
 
-              <button
-                onClick={() => setSettings(true)}
-                className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-              >
-                <BsGear fontSize={"1.2rem"} />
-                <span className="text-xs">Settings</span>
-              </button>
+              {roomPermissions.ismod && (
+                <button
+                  onClick={() => setSettings(true)}
+                  className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+                >
+                  <BsGear fontSize={"1.2rem"} />
+                  <span className="text-xs">Settings</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -672,12 +700,12 @@ const room = () => {
               {(roomPermissions.ismod || room.creatorid === user.userid) &&
                 modalProfile.userid !== user.userid && (
                   <div className="space-y-4 font-normal">
-                    <button
+                    {/* <button
                       onClick={handleMakeRoomAdmin}
                       className="bg-sky-600 p-3 flex items-center justify-center rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
                     >
                       Make Room Admin
-                    </button>
+                    </button> */}
                     <button
                       onClick={
                         modalProfile.isspeaker
