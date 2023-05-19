@@ -19,11 +19,12 @@ const useSplitUsersIntoSections = (room: any) => {
     "room-permissions",
     room.roomid,
   ]);
-  room.participants.forEach((u: any) => {
+
+  roomPermissions && room.participants.forEach((u: any) => {
     let arr = listeners;
     if (u.userid === room.creatorid || u.isspeaker) {
       arr = speakers;
-    } else if (u.askedToSpeak) {
+    } else if (u.askedtospeak && roomPermissions.ismod) {
       arr = askedToSpeak;
     }
 

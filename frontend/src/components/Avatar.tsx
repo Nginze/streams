@@ -5,6 +5,7 @@ import { useQueryClient } from "react-query";
 import { userContext } from "../contexts/UserContext";
 import { useRoomProfileModalStore } from "../global-stores/useRoomProfileModal";
 
+
 type Props = {
   userid: string;
   username: string;
@@ -76,6 +77,25 @@ const Avatar = ({
           src={avatarurl}
           alt=""
         />
+        {askedtospeak &&  !(roomPermissions.ismod) && (
+          <div
+            style={{
+              backgroundColor: "#ffff",
+              borderRadius: "100%",
+              padding: "0.4rem",
+              position: "absolute",
+              width: "25px",
+              height: "25px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              right: 20,
+              top: 2,
+            }}
+          >
+            <span>✋</span>
+          </div>
+        )}
         {muted && isspeaker && (
           <div
             style={{

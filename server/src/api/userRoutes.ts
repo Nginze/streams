@@ -50,10 +50,10 @@ router.patch("/update", async (req: Request, res: Response) => {
     await pool.query(
       `
       update "user"
-      set username = $1, bio = $2, displayname = $3, bannerurl = $4, avatarurl = $5
-      where userid = $6
+      set bio= $1, avatarurl = $2
+      where userid = $3
      `,
-      [username, bio, displayname, bannerurl, avatarurl, userid]
+      [bio, avatarurl, userid]
     );
 
     res.status(200).json({ msg: "updated user data" });
