@@ -51,7 +51,7 @@ const home: React.FC<IProps> = () => {
     try {
       const { status } = await apiClient.patch("/profile/update", {
         bio: newBio ? newBio : user.bio,
-        avatarurl: newImgUrl ? newImgUrl : user.avatarurl 
+        avatarurl: newImgUrl ? newImgUrl : user.avatarurl,
       });
 
       if (status == 200) {
@@ -143,16 +143,21 @@ const home: React.FC<IProps> = () => {
             </div>
             <div className="font-normal">
               <input
+                className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md"
+                placeholder={user.username}
+                disabled
+              />
+              <input
                 value={newBio}
                 onChange={e => setBio(e.target.value)}
                 className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md"
-                placeholder="Enter new Bio"
+                placeholder={user.bio}
               />
               <input
                 value={newImgUrl}
                 onChange={e => setImageUrl(e.target.value)}
                 className="w-full mb-4 p-3 mt-4 text-white bg-zinc-700 rounded-md"
-                placeholder="Enter image url"
+                placeholder={user.avatarurl}
               />
 
               <button
