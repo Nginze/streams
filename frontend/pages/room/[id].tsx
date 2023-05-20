@@ -26,6 +26,7 @@ import { useConsumerStore } from "../../src/lib/webrtc/store/useConsumerStore";
 import { useProducerStore } from "../../src/lib/webrtc/store/useProducerStore";
 import { useVoiceStore } from "../../src/lib/webrtc/store/useVoiceStore";
 import { HiHand, HiOutlineHand } from "react-icons/hi";
+import axios from "axios";
 
 const room = () => {
   const router = useRouter();
@@ -43,6 +44,7 @@ const room = () => {
   const [showPicker, setPicker] = useState<boolean>(false);
   const [showInvite, setInvite] = useState<boolean>(false);
   const [showSettings, setSettings] = useState<boolean>(false);
+  const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
   const { setOptions, showOptions, setModalUser, modalProfile } =
     useRoomProfileModalStore();
@@ -290,7 +292,88 @@ const room = () => {
 
   const handleKick = (e: any) => {};
 
-  const handleFollow = (e: any) => {};
+  const handleFollow = async (e: any) => {
+    try {
+      setFollowingLoading(true);
+      const { status } = await apiClient.post("/profile/follow", {
+        userToFollow: modalProfile.userid,
+      });
+      setFollowingLoading(false);
+      if (status == 200) {
+        toast(`Started following ${modalProfile.username}\n`, {
+          icon: "✔",
+          style: {
+            borderRadius: "10px",
+            background: "#fff",
+            color: "black",
+          },
+        });
+      }
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        participants: data.participants.map((u: any) =>
+          u.userid === modalProfile.userid
+            ? {
+                ...u,
+                hasfollowed: true,
+              }
+            : u
+        ),
+      }));
+
+      setOptions(false);
+    } catch (error) {
+      toast("Connection Failed. Try again", {
+        icon: "❌",
+        style: {
+          borderRadius: "10px",
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      setFollowingLoading(true);
+      const { status } = await apiClient.delete(
+        `/profile/unfollow/${modalProfile.userid}`
+      );
+      setFollowingLoading(false);
+      if (status == 204) {
+        toast(`Unfollowed ${modalProfile.username}\n`, {
+          icon: "✔",
+          style: {
+            borderRadius: "10px",
+            background: "#fff",
+            color: "black",
+          },
+        });
+      }
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        participants: data.participants.map((u: any) =>
+          u.userid === modalProfile.userid
+            ? {
+                ...u,
+                hasfollowed: false,
+              }
+            : u
+        ),
+      }));
+      setOptions(false);
+    } catch (error) {
+      toast("Connection Failed. Try again", {
+        icon: "",
+        style: {
+          borderRadius: "10px",
+          background: "#333",
+          color: "#fff",
+        },
+      });
+    }
+  };
 
   const handleChatSend = (e: any) => {
     e.preventDefault();
@@ -673,14 +756,25 @@ const room = () => {
                       alt=""
                     />
 
-                    {user.userid !== modalProfile.userid && (
-                      <button
-                        onClick={handleFollow}
-                        className="bg-gray-600 px-2 py-1 flex items-center justify-center rounded-md w-1/4 active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300"
-                      >
-                        Follow
-                      </button>
-                    )}
+                    {user.userid !== modalProfile.userid &&
+                      (!followingLoading ? (
+                        <button
+                          onClick={
+                            !modalProfile.hasfollowed
+                              ? handleFollow
+                              : handleUnfollow
+                          }
+                          className={`${
+                            !modalProfile.hasfollowed
+                              ? "bg-gray-600"
+                              : "ring ring-gray-600"
+                          } px-2 py-1 flex items-center justify-center rounded-md w-1/4 active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300`}
+                        >
+                          {!modalProfile.hasfollowed ? "Follow" : "Unfollow"}
+                        </button>
+                      ) : (
+                        <span>...</span>
+                      ))}
                   </div>
                   <div className="flex flex-col items-start space-y-2 mt-2 mb-4 text-sm">
                     <div className="flex flex-col items-start">

@@ -40,6 +40,7 @@ const useSplitUsersIntoSections = (room: any) => {
         muted={u.muted}
         ismod={u.ismod}
         following={u.following}
+        hasfollowed={u.hasfollowed}
         followers={u.followers}
         key={u.userid}
       />

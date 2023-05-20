@@ -15,6 +15,8 @@ const home: React.FC<IProps> = () => {
   const { data: user, isLoading: userLoading } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
   const router = useRouter();
+  const [isSaving, setSaving] = useState<boolean>(false);
+  const [showFollowingOnline, setFollowingOnline] = useState<boolean>(false);
   const [showCreate, setCreate] = useState<boolean>(false);
   const [showEdit, setEdit] = useState<boolean>(false);
   const [roomname, setRoomName] = useState<string>("");
@@ -26,6 +28,13 @@ const home: React.FC<IProps> = () => {
     ["live-rooms"],
     async () => {
       const { data } = await apiClient.get("/room/rooms/live");
+      return data;
+    }
+  );
+  const { data: followingOnline, isLoading: onlineLoading } = useQuery(
+    ["following-online"],
+    async () => {
+      const { data } = await apiClient.get("/profile/online");
       return data;
     }
   );
@@ -49,10 +58,12 @@ const home: React.FC<IProps> = () => {
 
   const handleEditProfile = async () => {
     try {
+      setSaving(true);
       const { status } = await apiClient.patch("/profile/update", {
         bio: newBio ? newBio : user.bio,
         avatarurl: newImgUrl ? newImgUrl : user.avatarurl,
       });
+      setSaving(false);
 
       if (status == 200) {
         toast("Profile Updated", {
@@ -96,6 +107,60 @@ const home: React.FC<IProps> = () => {
           rel="stylesheet"
         />
       </Head>
+      {showFollowingOnline && (
+        <>
+          <div
+            onClick={() => setFollowingOnline(false)}
+            className="w-screen h-screen bg-black opacity-50 rounded-md absolute z-40"
+          ></div>
+
+          <div className="w-[500px] h-auto top-1/4 left-1/3 absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
+            <button
+              onClick={() => setFollowingOnline(false)}
+              className="absolute right-5 cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
+            >
+              <AiOutlineClose fontSize={"1.2rem"} />
+            </button>
+            <span className="font-semibold text-lg">Online List</span>
+            {followingOnline && (
+              <div className="mt-4 h-[200px]">
+                {followingOnline.length > 0 ? (
+                  followingOnline.map((u: any) => (
+                    <div className="flex items-center justify-between flex-row cursor-pointer">
+                      <div className="flex flex-row items-start">
+                        <img
+                          className="inline-block h-12 mr-6 w-12 rounded-2xl active:opacity-80"
+                          src={u.avatarurl}
+                          alt=""
+                        />
+                        <div className="flex flex-col items-start space-y-2 mt-2 mb-4 text-sm">
+                          <div className="flex flex-col items-start">
+                            <span>{u.username}</span>
+                            <span>{u.bio}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => {router.push(`/room/${u.currentroomid}`)}}
+                          className={`
+                            ring ring-gray-600 px-2 py-1 align-center flex items-center justify-center rounded-md w-[70px] active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300`}
+                        >
+                          join
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <span className="w-full h-full flex items-center justify-center">
+                    😥 No one is Online
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
       {showEdit && user && (
         <>
           <div
@@ -143,7 +208,7 @@ const home: React.FC<IProps> = () => {
             </div>
             <div className="font-normal">
               <input
-                className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md"
+                className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md cursor-not-allowed"
                 placeholder={user.username}
                 disabled
               />
@@ -160,12 +225,18 @@ const home: React.FC<IProps> = () => {
                 placeholder={user.avatarurl}
               />
 
-              <button
-                onClick={handleEditProfile}
-                className="bg-sky-600 p-3 mb-4 flex items-center justify-center font-bold rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-              >
-                Save
-              </button>
+              {!isSaving ? (
+                <button
+                  onClick={handleEditProfile}
+                  className="bg-sky-600 p-3 mb-4 flex items-center justify-center font-bold rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+                >
+                  Save
+                </button>
+              ) : (
+                <span className="w-full justify-center font-bold">
+                  Updating...
+                </span>
+              )}
             </div>
           </div>
         </>
@@ -247,7 +318,10 @@ const home: React.FC<IProps> = () => {
             Voice Converstations Scaling to the Moon 🚀
           </p>
           <div className="w-full flex items-center justify-center my-6">
-            <button className="flex items-center bg-zinc-700 justify-center mr-6 h-12 w-12 rounded-full ring-2 ring-white active:bg-zinc-500 focus:outline-none focus:ring focus:ring-sky-300">
+            <button
+              onClick={() => setFollowingOnline(true)}
+              className="flex items-center bg-zinc-700 justify-center mr-6 h-12 w-12 rounded-full ring-2 ring-white active:bg-zinc-500 focus:outline-none focus:ring focus:ring-sky-300"
+            >
               <BsPeopleFill fontSize={"1.5rem"} />
             </button>
             <button

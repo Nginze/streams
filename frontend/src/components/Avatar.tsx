@@ -18,6 +18,7 @@ type Props = {
   ismod: boolean;
   followers: number;
   following: number;
+  hasfollowed: boolean;
 };
 
 const Avatar = ({
@@ -32,6 +33,7 @@ const Avatar = ({
   ismod,
   followers,
   following,
+  hasfollowed
 }: Props) => {
   const { setOptions, setModalUser } = useRoomProfileModalStore();
   const queryClient = useQueryClient();
@@ -56,6 +58,7 @@ const Avatar = ({
       ismod,
       followers,
       following,
+      hasfollowed
     };
     setModalUser(myProfile);
 

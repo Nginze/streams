@@ -26,7 +26,9 @@ export async function main(
     );
     console.log(`[socket.io]: peer (${socket.id}) connected to socket server`);
     const user = (socket.request as any).user;
+
     redisClient.set(user?.userId, socket.id);
+    redisClient.sadd("onlineUsers", user?.userid);
 
     socket.on("disconnecting", () => {
       console.log(
@@ -37,6 +39,8 @@ export async function main(
       const user = (socket.request as any).user;
       const clients = io.sockets.adapter.rooms.get(roomId);
 
+      redisClient.srem("onlineUsers", user.userid);
+      
       channel.sendToQueue(
         sendQueue,
         Buffer.from(
@@ -62,7 +66,7 @@ export async function main(
           )
         );
       }
-      redisClient.del(user.userid)
+      redisClient.del(user.userid);
     });
 
     socket.on("disconnect", () => {
@@ -200,7 +204,7 @@ export async function main(
     );
 
     socket.on("add-speaker", async ({ roomId, userId }) => {
-      const peerSocketId = await redisClient.get(userId) 
+      const peerSocketId = await redisClient.get(userId);
       console.log("attempting to add speaker , userid: ", peerSocketId);
       channel?.sendToQueue(
         sendQueue,
@@ -211,15 +215,17 @@ export async function main(
           })
         )
       );
-      io.to(roomId).emit("speaker-added", { roomId, userId});
-      io.to(peerSocketId as string).emit("add-speaker-permissions", {roomId, userId})
+      io.to(roomId).emit("speaker-added", { roomId, userId });
+      io.to(peerSocketId as string).emit("add-speaker-permissions", {
+        roomId,
+        userId,
+      });
     });
 
-
     socket.on("remove-speaker", async ({ roomId, userId }) => {
-      console.log(userId)
-      const peerSocketId = await redisClient.get(userId) 
-      console.log(peerSocketId)
+      console.log(userId);
+      const peerSocketId = await redisClient.get(userId);
+      console.log(peerSocketId);
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
@@ -230,7 +236,10 @@ export async function main(
         )
       );
       io.to(roomId).emit("speaker-removed", { roomId, userId });
-      io.to(peerSocketId as string).emit("remove-speaker-permissions", {roomId, userId})
+      io.to(peerSocketId as string).emit("remove-speaker-permissions", {
+        roomId,
+        userId,
+      });
     });
 
     socket.on("user-started-speaking", ({ userId, roomId }) => {
