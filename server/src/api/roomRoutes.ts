@@ -71,14 +71,17 @@ router.get("/:roomid", async (req: Request, res: Response) => {
     );
 
     const { rows: participants } = await pool.query(
-      `select *, 
-      (select count(receiverid) from user_follow where receiverid = "user".userid) as followers, 
-      (select count(causerid) from user_follow where causerid = "user".userid) as following from "user"
+      `
+      select *, 
+      (select count(f.isfollowing) from follows f where f.isfollowing = "user".userid) as followers, 
+      (select count(f.userid) from follows f where f.userid = "user".userid) as following,
+      exists (select 1 from follows f where f.userid = $2 and f.isfollowing = "user".userid) as hasfollowed
+      from "user"
       inner join room_permission as rp
       on rp.userid = "user".userid
       where rp.roomid = $1
     `,
-      [roomid]
+      [roomid, userid]
     );
 
     await client.query("COMMIT");

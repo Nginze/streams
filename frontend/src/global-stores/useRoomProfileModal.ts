@@ -10,6 +10,7 @@ interface User {
   following: number;
   isspeaker: boolean;
   ismod: boolean;
+  hasfollowed: boolean
 }
 export const useRoomProfileModalStore = create(
   combine(
