@@ -1,6 +1,6 @@
 import { Router, WebRtcTransport } from "mediasoup/node/lib/types";
 import { VoiceSendDirection } from "../types/VoiceSendDirection";
-import { config } from "../msconfig";
+import { config } from "../config/msconfig";
 
 export const transportToOptions = ({
   id,

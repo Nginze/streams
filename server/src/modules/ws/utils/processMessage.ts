@@ -1,8 +1,6 @@
-import { eventNames } from "process";
-import { Socket } from "socket.io";
 import { broadcastExcludeSender } from "./broadcastExcludeSender";
 
-type IEvent = {
+type Event = {
   op: string;
   userid: string;
   peerId: string;
@@ -10,7 +8,7 @@ type IEvent = {
   d: any;
 };
 
-export const processMessage = async (event: IEvent, sid: string, io: any) => {
+export const processMessage = async (event: Event, sid: string, io: any) => {
   switch (event?.op) {
     case "room-created":
       io.to(sid).emit(event.op, {

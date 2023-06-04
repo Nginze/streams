@@ -2,85 +2,51 @@ import { useRouter } from "next/router";
 import { useContext } from "react";
 import { BsMicMute } from "react-icons/bs";
 import { useQueryClient } from "react-query";
-import { userContext } from "../contexts/UserContext";
-import { useRoomProfileModalStore } from "../global-stores/useRoomProfileModal";
-
+import { userContext } from "../../contexts/UserContext";
+import { useRoomProfileModalStore } from "../../global-stores/useRoomProfileModal";
 
 type Props = {
-  userid: string;
-  username: string;
-  avatarurl: string;
-  bio: string;
-  active: boolean | undefined;
-  isspeaker: boolean;
-  askedtospeak: boolean | undefined;
-  muted: boolean | undefined;
-  ismod: boolean;
-  followers: number;
-  following: number;
-  hasfollowed: boolean;
+  participant: RoomParticipant;
 };
 
-const Avatar = ({
-  userid,
-  username,
-  avatarurl,
-  bio,
-  active,
-  isspeaker,
-  askedtospeak,
-  muted,
-  ismod,
-  followers,
-  following,
-  hasfollowed
-}: Props) => {
-  const { setOptions, setModalUser } = useRoomProfileModalStore();
+const RoomAvatar = ({ participant }: Props) => {
   const queryClient = useQueryClient();
-  const { data: user, isLoading: userLoading } = useContext(userContext);
+
+  const { setOptions, setModalUser } = useRoomProfileModalStore();
+  const { user, userLoading } = useContext(userContext);
+
   const router = useRouter();
   const { id: roomId } = router.query;
-  const roomPermissions: any = queryClient.getQueryData([
-    "room-permissions",
+
+  const myRoomStatus = queryClient.getQueryData<RoomStatus>([
+    "room-status",
     roomId,
   ]);
-  const indicatorOn = active && !muted;
-  const handleModalOpen = () => {
-    const myProfile = {
-      userid,
-      username,
-      avatarurl,
-      bio,
-      active,
-      isspeaker,
-      askedtospeak,
-      muted,
-      ismod,
-      followers,
-      following,
-      hasfollowed
-    };
-    setModalUser(myProfile);
 
+  const canShowIndicator = participant.indicatorOn && !participant.isMuted;
+
+  const openParticipantProfile = () => {
+    setModalUser(participant);
     setOptions(true);
   };
   return (
     <>
       <div
-        onClick={handleModalOpen}
+        // onClick={handleModalOpen}
+        onClick = {openParticipantProfile}
         style={{ position: "relative" }}
         className="cursor-pointer w-full h-16 flex flex-col items-center mb-6"
       >
         <img
           style={{
-            border: `${indicatorOn ? "3.3px #0084c7 solid" : ""}`,
+            border: `${canShowIndicator ? "3.3px #0084c7 solid" : ""}`,
             padding: "0.12rem",
           }}
           className={`inline-block h-16 w-16 rounded-full cursor-pointer active:opacity-80`}
-          src={avatarurl}
+          src={participant.avatarUrl}
           alt=""
         />
-        {askedtospeak &&  !(roomPermissions.ismod) && (
+        {participant.raisedHand && (
           <div
             style={{
               backgroundColor: "#ffff",
@@ -99,7 +65,7 @@ const Avatar = ({
             <span>✋</span>
           </div>
         )}
-        {muted && isspeaker && (
+        {participant.isMuted && participant.isSpeaker && (
           <div
             style={{
               backgroundColor: "#0084c7",
@@ -115,8 +81,8 @@ const Avatar = ({
         )}
         <span>
           <span className="text-xs font-semibold">
-            {ismod && <span>👑</span>}
-            {user.userid === userid ? "You" : username}
+            {participant.isMod && <span>👑</span>}
+            {user.userId === participant.userId ? "You" : participant.userName}
           </span>
         </span>
       </div>
@@ -124,4 +90,4 @@ const Avatar = ({
   );
 };
 
-export default Avatar;
+export default RoomAvatar;

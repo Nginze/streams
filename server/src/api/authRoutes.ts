@@ -1,9 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
-import * as dotenv from "dotenv";
+import "dotenv/config";
 import "../auth/githubAuth";
 
-dotenv.config()
 export const router = Router();
 
 router.get("/github", passport.authenticate("github"));
@@ -14,4 +13,3 @@ router.get(
     failureRedirect: "/failure",
   })
 );
-

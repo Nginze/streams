@@ -21,6 +21,7 @@
     "react-hot-toast": "^2.4.0",
     "react-icons": "^4.8.0",
     "react-query": "^3.39.2",
+    "react-responsive": "^9.0.2",
     "socket.io-client": "^4.5.4",
     "zustand": "^4.3.2"
   },

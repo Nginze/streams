@@ -9,10 +9,11 @@ import { AiOutlineClose } from "react-icons/ai";
 import { BsPeopleFill } from "react-icons/bs";
 import { VscPerson } from "react-icons/vsc";
 import { toast } from "react-hot-toast";
+import useScreenType from "../../src/lib/room/hooks/useScreenType";
 interface IProps {}
 
 const home: React.FC<IProps> = () => {
-  const { data: user, isLoading: userLoading } = useContext(userContext);
+  const { user, userLoading } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
   const router = useRouter();
   const [isSaving, setSaving] = useState<boolean>(false);
@@ -24,6 +25,8 @@ const home: React.FC<IProps> = () => {
   const [newImgUrl, setImageUrl] = useState<string>("");
   const [newBio, setBio] = useState<string>("");
   const [autospeaker, setAutoSpeaker] = useState<boolean>(false);
+
+  const screenType = useScreenType();
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery(
     ["live-rooms"],
     async () => {
@@ -34,7 +37,7 @@ const home: React.FC<IProps> = () => {
   const { data: followingOnline, isLoading: onlineLoading } = useQuery(
     ["following-online"],
     async () => {
-      const { data } = await apiClient.get("/profile/online");
+      const { data } = await apiClient.get("/profile/following/onlineList");
       return data;
     }
   );
@@ -61,7 +64,7 @@ const home: React.FC<IProps> = () => {
       setSaving(true);
       const { status } = await apiClient.patch("/profile/update", {
         bio: newBio ? newBio : user.bio,
-        avatarurl: newImgUrl ? newImgUrl : user.avatarurl,
+        avatarUrl: newImgUrl ? newImgUrl : user.avatarUrl,
       });
       setSaving(false);
 
@@ -108,13 +111,13 @@ const home: React.FC<IProps> = () => {
         />
       </Head>
       {showFollowingOnline && (
-        <>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div
             onClick={() => setFollowingOnline(false)}
             className="w-screen h-screen bg-black opacity-50 rounded-md absolute z-40"
           ></div>
 
-          <div className="w-[500px] h-auto top-1/4 left-1/3 absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
+          <div className="w-[500px] h-auto absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
             <button
               onClick={() => setFollowingOnline(false)}
               className="absolute right-5 cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
@@ -142,7 +145,9 @@ const home: React.FC<IProps> = () => {
                       </div>
                       <div>
                         <button
-                          onClick={() => {router.push(`/room/${u.currentroomid}`)}}
+                          onClick={() => {
+                            router.push(`/room/${u.currentroomid}`);
+                          }}
                           className={`
                             ring ring-gray-600 px-2 py-1 align-center flex items-center justify-center rounded-md w-[70px] active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300`}
                         >
@@ -159,16 +164,16 @@ const home: React.FC<IProps> = () => {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
       {showEdit && user && (
-        <>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div
             onClick={() => setEdit(false)}
             className="w-screen h-screen bg-black opacity-50 rounded-md absolute z-40"
           ></div>
 
-          <div className="w-[500px] h-auto top-1/4 left-1/3 absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
+          <div className="w-[500px] h-auto  absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
             <button
               onClick={() => setEdit(false)}
               className="absolute right-5 cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
@@ -180,7 +185,7 @@ const home: React.FC<IProps> = () => {
                 <div className="flex items-center space-x-3">
                   <img
                     className="inline-block h-12 w-12 rounded-2xl active:opacity-80"
-                    src={user.avatarurl}
+                    src={user.avatarUrl}
                     alt=""
                   />
 
@@ -195,8 +200,8 @@ const home: React.FC<IProps> = () => {
                 </div>
                 <div className="flex flex-col items-start space-y-2 mt-2 mb-4 text-sm">
                   <div className="flex flex-col items-start">
-                    <span>{user.username}</span>
-                    <span>@{user.username}</span>
+                    <span>{user.userName}</span>
+                    <span>@{user.userName}</span>
                   </div>
                   <div>
                     <span className="mr-3">0 Followers</span>
@@ -209,7 +214,7 @@ const home: React.FC<IProps> = () => {
             <div className="font-normal">
               <input
                 className="w-full p-3 mt-4 text-white bg-zinc-700 rounded-md cursor-not-allowed"
-                placeholder={user.username}
+                placeholder={user.userName}
                 disabled
               />
               <input
@@ -222,7 +227,7 @@ const home: React.FC<IProps> = () => {
                 value={newImgUrl}
                 onChange={e => setImageUrl(e.target.value)}
                 className="w-full mb-4 p-3 mt-4 text-white bg-zinc-700 rounded-md"
-                placeholder={user.avatarurl}
+                placeholder={user.avatarUrl}
               />
 
               {!isSaving ? (
@@ -239,16 +244,16 @@ const home: React.FC<IProps> = () => {
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
       {showCreate && (
-        <div>
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div
             onClick={() => setCreate(false)}
             className="w-screen h-screen bg-black opacity-50 absolute z-40"
           ></div>
 
-          <div className="w-[500px] h-auto top-1/4 left-1/3 absolute bg-zinc-800 z-50 text-white px-5 py-4 rounded-md">
+          <div className="w-[500px] h-auto bg-zinc-800 z-50 text-white px-5 py-4 rounded-md absolute">
             <button
               onClick={() => setCreate(false)}
               className="absolute right-5 cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
@@ -311,8 +316,14 @@ const home: React.FC<IProps> = () => {
           </div>
         </div>
       )}
-      <div className="w-screen h-screen relative bg-zinc-800 text-white font-display flex min-h-screen  py-2 overflow-x-hiddenflex flex-col justify-center items-center">
-        <div className="mb-6 text-left w-1/3">
+      <div className={`w-screen h-screen relative bg-zinc-800 text-white font-display flex min-h-screen ${screenType == "fullscreen" ? "px-10" : ""} py-2 overflow-x-hidden  flex-col justify-center items-center`}>
+        <div
+          className={`mb-6 ${
+            screenType == "fullscreen"
+              ? "w-full text-center"
+              : "w-[530px] text-left"
+          }`}
+        >
           <h1 className="font-bold text-5xl mb-3">Drop 🎧</h1>
           <p className="font-bold text-2xl">
             Voice Converstations Scaling to the Moon 🚀
@@ -331,7 +342,7 @@ const home: React.FC<IProps> = () => {
               {user ? (
                 <img
                   className="inline-block h-12 w-12 rounded-full ring-2 active:opacity-80"
-                  src={user.avatarurl}
+                  src={user.avatarUrl}
                   alt=""
                 />
               ) : (
@@ -344,7 +355,11 @@ const home: React.FC<IProps> = () => {
             </button>
           </div>
         </div>
-        <div className="scrollbar-hide relative flex flex-col w-[530px] h-auto max-h-[200px] px-5 overflow-y-auto  mb-6 text-left text-lg">
+        <div
+          className={`scrollbar-hide relative flex flex-col ${
+            screenType == "fullscreen" ? "w-full" : "w-[530px]"
+          } h-auto max-h-[200px] overflow-y-auto  mb-6 text-left text-lg`}
+        >
           {!liveRooms ||
             (liveRooms.length == 0 && (
               <span className="text-center">😵 No live rooms available</span>
@@ -354,11 +369,11 @@ const home: React.FC<IProps> = () => {
               return (
                 <button
                   key={lr.roomid}
-                  onClick={() => router.push(`/room/${lr.roomid}`)}
-                  className="w-full mb-4 cursor-pointer h-auto bg-gray-700 px-4 py-3 rounded-md active:bg-gray-600 focus:outline-none focus:ring focus:ring-zinc-300"
+                  onClick={() => router.push(`/room/${lr.roomId}`)}
+                  className="mb-4 w-full cursor-pointer h-auto bg-gray-700 px-4 py-3 rounded-md active:bg-gray-600 focus:outline-none focus:ring focus:ring-zinc-300"
                 >
                   <div className="w-full flex justify-between ">
-                    <span className="font-semibold">{lr.roomname}</span>
+                    <span className="font-semibold">{lr.roomDesc}</span>
                     <div>
                       <span className="flex items-center ">
                         <VscPerson />
@@ -380,19 +395,17 @@ const home: React.FC<IProps> = () => {
             })
           ) : (
             <span className="w-full flex justify-center">Loading Rooms...</span>
-            // <div className="lds-ring absolute left-[200px]">
-            //   <div></div>
-            //   <div></div>
-            //   <div></div>
-            //   <div></div>
-            // </div>
           )}
         </div>
 
-        <div className="w-1/3 bg-transparent">
+        <div
+          className={` ${
+            screenType == "fullscreen" ? "w-full" : "w-[530px]"
+          } bg-transparent`}
+        >
           <button
             onClick={() => setCreate(true)}
-            className="bg-sky-600  p-3 flex items-center justify-center font-bold rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+            className="bg-sky-600 w-full p-3 flex items-center justify-center font-bold rounded-md active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
           >
             Create Room
           </button>

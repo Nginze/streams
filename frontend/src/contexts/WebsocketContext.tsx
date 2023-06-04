@@ -1,44 +1,34 @@
-import React, { createContext, useEffect, useRef, useState } from "react";
-import { io, ManagerOptions, Socket, SocketOptions } from "socket.io-client";
+import React, { createContext, useEffect, useRef } from "react";
+import { ManagerOptions, Socket, SocketOptions, io } from "socket.io-client";
+
 type Props = {
   children: React.ReactNode;
 };
 
-interface Context {
+interface WsContext {
   conn: Socket | null;
 }
 
-export const WebSocketContext = createContext<Context>({} as Context);
+export const WebSocketContext = createContext<WsContext>({} as WsContext);
 
 export const WebSocketProvider = ({ children }: Props) => {
   const opts = {
-    transports: ["polling"],
+    transports: ['polling'],
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
-  const isTunnel = false;
+
   const conn = useRef<Socket | null>(null);
-  // const [conn, setConn] = useState<Socket | null>(null);
+
   useEffect(() => {
-    const ws = io(
-      isTunnel
-        ? "wss://drop.up.railway.app"
-        : "http://localhost:8000",
-      opts
-    );
-    // setConn(ws);
+    const ws = io("http://localhost:8000", opts);
     conn.current = ws;
+
     return () => {
       ws.disconnect();
     };
   }, []);
-  // if (conn.current == null) {
-  //   return (
-  //     <>
-  //       <div>Not connected to socket server</div>
-  //     </>
-  //   );
-  // }
+
   return (
     <WebSocketContext.Provider value={{ conn: conn.current }}>
       {children}

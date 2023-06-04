@@ -1,12 +1,17 @@
 import { Router } from "mediasoup/node/lib/Router";
 import { Worker } from "mediasoup/node/lib/Worker";
-import { Rooms } from "./types/RoomState";
-import { closePeer } from "./utils/closePeer";
-import { createConsumer } from "./utils/createConsumer";
-import { createTransport, transportToOptions } from "./utils/createTransport";
-import { deleteRoom } from "./utils/deleteRoom";
-import { startMediasoup } from "./utils/startMediasoup";
-import { handlerMap, startRabbit } from "./utils/startRabbit";
+import { Rooms } from "../types/RoomState";
+import { closePeer } from "../utils/closePeer";
+import { createConsumer } from "../utils/createConsumer";
+import { createTransport, transportToOptions } from "../utils/createTransport";
+import { deleteRoom } from "../utils/deleteRoom";
+import { startMediasoup } from "../utils/startMediasoup";
+import { HandlerMap, startRabbit } from "../utils/startRabbit";
+import {
+  MediaKind,
+  RtpCapabilities,
+  RtpParameters,
+} from "mediasoup/node/lib/RtpParameters";
 
 export async function main() {
   let workers: Array<{ worker: Worker; router: Router }> = [];
@@ -32,7 +37,7 @@ export async function main() {
     return { worker, router, state: {} };
   };
 
-  const handlerMap = {
+  const handler = {
     "create-room": async ({ roomId, peerId }, send) => {
       if (!(roomId in rooms)) {
         rooms[roomId] = createRoom();
@@ -40,6 +45,7 @@ export async function main() {
 
       send({ op: "room-created", d: { roomId }, peerId });
     },
+
     "join-as-speaker": async ({ roomId, peerId }, send) => {
       if (!(roomId in rooms)) {
         rooms[roomId] = createRoom();
@@ -64,14 +70,13 @@ export async function main() {
 
       send({
         op: "you-joined-as-a-speaker",
+        peerId,
         d: {
           roomId,
-          peerId,
           routerRtpCapabilities: rooms[roomId].router.rtpCapabilities,
           recvTransportOptions: transportToOptions(recvTransport),
           sendTransportOptions: transportToOptions(sendTransport),
         },
-        peerId: peerId,
       });
     },
     "join-as-new-peer": async ({ roomId, peerId }, send) => {
@@ -94,13 +99,12 @@ export async function main() {
       };
       send({
         op: "you-joined-as-a-peer",
+        peerId,
         d: {
           roomId,
-          peerId,
           routerRtpCapabilities: rooms[roomId].router.rtpCapabilities,
           recvTransportOptions: transportToOptions(recvTransport),
         },
-        peerId: peerId,
       });
     },
     "add-speaker": async ({ roomId, peerId }, send) => {
@@ -114,11 +118,11 @@ export async function main() {
       rooms[roomId].state[peerId].sendTransport = sendTransport;
       send({
         op: "you-are-now-a-speaker",
+        peerId,
         d: {
           sendTransportOptions: transportToOptions(sendTransport),
           roomId,
         },
-        peerId: peerId,
       });
     },
     "remove-speaker": async ({ roomId, peerId }) => {
@@ -145,7 +149,7 @@ export async function main() {
       });
     },
     "destroy-room": async ({ roomId }) => {
-      console.log("destroying room", roomId)
+      console.log("destroying room", roomId);
       if (roomId in rooms) {
         for (const peer of Object.values(rooms[roomId].state)) {
           closePeer(peer);
@@ -179,12 +183,12 @@ export async function main() {
 
       send({
         op: `@connect-transport-${direction}-done` as const,
-        peerId: peerId,
+        peerId,
         d: { roomId },
       });
     },
     "get-recv-tracks": async ({ roomId, peerId, rtpCapabilities }, send) => {
-      console.log("getting recv tracks for ", roomId, peerId)
+      console.log("getting recv tracks for ", roomId, peerId);
       const consumerParametersArr = [];
       if (!rooms[roomId]?.state[peerId]?.recvTransport) {
         return;
@@ -207,7 +211,7 @@ export async function main() {
             await createConsumer(
               router,
               producer,
-              rtpCapabilities,
+              rtpCapabilities as RtpCapabilities,
               transport,
               peerId,
               state[theirPeerId]
@@ -220,7 +224,7 @@ export async function main() {
       }
       send({
         op: "@get-recv-tracks-done",
-        peerId: peerId,
+        peerId,
         d: { consumerParametersArr, roomId },
       });
     },
@@ -228,7 +232,6 @@ export async function main() {
       {
         roomId,
         transportId,
-        direction,
         peerId,
         kind,
         rtpParameters,
@@ -258,15 +261,14 @@ export async function main() {
           previousProducer.close();
           consumers.forEach(c => c.close());
           send({
-            rid: roomId,
             op: "close_consumer",
             d: { producerId: previousProducer!.id, roomId },
           });
         }
 
         const producer = await transport.produce({
-          kind,
-          rtpParameters,
+          kind: kind as MediaKind,
+          rtpParameters: rtpParameters as RtpParameters,
           paused,
           appData: { ...appData, peerId, transportId },
         });
@@ -281,10 +283,10 @@ export async function main() {
             continue;
           }
           try {
-            const d = await createConsumer(
+            const consumer = await createConsumer(
               rooms[roomId].router,
               producer,
-              rtpCapabilities,
+              rtpCapabilities as RtpCapabilities,
               peerTransport,
               peerId,
               state[theirPeerId]
@@ -293,7 +295,7 @@ export async function main() {
             send({
               peerId: theirPeerId,
               op: "new-peer-speaker",
-              d: { ...d, roomId },
+              d: { roomId, ...consumer },
             });
           } catch (err) {
             console.log(err);
@@ -302,7 +304,7 @@ export async function main() {
 
         send({
           op: `@send-track-done` as const,
-          peerId: peerId,
+          peerId,
           d: {
             id: producer.id,
             roomId,
@@ -312,7 +314,7 @@ export async function main() {
         console.log(err);
         send({
           op: `@send-track-done` as const,
-          peerId: peerId,
+          peerId,
           d: {
             error: err,
             roomId,
@@ -320,17 +322,13 @@ export async function main() {
         });
         send({
           op: "error",
+          peerId,
           d: "error connecting to voice server | " + err,
-          peerId: peerId,
         });
         return;
       }
     },
-  } as handlerMap;
-  try {
-    startRabbit(handlerMap);
-  } catch (err) {
-    console.log(err);
-    throw err;
-  }
+  } as HandlerMap;
+
+  startRabbit(handler);
 }
