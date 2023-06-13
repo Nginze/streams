@@ -3,6 +3,8 @@ import { apiClient } from "../../lib/apiclient/client";
 import { useContext, useState } from "react";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
 import { userContext } from "../../contexts/UserContext";
+import { Switch } from "../ui/switch";
+import { Button } from "../ui/button";
 
 type Props = {
   room: Room;
@@ -13,6 +15,7 @@ const RoomSettings = ({ room }: Props) => {
   const { user } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
 
+  const [updatedRoomDesc, setRoomDesc] = useState<string>(room.roomDesc);
   const [chatEnabled, setChatEnabled] = useState<boolean>(room.chatEnabled);
   const [handRaiseEnabled, setHandRaiseEnabled] = useState<boolean>(
     room.handRaiseEnabled
@@ -93,9 +96,37 @@ const RoomSettings = ({ room }: Props) => {
 
   return (
     <>
-      <div className="mt-4">
+      <div className="mt-4 space-y-4">
+        <div>
+          <span className="font-bold text-lg">Update Settings</span>
+        </div>
+        <div className="w-full">
+          <input
+            value={updatedRoomDesc}
+            onChange={e => setRoomDesc(e.target.value)}
+            placeholder="Describe topics shared in your room"
+            className="outline-none border-none bg-app_bg_light w-full p-2 rounded-sm"
+          />
+        </div>
+        <div>
+          <span className="font-bold text-lg">Options</span>
+        </div>
         <div className="space-y-4">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between w-full">
+            <label htmlFor="autospeaker">Enable Auto-Speaker</label>
+            <Switch id="autospeaker" />
+          </div>
+
+          <div className="flex items-center justify-between w-full">
+            <label htmlFor="enablechat">Enable Chat</label>
+            <Switch id="enablechat" />
+          </div>
+
+          <div className="flex items-center justify-between w-full">
+            <label htmlFor="enablehandraise">Enable Hand Raise</label>
+            <Switch  id="enablehandraise" />
+          </div>
+          {/* <div className="flex items-center">
             <input
               onChange={handleMuteAllSpeakers}
               checked={muteAllSpeakers}
@@ -124,7 +155,11 @@ const RoomSettings = ({ room }: Props) => {
               className="mr-2"
             />
             <label htmlFor="room-chat">Allow room chat</label>
-          </div>
+          </div> */}
+        </div>
+
+        <div className="w-full">
+          <Button className="w-full bg-app_cta p-5 h-12 font-bold">Save</Button>
         </div>
       </div>
     </>

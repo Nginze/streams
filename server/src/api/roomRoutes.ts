@@ -11,6 +11,8 @@ type RoomInfo = {
   isPrivate: boolean;
   autoSpeaker: boolean;
   chatEnabled: boolean;
+  handRaiseEnabled: boolean;
+  categories: string[];
 };
 
 router.post("/create", async (req: Request, res: Response) => {
@@ -18,7 +20,15 @@ router.post("/create", async (req: Request, res: Response) => {
     ...req.body,
     creatorId: (req.user as UserDTO).userId,
   } as RoomInfo;
-  const { roomDesc, creatorId, isPrivate, autoSpeaker, chatEnabled } = roomInfo;
+  const {
+    roomDesc,
+    creatorId,
+    isPrivate,
+    autoSpeaker,
+    chatEnabled,
+    handRaiseEnabled,
+    categories,
+  } = roomInfo;
 
   if (!roomInfo) {
     return res
@@ -26,14 +36,29 @@ router.post("/create", async (req: Request, res: Response) => {
       .json({ msg: "Bad request, invalide credentials sent" });
   }
 
-  const { rows } = await pool.query(
+  const client = await pool.connect();
+
+  await client.query(`BEGIN`);
+
+  const { rows } = await client.query(
     `
-    INSERT INTO room (room_desc, is_private, auto_speaker, creator_id)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO room (room_desc, is_private, auto_speaker, creator_id, chat_enabled, hand_raise_enabled)
+    VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING room_id;
     `,
-    [roomDesc, isPrivate, autoSpeaker, creatorId]
+    [roomDesc, isPrivate, autoSpeaker, creatorId, chatEnabled, handRaiseEnabled]
   );
+
+  categories.forEach(async category => {
+    await client.query(
+      `
+    INSERT INTO room_category (room_id, category) VALUES ($1, $2) 
+    `,
+      [rows[0].room_id, category]
+    );
+  });
+
+  await client.query("COMMIT");
 
   if (rows.length > 0) {
     res.status(200).json(parseCamel(rows[0]));
@@ -90,6 +115,14 @@ router.get("/:roomId", async (req: Request, res: Response) => {
       ]
     );
 
+    const { rows: categories } = await client.query(
+      `
+      SELECT category FROM room_category 
+      WHERE room_id = $1
+      `,
+      [roomId]
+    );
+
     const { rows: participants } = await client.query(
       `
       SELECT *,
@@ -104,9 +137,11 @@ router.get("/:roomId", async (req: Request, res: Response) => {
     );
 
     await client.query("COMMIT");
-    return res
-      .status(200)
-      .json({ ...parseCamel(room[0]), participants: parseCamel(participants) });
+    return res.status(200).json({
+      ...parseCamel(room[0]),
+      participants: parseCamel(participants),
+      categories,
+    });
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -119,7 +154,8 @@ router.get("/rooms/live", async (req: Request, res: Response) => {
   const { rows: rooms } = await pool.query(
     `
     SELECT *,
-    ARRAY(SELECT user_name FROM user_data WHERE current_room_id = room.room_id) AS participants
+    ARRAY(SELECT user_name FROM user_data WHERE current_room_id = room.room_id) AS participants,
+    ARRAY(SELECT category FROM room_category WHERE room_id = room.room_id) AS categories
     FROM room
     LIMIT 5
     `
@@ -154,9 +190,10 @@ router.get(
 );
 
 router.post("/leave", async (req: Request, res: Response) => {
-  const { userId } = req.user as UserDTO;
+  const { userId } = (req.user as UserDTO) ? (req.user as UserDTO) : req.query;
   const { roomId } = req.query;
 
+  console.log("hit leave end point");
   if (!roomId || !userId) {
     return res
       .status(400)
@@ -194,6 +231,41 @@ router.post("/leave", async (req: Request, res: Response) => {
   } finally {
     client.release();
   }
+});
+
+router.post("/destroy", async (req: Request, res: Response) => {
+  const { roomId } = req.query;
+
+  console.log("hit destroy end point");
+  if (!roomId ) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, invalid credentials sent" });
+  }
+
+  const client = await pool.connect();
+
+  await client.query(`BEGIN`);
+
+  await client.query(
+    `
+    DELETE FROM room_category
+    WHERE room_id = $1
+    `,
+    [roomId]
+  );
+
+  await client.query(
+    `
+    DELETE FROM room
+    WHERE room_id = $1
+    `,
+    [roomId]
+  );
+
+  await client.query(`COMMIT`);
+
+  return res.status(200).json({ msg: "room destroyed" });
 });
 
 router.put(

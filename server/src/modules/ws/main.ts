@@ -7,6 +7,7 @@ import { processMessage } from "./utils/processMessage";
 import { wsAuthMiddleware } from "./middleware/wsAuth";
 import { UserDTO } from "../../types/User";
 import { logger } from "../../config/logger";
+import { apiClient } from "./utils/restClient";
 
 const recvQueue = "sendqueue";
 const sendQueue = "recvqueue";
@@ -48,7 +49,7 @@ export async function main(
     redisClient.sadd("onlineUsers", user.userId);
 
     //Socket Handlers
-    socket.on("disconnecting", () => {
+    socket.on("disconnecting", async () => {
       logger.log({
         level: "critical",
         message: `disconnecting socket is in room, ${
@@ -77,8 +78,15 @@ export async function main(
         return;
       }
 
-      if (clients.size <= 1) {
+      await apiClient.post(
+        `/room/leave?roomId=${roomId}&&userId=${user.userId}`
+      );
+
+      console.log(clients.size);
+
+      if (clients.size < 1) {
         console.log("destroying room", roomId);
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
         channel.sendToQueue(
           sendQueue,
           Buffer.from(
@@ -89,6 +97,8 @@ export async function main(
           )
         );
       }
+
+      socket.leave(roomId);
     });
 
     socket.on("disconnect", () => {
@@ -98,7 +108,7 @@ export async function main(
       });
     });
 
-    socket.on("leave-room", ({ roomId }) => {
+    socket.on("leave-room", async ({ roomId }) => {
       const clients = io.sockets.adapter.rooms.get(roomId);
       const user: UserDTO = (socket.request as any).user;
 
@@ -116,7 +126,11 @@ export async function main(
         return;
       }
 
+      console.log(clients.size)
+
       if (clients.size <= 1) {
+        console.log("destroying room", roomId);
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
         channel.sendToQueue(
           sendQueue,
           Buffer.from(
@@ -127,6 +141,8 @@ export async function main(
           )
         );
       }
+
+      socket.leave(roomId);
     });
 
     socket.on("create-room", async ({ roomId }) => {
@@ -311,6 +327,9 @@ export async function main(
 
       io.to(roomId).emit("toggle-hand-raise-enabled", { roomId });
     });
-  
+
+    socket.on("leave-room-all", async ({ roomId, hostId }) => {
+      io.to(roomId).emit("leave-room-all", { roomId, hostId });
+    });
   });
 }

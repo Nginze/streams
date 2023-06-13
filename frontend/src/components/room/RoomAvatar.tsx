@@ -4,6 +4,8 @@ import { BsMicMute } from "react-icons/bs";
 import { useQueryClient } from "react-query";
 import { userContext } from "../../contexts/UserContext";
 import { useRoomProfileModalStore } from "../../global-stores/useRoomProfileModal";
+import AppDialog from "../global/AppDialog";
+import RoomParticipantProfile from "./RoomParticipantProfile";
 
 type Props = {
   participant: RoomParticipant;
@@ -33,23 +35,33 @@ const RoomAvatar = ({ participant }: Props) => {
     <>
       <div
         // onClick={handleModalOpen}
-        onClick = {openParticipantProfile}
+        onClick={openParticipantProfile}
         style={{ position: "relative" }}
         className="cursor-pointer w-full h-16 flex flex-col items-center mb-6"
       >
-        <img
-          style={{
-            border: `${canShowIndicator ? "3.3px #0084c7 solid" : ""}`,
-            padding: "0.12rem",
-          }}
-          className={`inline-block h-16 w-16 rounded-full cursor-pointer active:opacity-80`}
-          src={participant.avatarUrl}
-          alt=""
-        />
+        <AppDialog
+          content={
+            <RoomParticipantProfile
+              myRoomStatus={myRoomStatus!}
+              participantId={participant.userId}
+              room={{} as Room}
+              toggleDialog={() => {}}
+            />
+          }
+        >
+          <img
+            style={{
+              border: `${canShowIndicator ? "3.3px #0084c7 solid" : ""}`,
+              padding: "0.12rem",
+            }}
+            className={`inline-block h-16 w-16 rounded-full cursor-pointer active:opacity-80`}
+            src={participant.avatarUrl}
+            alt=""
+          />
+        </AppDialog>
         {participant.raisedHand && (
           <div
             style={{
-              backgroundColor: "#ffff",
               borderRadius: "100%",
               padding: "0.4rem",
               position: "absolute",
@@ -58,7 +70,7 @@ const RoomAvatar = ({ participant }: Props) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              right: 20,
+              right: 5,
               top: 2,
             }}
           >
@@ -72,7 +84,7 @@ const RoomAvatar = ({ participant }: Props) => {
               borderRadius: "100%",
               padding: "0.2rem",
               position: "absolute",
-              right: 20,
+              right: 10,
               bottom: 6,
             }}
           >

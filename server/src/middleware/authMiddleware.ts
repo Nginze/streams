@@ -5,7 +5,11 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  if (req.originalUrl.startsWith("/auth")) {
+  if (
+    req.originalUrl.startsWith("/auth") ||
+    req.originalUrl.includes("/room/leave") ||
+    req.originalUrl.includes("/room/destroy")
+  ) {
     next();
   } else if (req.user) {
     next();

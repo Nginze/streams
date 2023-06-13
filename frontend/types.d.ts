@@ -7,6 +7,7 @@ type User = {
   displayName: string;
   currentRoomId: string;
   lastSeen: Date;
+  color?: string;
 };
 
 type RoomParticipant = User & {
@@ -30,6 +31,7 @@ type Room = {
   handRaiseEnabled: boolean;
   createdAt: Date;
   participants: RoomParticipant[];
+  categories: string[];
 };
 
 type RoomStatus = {
@@ -43,6 +45,7 @@ type RoomStatus = {
 };
 
 type ChatMessage = User & {
+  reply?: ChatMessage;
   content: string;
   createdAt: Date;
 };

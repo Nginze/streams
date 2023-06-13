@@ -2,15 +2,25 @@ import { useContext, useEffect } from "react";
 import { useQueryClient } from "react-query";
 import { userContext } from "../contexts/UserContext";
 import { WebSocketContext } from "../contexts/WebsocketContext";
+import { useRouter } from "next/router";
+import { apiClient } from "@/lib/apiclient/client";
+import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
+import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
+import { useVoiceStore } from "@/lib/webrtc/store/useVoiceStore";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export const MainWsHandler = ({ children }: Props) => {
-  const { userLoading } = useContext(userContext);
+  const { userLoading, user } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const { nullify } = useVoiceStore();
+  const { closeAll } = useConsumerStore();
+  const { close } = useProducerStore();
 
   useEffect(() => {
     if (!conn) {
@@ -217,6 +227,32 @@ export const MainWsHandler = ({ children }: Props) => {
       }));
     });
 
+    conn.on("leave-room-all", async ({ roomId, hostId }) => {
+      console.log("forced to leave room");
+
+      await apiClient.post(`/room/leave?roomId=${roomId}`).then(res => {
+        conn?.emit("leave-room", { roomId });
+        nullify();
+        closeAll();
+        close();
+      });
+
+      if (user.userId == hostId) {
+        console.log("you are the host");
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
+        await router.push("/");
+        alert("you ended meeting");
+      } else {
+        await router.push("/");
+        alert("host ended meeting");
+        console.log("host ended meeting");
+      }
+
+      queryClient.removeQueries(["room"]);
+      queryClient.removeQueries(["room-status"]);
+      queryClient.removeQueries(["room-chat"]);
+    });
+
     return () => {
       conn.off("mod-added");
       conn.off("you-are-now-a-mod");
@@ -233,6 +269,7 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("invalidate-participants");
       conn.off("toggle-room-chat");
       conn.off("toggle-hand-raise-enabled");
+      conn.off("leave-room-all");
     };
   }, [conn, userLoading]);
   return <>{children}</>;

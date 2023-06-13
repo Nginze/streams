@@ -145,7 +145,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false)
+      toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_speaker",
@@ -162,7 +162,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false)
+      toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_speaker",
@@ -179,7 +179,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false)
+      toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_mod",
@@ -196,7 +196,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false)
+      toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_mod",
@@ -212,16 +212,16 @@ const RoomParticipantProfile = ({
 
   return myRoomStatus && participant ? (
     <>
-      <div className="mt-4">
+      <div className="mt-5">
         <div>
           <div className="flex items-center space-x-3">
             <img
-              className="inline-block h-12 w-12 rounded-2xl active:opacity-80"
+              className="inline-block h-14 w-14 rounded-2xl active:opacity-80"
               src={participant.avatarUrl}
               alt=""
             />
 
-            {user.userId !== participant.userId &&
+            {/* {user.userId !== participant.userId &&
               (!followMutation.isLoading ? (
                 <button
                   onClick={
@@ -237,52 +237,58 @@ const RoomParticipantProfile = ({
                 </button>
               ) : (
                 <span>...</span>
-              ))}
+              ))} */}
           </div>
-          <div className="flex flex-col items-start space-y-2 mt-2 mb-4 text-sm">
+          <div className="flex flex-col items-start space-y-3 mt-2  text-sm">
             <div className="flex flex-col items-start">
-              <span>{participant.userName}</span>
-              <span>@{participant.userName}</span>
+              {/* <span>{participant.userName}</span> */}
+              <span className="text-md font-semibold text-[16px]">
+                @{participant.userName}
+              </span>
             </div>
-            <div>
-              <span className="mr-3">{participant.followers} Followers</span>
-              <span>{participant.following} Following</span>
+            <div className="w-2/3 flex justify-between">
+              <span className="font-semibold text-[16px]">
+                {participant.followers} followers
+              </span>
+              <span className="font-semibold text-[16px]">
+                {participant.following} following
+              </span>
             </div>
-            <span>{participant.bio}</span>
+            <span className="font-semibold text-[16px]">{participant.bio}</span>
           </div>
         </div>
       </div>
       {(myRoomStatus.isMod || room.creatorId === user.userId) &&
         participant.userId !== user.userId && (
-          <div className="space-y-4 font-normal">
-            <button
-              onClick={
-                participant.isSpeaker ? handleRemoveSpeaker : handleAddSpeaker
-              }
-              className="bg-sky-600 p-3 flex items-center justify-center rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-            >
-              {participant.isSpeaker ? "Move to audience" : "Add as Speaker"}
-            </button>
+          <div className="space-y-2 font-normal">
             <button
               onClick={
                 participant.isMod ? handleDemoteToListener : handlePromoteToMod
               }
-              className="bg-sky-600 p-3 flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
               {participant.isMod ? "Demote to Listener" : "Promote to Mod"}
             </button>
 
             <button
+              onClick={
+                participant.isSpeaker ? handleRemoveSpeaker : handleAddSpeaker
+              }
+              className="bg-app_bg_deep p-4 flex font-semibold items-center justify-center rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+            >
+              {participant.isSpeaker ? "Move to Listener" : "Move to Speaker"}
+            </button>
+            <button
               onClick={handleChatBan}
-              className="bg-sky-600 p-3 flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
               Ban from Chat
             </button>
             <button
               onClick={handleKickFromRoom}
-              className="bg-red-600 p-3 flex items-center justify-center  rounded-md w-full active:bg-red-800 focus:outline-none focus:ring focus:ring-red-300"
+              className="bg-red-500 p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-red-800 focus:outline-none focus:ring focus:ring-red-300"
             >
-              Kick from Room
+              Ban from Room
             </button>
           </div>
         )}

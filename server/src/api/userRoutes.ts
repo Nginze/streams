@@ -23,9 +23,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
   );
 
   res.status(200).json(parseCamel(rows[0]));
-
 });
-
 
 router.post("/follow", async (req: Request, res: Response) => {
   const { userId } = req.user as UserDTO;
@@ -106,11 +104,22 @@ router.get("/following/onlineList", async (req: Request, res: Response) => {
     FROM user_follows f
     INNER JOIN user_data u ON f.is_following = u.user_id
     WHERE f.user_id = $1
-      AND u.user_id = ANY($2)
-      AND u.current_room_id IS NOT NULL
     `,
-    [userId, onlineUserIds]
+    [userId]
   );
 
-  res.status(200).json(parseCamel(rows));
+  const people = rows.map(row => {
+    if (onlineUserIds.includes(row.user_id)) {
+      return {
+        ...row,
+        online: true,
+      };
+    }
+    return {
+      ...row,
+      online: false,
+    };
+  });
+
+  res.status(200).json(parseCamel(people));
 });
