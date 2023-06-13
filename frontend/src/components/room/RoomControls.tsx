@@ -132,7 +132,8 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
           close();
           router.push("/");
         });
-
+        
+        queryClient.invalidateQueries(["user"]);
         queryClient.removeQueries(["room"]);
         queryClient.removeQueries(["room-status"]);
         queryClient.removeQueries(["room-chat"]);
@@ -166,7 +167,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
             <MdOutlineWavingHand size={16} />
           )}
         </Button>
-        <AppDialog content={<RoomShare />}>
+        <AppDialog content={<RoomShare room={room} />}>
           <Button className="bg-app_bg_deeper">
             <UserPlus size={16} />
           </Button>

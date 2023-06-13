@@ -1,5 +1,6 @@
 import Head from "next/head";
 import React from "react";
+import { Toaster } from "react-hot-toast";
 
 type Props = {
   navbar: React.ReactNode;

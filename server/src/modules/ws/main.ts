@@ -74,6 +74,8 @@ export async function main(
         )
       );
 
+      await apiClient.post(`/profile/ping?userId=${user.userId}`);
+
       if (!clients) {
         return;
       }
@@ -126,7 +128,7 @@ export async function main(
         return;
       }
 
-      console.log(clients.size)
+      console.log(clients.size);
 
       if (clients.size <= 1) {
         console.log("destroying room", roomId);
@@ -330,6 +332,14 @@ export async function main(
 
     socket.on("leave-room-all", async ({ roomId, hostId }) => {
       io.to(roomId).emit("leave-room-all", { roomId, hostId });
+    });
+
+    socket.on("room-invite", async ({ room, user, to }) => {
+      const peerId = await redisClient.get(to);
+      io.to(peerId as string).emit("room-invite", {
+        room,
+        user,
+      });
     });
   });
 }
