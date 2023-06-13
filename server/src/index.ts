@@ -1,29 +1,27 @@
-import express, { Request, Response } from "express";
-import { Socket, Server } from "socket.io";
-import { redisClient } from "./config/redis";
-import http from "http";
-import passport from "passport";
-import session, { SessionOptions } from "express-session";
 import Store from "connect-redis";
 import cors, { CorsOptions } from "cors";
-import * as dotenv from "dotenv";
+import "dotenv/config";
+import express from "express";
+import session, { SessionOptions } from "express-session";
+import http from "http";
+import passport from "passport";
+import { Server } from "socket.io";
 import { router as authRoutes } from "./api/authRoutes";
 import { router as roomRoutes } from "./api/roomRoutes";
+import { router as rootRoutes } from "./api/rootRoutes";
 import { router as userRoutes } from "./api/userRoutes";
-import "./config/redis";
-import "./config/psql";
-import "./config/rabbit";
+import { logger } from "./config/logger";
+import { redisClient } from "./config/redis";
+import { authMiddleware } from "./middleware/authMiddleware";
+import { internalErrorMiddleware } from "./middleware/internalError";
 import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
 
-const isTunnel = false;
-const isProduction = process.env.NODE_ENV === "production";
-dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: isProduction ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
+    origin: process.env.CLIENT_URI,
     credentials: true,
   },
 });
@@ -31,7 +29,7 @@ const io = new Server(server, {
 const RedisStore = Store(session);
 
 const corsMiddleware: CorsOptions = {
-  origin: isTunnel ? process.env.TUNNEL_URI : process.env.CLIENT_URI,
+  origin: process.env.CLIENT_URI,
   credentials: true,
 };
 
@@ -41,18 +39,20 @@ const sessionMiddleware: SessionOptions = {
   saveUninitialized: true,
   store: new RedisStore({ client: redisClient }),
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000,
-    // sameSite: "none",
-    // secure: true
+    maxAge: 72 * 60 * 60 * 1000,
   },
 };
-app.set("trust proxy", 1);
+
 app.use(cors(corsMiddleware));
 app.use(session(sessionMiddleware));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(internalErrorMiddleware);
+app.use(authMiddleware);
+
+app.use("/", rootRoutes);
 app.use("/auth", authRoutes);
 app.use("/room", roomRoutes);
 app.use("/profile", userRoutes);
@@ -61,22 +61,14 @@ io.use(wrap(session(sessionMiddleware)));
 io.use(wrap(passport.initialize()));
 io.use(wrap(passport.session()));
 
-app.get("/", (req: Request, res: Response) => {
-  console.log("user: ", req.user);
-  res.send("[Drop]: Get the fuck outta here!");
-});
-
-app.get("/user", (req: Request, res: Response) => {
-  // console.log(req.user)
-  res.status(200).json({ user: req.user });
-});
-
-// app.listen(process.env.PORT, () => {
-//   console.log(`[server]: listening on port ${process.env.PORT}`);
-// });
-
 server.listen(process.env.PORT || 8000, () => {
-  console.log(`[socket && server]: listening on port 8000`);
+  logger.info(`listening on port 8000`);
 });
 
-main(io);
+(async function () {
+  try {
+    await main(io);
+  } catch (err) {
+    logger.log({ level: "error", message: `${err}` });
+  }
+})();

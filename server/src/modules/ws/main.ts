@@ -2,8 +2,12 @@ import { Server, Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { channel } from "../../config/rabbit";
 import { redisClient } from "../../config/redis";
-import { broadcastExcludeSender } from "../../config/utils/broadcastExcludeSender";
-import { processMessage } from "../../config/utils/processMessage";
+import { broadcastExcludeSender } from "./utils/broadcastExcludeSender";
+import { processMessage } from "./utils/processMessage";
+import { wsAuthMiddleware } from "./middleware/wsAuth";
+import { UserDTO } from "../../types/User";
+import { logger } from "../../config/logger";
+import { apiClient } from "./utils/restClient";
 
 const recvQueue = "sendqueue";
 const sendQueue = "recvqueue";
@@ -11,42 +15,61 @@ const sendQueue = "recvqueue";
 export async function main(
   io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
 ) {
+  io.use(wsAuthMiddleware);
+
   io.on("connection", async (socket: Socket) => {
-    channel.consume(
-      recvQueue,
-      async msg => {
-        if (!msg) {
-          console.log("no message returned from queue");
-          return;
-        }
-        const event = JSON.parse(msg.content.toString());
-        processMessage(event, event.peerId, io);
-      },
-      { noAck: false }
-    );
-    console.log(`[socket.io]: peer (${socket.id}) connected to socket server`);
-    const user = (socket.request as any).user;
+    const user: UserDTO = (socket.request as any).user;
 
-    redisClient.set(user?.userId, socket.id);
-    redisClient.sadd("onlineUsers", user?.userid);
+    logger.log({
+      level: "critical",
+      message: `peer (${socket.id}) connected to socket server`,
+    });
 
-    socket.on("disconnecting", () => {
-      console.log(
-        "[socket.io]: disconnecting socket is in room,",
-        Array.from(socket.rooms)[1]
+    try {
+      await channel.consume(
+        recvQueue,
+        async msg => {
+          if (!msg) {
+            logger.log({
+              level: "critical",
+              message: `peer (${socket.id}) connected to socket server`,
+            });
+            return;
+          }
+          const e = JSON.parse(msg.content.toString());
+          processMessage(e, e.peerId, io);
+        },
+        { noAck: true }
       );
+    } catch (err) {
+      throw err;
+    }
+
+    redisClient.set(user.userId, socket.id);
+    redisClient.sadd("onlineUsers", user.userId);
+
+    //Socket Handlers
+    socket.on("disconnecting", async () => {
+      logger.log({
+        level: "critical",
+        message: `disconnecting socket is in room, ${
+          Array.from(socket.rooms)[1]
+        }`,
+      });
+
       const roomId = Array.from(socket.rooms)[1];
-      const user = (socket.request as any).user;
+      const user: UserDTO = (socket.request as any).user;
       const clients = io.sockets.adapter.rooms.get(roomId);
 
-      redisClient.srem("onlineUsers", user.userid);
-      
+      redisClient.srem("onlineUsers", user.userId);
+      redisClient.del(user.userId);
+
       channel.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "close-peer",
-            d: { peerId: socket.id, roomId, userId: user?.userid },
+            d: { peerId: socket.id, roomId, userId: user.userId },
           })
         )
       );
@@ -54,8 +77,16 @@ export async function main(
       if (!clients) {
         return;
       }
-      if (clients.size <= 1) {
+
+      await apiClient.post(
+        `/room/leave?roomId=${roomId}&&userId=${user.userId}`
+      );
+
+      console.log(clients.size);
+
+      if (clients.size < 1) {
         console.log("destroying room", roomId);
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
         channel.sendToQueue(
           sendQueue,
           Buffer.from(
@@ -66,24 +97,27 @@ export async function main(
           )
         );
       }
-      redisClient.del(user.userid);
+
+      socket.leave(roomId);
     });
 
     socket.on("disconnect", () => {
-      console.log("[socket.io]: peer disconnected: ", socket.id);
+      logger.log({
+        level: "critical",
+        message: `peer disconnected, (${socket.id}) `,
+      });
     });
 
-    socket.on("leave-room", ({ roomId }) => {
-      console.log("attempting to leave room");
+    socket.on("leave-room", async ({ roomId }) => {
       const clients = io.sockets.adapter.rooms.get(roomId);
-      const user = (socket.request as any).user;
+      const user: UserDTO = (socket.request as any).user;
 
       channel.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "close-peer",
-            d: { peerId: socket.id, roomId, userId: user?.userid },
+            d: { peerId: socket.id, roomId, userId: user.userId },
           })
         )
       );
@@ -91,8 +125,12 @@ export async function main(
       if (!clients) {
         return;
       }
+
+      console.log(clients.size)
+
       if (clients.size <= 1) {
         console.log("destroying room", roomId);
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
         channel.sendToQueue(
           sendQueue,
           Buffer.from(
@@ -103,11 +141,11 @@ export async function main(
           )
         );
       }
+
+      socket.leave(roomId);
     });
 
     socket.on("create-room", async ({ roomId }) => {
-      console.log("new room id is:", roomId);
-      const user = (socket.request as any).user;
       channel.sendToQueue(
         sendQueue,
         Buffer.from(
@@ -154,89 +192,76 @@ export async function main(
     );
 
     socket.on("connect-transport", async (d, cb) => {
-      const user = (socket.request as any).user;
-      if (user) {
-        const { userid } = user;
-        channel?.sendToQueue(
-          sendQueue,
-          Buffer.from(
-            JSON.stringify({
-              op: "connect-transport",
-              d: { ...d, peerId: socket.id },
-            })
-          )
-        );
-      }
+      const user: UserDTO = (socket.request as any).user;
+      channel?.sendToQueue(
+        sendQueue,
+        Buffer.from(
+          JSON.stringify({
+            op: "connect-transport",
+            d: { ...d, peerId: socket.id },
+          })
+        )
+      );
       cb();
     });
 
     socket.on("send-track", async (d, cb) => {
-      const user = (socket.request as any).user;
-      if (user) {
-        const { userid } = user;
-        channel?.sendToQueue(
-          sendQueue,
-          Buffer.from(
-            JSON.stringify({ op: "send-track", d: { ...d, peerId: socket.id } })
-          )
-        );
-      }
+      const user: UserDTO = (socket.request as any).user;
+      channel?.sendToQueue(
+        sendQueue,
+        Buffer.from(
+          JSON.stringify({ op: "send-track", d: { ...d, peerId: socket.id } })
+        )
+      );
     });
 
-    socket.on(
-      "get-recv-tracks",
-      async ({ roomId, peerId, rtpCapabilities }) => {
-        const user = (socket.request as any).user;
-        console.log("getting audio tracks of room members");
-        if (user) {
-          const { userid } = user;
-          channel?.sendToQueue(
-            sendQueue,
-            Buffer.from(
-              JSON.stringify({
-                op: "get-recv-tracks",
-                d: { roomId, peerId: socket.id, rtpCapabilities },
-              })
-            )
-          );
-        }
-      }
-    );
+    socket.on("get-recv-tracks", async ({ roomId, rtpCapabilities }) => {
+      const user: UserDTO = (socket.request as any).user;
+      console.log("getting audio tracks of room members");
+      const { userId } = user;
+      channel?.sendToQueue(
+        sendQueue,
+        Buffer.from(
+          JSON.stringify({
+            op: "get-recv-tracks",
+            d: { roomId, peerId: socket.id, rtpCapabilities },
+          })
+        )
+      );
+    });
 
     socket.on("add-speaker", async ({ roomId, userId }) => {
-      const peerSocketId = await redisClient.get(userId);
-      console.log("attempting to add speaker , userid: ", peerSocketId);
+      const peerId = await redisClient.get(userId);
+      console.log("attempting to add speaker , peerId: ", peerId);
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "add-speaker",
-            d: { roomId, peerId: peerSocketId },
+            d: { roomId, peerId },
           })
         )
       );
       io.to(roomId).emit("speaker-added", { roomId, userId });
-      io.to(peerSocketId as string).emit("add-speaker-permissions", {
+      io.to(peerId as string).emit("add-speaker-permissions", {
         roomId,
         userId,
       });
     });
 
     socket.on("remove-speaker", async ({ roomId, userId }) => {
-      console.log(userId);
-      const peerSocketId = await redisClient.get(userId);
-      console.log(peerSocketId);
+      const peerId = await redisClient.get(userId);
       channel?.sendToQueue(
         sendQueue,
         Buffer.from(
           JSON.stringify({
             op: "remove-speaker",
-            d: { roomId, peerId: peerSocketId },
+            d: { roomId, peerId },
           })
         )
       );
       io.to(roomId).emit("speaker-removed", { roomId, userId });
-      io.to(peerSocketId as string).emit("remove-speaker-permissions", {
+      io.to(peerId as string).emit("remove-speaker-permissions", {
         roomId,
         userId,
       });
@@ -270,6 +295,10 @@ export async function main(
       io.to(roomId).emit("new-chat-message", { roomId, message });
     });
 
+    socket.on("invalidate-participants", ({ roomId }) => {
+      io.to(roomId).emit("invalidate-participants", { roomId });
+    });
+
     socket.on("mod-added", async ({ userId, roomId }) => {
       const peerId = await redisClient.get(userId);
       console.log("new mod is, ", peerId);
@@ -286,6 +315,21 @@ export async function main(
       io.to(peerId as string).emit("you-are-no-longer-a-mod", {
         roomId,
       });
+    });
+
+    socket.on("toggle-room-chat", async ({ roomId }) => {
+      console.log("toggled chat");
+      io.to(roomId).emit("toggle-room-chat", { roomId });
+    });
+
+    socket.on("toggle-hand-raise-enabled", async ({ roomId }) => {
+      console.log("toggled hand raise", roomId);
+
+      io.to(roomId).emit("toggle-hand-raise-enabled", { roomId });
+    });
+
+    socket.on("leave-room-all", async ({ roomId, hostId }) => {
+      io.to(roomId).emit("leave-room-all", { roomId, hostId });
     });
   });
 }

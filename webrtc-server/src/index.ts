@@ -1,3 +1,13 @@
-import { main } from "./main";
+import { logger } from "./config/logger";
+import { main } from "./modules/main";
 
-main()
+(async function () {
+  try {
+    await main();
+  } catch (err) {
+    logger.log({
+      level: "error",
+      message: `${err}`,
+    });
+  }
+})();

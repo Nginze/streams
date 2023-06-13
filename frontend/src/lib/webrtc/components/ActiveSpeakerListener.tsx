@@ -1,16 +1,16 @@
 import hark from "hark";
-import { userAgent } from "next/server";
 import { useContext, useEffect } from "react";
 import { userContext } from "../../../contexts/UserContext";
 import { WebSocketContext } from "../../../contexts/WebsocketContext";
 import { useVoiceStore } from "../store/useVoiceStore";
 
-interface IProps {}
+interface Props {}
 
-export const ActiveSpeakerListener: React.FC<IProps> = ({}) => {
+export const ActiveSpeakerListener: React.FC<Props> = ({}) => {
   const { conn } = useContext(WebSocketContext);
-  const { micStream, roomId} = useVoiceStore();
-  const { data: user, isLoading: userLoading } = useContext(userContext);
+  const { micStream, roomId } = useVoiceStore();
+  const { user, userLoading } = useContext(userContext);
+
   useEffect(() => {
     if (!micStream || !conn || userLoading) {
       return;
@@ -19,11 +19,11 @@ export const ActiveSpeakerListener: React.FC<IProps> = ({}) => {
     const harker = hark(micStream);
 
     harker.on("speaking", () => {
-      console.log('speaking')
-      conn.emit("user-started-speaking", { userId: user.userid, roomId });
+      conn.emit("user-started-speaking", { userId: user.userId, roomId });
     });
+
     harker.on("stopped_speaking", () => {
-      conn.emit("user-stopped-speaking", { userId: user.userid, roomId });
+      conn.emit("user-stopped-speaking", { userId: user.userId, roomId });
     });
 
     return () => {

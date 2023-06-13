@@ -2,15 +2,25 @@ import { useContext, useEffect } from "react";
 import { useQueryClient } from "react-query";
 import { userContext } from "../contexts/UserContext";
 import { WebSocketContext } from "../contexts/WebsocketContext";
+import { useRouter } from "next/router";
+import { apiClient } from "@/lib/apiclient/client";
+import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
+import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
+import { useVoiceStore } from "@/lib/webrtc/store/useVoiceStore";
 
 type Props = {
   children: React.ReactNode;
 };
 
 export const MainWsHandler = ({ children }: Props) => {
-  const { data: user, isLoading } = useContext(userContext);
+  const { userLoading, user } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  const { nullify } = useVoiceStore();
+  const { closeAll } = useConsumerStore();
+  const { close } = useProducerStore();
 
   useEffect(() => {
     if (!conn) {
@@ -21,26 +31,26 @@ export const MainWsHandler = ({ children }: Props) => {
       if (status == "speaking") {
         queryClient.setQueryData(["room", roomId], (data: any) => ({
           ...data,
-          participants: data.participants.map((u: any) =>
-            u.userid === userId
+          participants: data.participants.map((p: RoomParticipant) =>
+            p.userId === userId
               ? {
-                  ...u,
-                  active:
-                    u.isspeaker || data.creatorid === userId ? true : false,
+                  ...p,
+                  indicatorOn:
+                    p.isSpeaker || data.creatorId === userId ? true : false,
                 }
-              : u
+              : p
           ),
         }));
       } else {
         queryClient.setQueryData(["room", roomId], (data: any) => ({
           ...data,
-          participants: data.participants.map((u: any) =>
-            u.userid === userId
+          participants: data.participants.map((p: RoomParticipant) =>
+            p.userId === userId
               ? {
-                  ...u,
-                  active: false,
+                  ...p,
+                  indicatorOn: false,
                 }
-              : u
+              : p
           ),
         }));
       }
@@ -50,14 +60,14 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("speaker-removed", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                isspeaker: false,
-                askedtospeak: false,
+                ...p,
+                isSpeaker: false,
+                raisedHand: false,
               }
-            : u
+            : p
         ),
       }));
     });
@@ -65,32 +75,32 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("new-speaker-added", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                askedtospeak: false,
-                isspeaker: true,
+                ...p,
+                raisedHand: false,
+                isSpeaker: true,
               }
-            : u
+            : p
         ),
       }));
     });
 
-    conn.on("add-speaker-permissions", ({ userId, roomId }) => {
+    conn.on("add-speaker-permissions", ({ roomId }) => {
       console.log("i just received a request to add speaker permissions");
-      queryClient.setQueriesData(["room-permissions", roomId], (data: any) => ({
+      queryClient.setQueriesData(["room-status", roomId], (data: any) => ({
         ...data,
-        isspeaker: true,
-        askedtospeak: false,
+        isSpeaker: true,
+        raisedHand: false,
       }));
     });
 
-    conn.on("remove-speaker-permissions", ({ userId, roomId }) => {
+    conn.on("remove-speaker-permissions", ({ roomId }) => {
       console.log("i just received a request to remove speaker permissions");
-      queryClient.setQueriesData(["room-permissions", roomId], (data: any) => ({
+      queryClient.setQueriesData(["room-status", roomId], (data: any) => ({
         ...data,
-        isspeaker: false,
+        isSpeaker: false,
       }));
     });
 
@@ -98,14 +108,17 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("user-left-room received", userId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.filter((u: any) => u.userid !== userId),
+        participants: data.participants.filter(
+          (p: RoomParticipant) => p.userId !== userId
+        ),
       }));
     });
+
     conn.on("new-user-joined-room", ({ user, roomId }) => {
       console.log("new user joined fired");
       queryClient.setQueryData(["room", roomId], (data: any) => {
         const exists = data.participants.some(
-          (u: any) => u.userid === user.userid
+          (p: RoomParticipant) => p.userId === user.userId
         );
         if (!exists) {
           return {
@@ -117,32 +130,34 @@ export const MainWsHandler = ({ children }: Props) => {
         }
       });
     });
+
     conn.on("hand-raised", ({ userId, roomId }) => {
       console.log("You raised your hand");
 
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                askedtospeak: !u.askedtospeak,
+                ...p,
+                raisedHand: !p.raisedHand,
               }
-            : u
+            : p
         ),
       }));
     });
+
     conn.on("mute-changed", ({ userId, roomId }) => {
       console.log("User muted mic");
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                muted: !u.muted,
+                ...p,
+                isMuted: !p.isMuted,
               }
-            : u
+            : p
         ),
       }));
     });
@@ -151,13 +166,13 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("user promoted to mod");
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                ismod: true,
+                ...p,
+                isMod: true,
               }
-            : u
+            : p
         ),
       }));
     });
@@ -166,13 +181,13 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("user demoted from mod");
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
-        participants: data.participants.map((u: any) =>
-          u.userid === userId
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
             ? {
-                ...u,
-                ismod: false,
+                ...p,
+                isMod: false,
               }
-            : u
+            : p
         ),
       }));
     });
@@ -181,15 +196,61 @@ export const MainWsHandler = ({ children }: Props) => {
       console.log("i am now a mod");
       queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
         ...data,
-        ismod: true,
+        isMod: true,
       }));
     });
 
     conn.on("you-are-no-longer-a-mod", ({ roomId }) => {
       queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
         ...data,
-        ismod: false,
+        isMod: false,
       }));
+    });
+
+    conn.on("invalidate-participants", ({ roomId }) => {
+      queryClient.refetchQueries(["room", roomId]);
+    });
+
+    conn.on("toggle-room-chat", ({ roomId }) => {
+      console.log("chat is about to be toggled");
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        chatEnabled: !data.chatEnabled,
+      }));
+    });
+
+    conn.on("toggle-hand-raise-enabled", ({ roomId }) => {
+      console.log("handraise is about to be toggled");
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        handRaiseEnabled: !data.handRaiseEnabled,
+      }));
+    });
+
+    conn.on("leave-room-all", async ({ roomId, hostId }) => {
+      console.log("forced to leave room");
+
+      await apiClient.post(`/room/leave?roomId=${roomId}`).then(res => {
+        conn?.emit("leave-room", { roomId });
+        nullify();
+        closeAll();
+        close();
+      });
+
+      if (user.userId == hostId) {
+        console.log("you are the host");
+        await apiClient.post(`/room/destroy?roomId=${roomId}`);
+        await router.push("/");
+        alert("you ended meeting");
+      } else {
+        await router.push("/");
+        alert("host ended meeting");
+        console.log("host ended meeting");
+      }
+
+      queryClient.removeQueries(["room"]);
+      queryClient.removeQueries(["room-status"]);
+      queryClient.removeQueries(["room-chat"]);
     });
 
     return () => {
@@ -205,7 +266,11 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("mute-changed");
       conn.off("add-speaker-permissions");
       conn.off("remove-speaker-permissions");
+      conn.off("invalidate-participants");
+      conn.off("toggle-room-chat");
+      conn.off("toggle-hand-raise-enabled");
+      conn.off("leave-room-all");
     };
-  }, [conn, isLoading]);
+  }, [conn, userLoading]);
   return <>{children}</>;
 };

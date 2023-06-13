@@ -1,15 +1,15 @@
 import Redis from "ioredis";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
+import { logger } from "./logger";
 
 const redisClient = new Redis(process.env.REDIS_URI as string);
 
 redisClient.on("error", err => {
-  console.log(err);
+  logger.log({ level: "error", message: `${err}` });
 });
 
 redisClient.on("ready", () => {
-    console.log("[redis]: connected to redis instance")
-})
+  logger.log({ level: "info", message: "connected to redis instance" });
+});
 
 export { redisClient };

@@ -1,22 +1,11 @@
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
-interface User {
-  userid: string;
-  avatarurl: string;
-  bio: string;
-  username: string;
-  followers: number;
-  following: number;
-  isspeaker: boolean;
-  ismod: boolean;
-  hasfollowed: boolean
-}
 export const useRoomProfileModalStore = create(
   combine(
     {
       showOptions: false,
-      modalProfile: {} as User,
+      modalProfile: {} as RoomParticipant,
     },
     set => ({
       setOptions: (val: boolean) => {
@@ -26,10 +15,10 @@ export const useRoomProfileModalStore = create(
           };
         });
       },
-      setModalUser: (currUser: User) => {
+      setModalUser: (participant: RoomParticipant) => {
         set(s => {
           return {
-            modalProfile: currUser,
+            modalProfile: participant,
           };
         });
       },

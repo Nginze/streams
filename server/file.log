@@ -1,0 +1,73 @@
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{ level: 'info', message: '[server]: connecting to, ' }
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  level: 'critical',
+  message: 'connecting to, process.env.RABBITMQ_URL || "amqp://localhost'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  level: 'critical',
+  message: 'connecting to, process.env.RABBITMQ_URL || amqp://localhost'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  level: 'critical',
+  message: 'connecting to, amqps://phrwfxre:JbjGXInw5drgBZX91VKpf1hJnXfC4pR6@kangaroo.rmq.cloudamqp.com/phrwfxre'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  level: 'info',
+  message: 'connecting to, amqps://phrwfxre:JbjGXInw5drgBZX91VKpf1hJnXfC4pR6@kangaroo.rmq.cloudamqp.com/phrwfxre'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  level: 'error',
+  message: 'connecting to, amqps://phrwfxre:JbjGXInw5drgBZX91VKpf1hJnXfC4pR6@kangaroo.rmq.cloudamqp.com/phrwfxre'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
+{
+  message: '[socket && server]: listening on port 8000',
+  level: 'info'
+}
