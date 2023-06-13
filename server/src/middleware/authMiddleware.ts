@@ -8,7 +8,8 @@ export const authMiddleware = (
   if (
     req.originalUrl.startsWith("/auth") ||
     req.originalUrl.includes("/room/leave") ||
-    req.originalUrl.includes("/room/destroy")
+    req.originalUrl.includes("/room/destroy") ||
+    req.originalUrl.includes("/ping")
   ) {
     next();
   } else if (req.user) {

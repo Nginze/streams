@@ -100,13 +100,16 @@ router.get("/following/onlineList", async (req: Request, res: Response) => {
 
   const { rows } = await pool.query(
     `
-    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id
+    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id, TO_CHAR(u.last_seen, 'YYYY-MM-DD HH:MI:SS') as last_seen, r.room_desc
     FROM user_follows f
     INNER JOIN user_data u ON f.is_following = u.user_id
+    LEFT JOIN room r on r.room_id = u.current_room_id
     WHERE f.user_id = $1
     `,
     [userId]
   );
+
+  // console.log(rows);
 
   const people = rows.map(row => {
     if (onlineUserIds.includes(row.user_id)) {
@@ -122,4 +125,16 @@ router.get("/following/onlineList", async (req: Request, res: Response) => {
   });
 
   res.status(200).json(parseCamel(people));
+});
+
+router.post("/ping", async (req: Request, res: Response) => {
+  const { userId } = req.query;
+  await pool.query(
+    `
+      UPDATE user_data
+      SET last_seen = NOW()
+      WHERE user_id = $1;
+      `,
+    [userId]
+  );
 });

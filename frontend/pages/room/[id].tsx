@@ -142,6 +142,9 @@ const room = () => {
   //     window.removeEventListener("beforeunload", cleanupConn);
   //   };
   // }, [roomId]);
+  useEffect(() => {
+    queryClient.invalidateQueries(["user"]);
+  }, [roomId]);
 
   useEffect(() => {
     if (!roomId || !conn || userLoading || roomLoading) {

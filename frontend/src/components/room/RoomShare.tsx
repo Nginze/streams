@@ -1,18 +1,23 @@
 import { Copy, LucideUserPlus, UserPlus } from "lucide-react";
-import React from "react";
+import React, { useContext } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { apiClient } from "@/lib/apiclient/client";
 import { useQuery } from "react-query";
 import PeopleList from "../global/PeopleList";
 import { Button } from "../ui/button";
 import { TbUserPlus } from "react-icons/tb";
+import { WebSocketContext } from "@/contexts/WebsocketContext";
+import { userContext } from "@/contexts/UserContext";
 
 type Person = User & { online: boolean };
 type ShareListItemProps = {
   person: Person;
+  room: Room;
 };
 
-const ShareListItem = ({ person }: ShareListItemProps) => {
+const ShareListItem = ({ person, room }: ShareListItemProps) => {
+  const { conn } = useContext(WebSocketContext);
+  const { user } = useContext(userContext);
   return (
     <div className="flex items-center justify-between space-x-4 cursor-pointer">
       <div className="flex items-center space-x-4">
@@ -26,13 +31,17 @@ const ShareListItem = ({ person }: ShareListItemProps) => {
           <span className="text-lg font-semibold leading-tight">
             {person?.userName}
           </span>
-          <span className="text-sm hover:underline leading-tight">
-            hangin out in whats...
-          </span>
+          <span className="text-sm leading-tight">online</span>
         </div>
       </div>
       <div>
-        <Button className="bg-app_cta p-4 h-10">
+        <Button
+          onClick={() => {
+            console.log("inviting...")
+            conn?.emit("room-invite", { room, user, to: person.userId });
+          }}
+          className="bg-app_cta p-4 h-10"
+        >
           <LucideUserPlus size={18} />
         </Button>
       </div>
@@ -52,7 +61,11 @@ const ShareListItemSkeleton = () => {
   );
 };
 
-const RoomShare = () => {
+type RoomShareProps = {
+  room: Room;
+};
+
+const RoomShare = ({ room }: RoomShareProps) => {
   const { isLoading: peopleLoading, data: people } = useQuery({
     queryKey: ["people"],
     queryFn: async () => {
@@ -83,7 +96,9 @@ const RoomShare = () => {
             ))}
           </div>
         ) : (
-          people.map((person: Person) => <ShareListItem person={person} />)
+          people.map((person: Person) => (
+            <ShareListItem room={room} person={person} />
+          ))
         )}
       </div>
     </div>

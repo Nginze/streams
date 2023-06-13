@@ -208,9 +208,8 @@ router.post("/leave", async (req: Request, res: Response) => {
     await client.query(
       `
       UPDATE user_data
-      SET current_room_id = $1
+      SET current_room_id = $1,last_seen = NOW()
       WHERE user_id = $2;
-
       `,
       [null, userId]
     );
@@ -237,7 +236,7 @@ router.post("/destroy", async (req: Request, res: Response) => {
   const { roomId } = req.query;
 
   console.log("hit destroy end point");
-  if (!roomId ) {
+  if (!roomId) {
     return res
       .status(400)
       .json({ msg: "Bad request, invalid credentials sent" });
@@ -252,6 +251,14 @@ router.post("/destroy", async (req: Request, res: Response) => {
     DELETE FROM room_category
     WHERE room_id = $1
     `,
+    [roomId]
+  );
+
+  await client.query(
+    `
+      DELETE FROM room_status
+      WHERE room_id = $1;
+      `,
     [roomId]
   );
 

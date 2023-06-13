@@ -7,6 +7,11 @@ import { apiClient } from "@/lib/apiclient/client";
 import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
 import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
 import { useVoiceStore } from "@/lib/webrtc/store/useVoiceStore";
+import { useRoomInviteModal } from "@/global-stores/useRoomInviteModal";
+import { useToast } from "@/components/ui/use-toast";
+import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/button";
+import { useSoundEffectStore } from "@/global-stores/useSoundEffectStore";
 
 type Props = {
   children: React.ReactNode;
@@ -21,6 +26,9 @@ export const MainWsHandler = ({ children }: Props) => {
   const { nullify } = useVoiceStore();
   const { closeAll } = useConsumerStore();
   const { close } = useProducerStore();
+  const { setModalRoom, setModalUser, showInvite } = useRoomInviteModal();
+
+  const playSoundEffect = useSoundEffectStore(x => x.playSoundEffect);
 
   useEffect(() => {
     if (!conn) {
@@ -106,6 +114,7 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("user-left-room", ({ userId, roomId }) => {
       console.log("user-left-room received", userId);
+      queryClient.invalidateQueries(["people"]);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.filter(
@@ -116,6 +125,7 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("new-user-joined-room", ({ user, roomId }) => {
       console.log("new user joined fired");
+      queryClient.invalidateQueries(["people"]);
       queryClient.setQueryData(["room", roomId], (data: any) => {
         const exists = data.participants.some(
           (p: RoomParticipant) => p.userId === user.userId
@@ -248,9 +258,58 @@ export const MainWsHandler = ({ children }: Props) => {
         console.log("host ended meeting");
       }
 
+      queryClient.invalidateQueries(["user"]);
       queryClient.removeQueries(["room"]);
       queryClient.removeQueries(["room-status"]);
       queryClient.removeQueries(["room-chat"]);
+    });
+
+    conn.on("room-invite", ({ room, user }) => {
+      console.log("i was invited to a room");
+      playSoundEffect("roomInvite");
+      toast.custom(t => (
+        <div
+          className={`${
+            t.visible ? "animate-enter" : "animate-leave"
+          } max-w-md w-full bg-app_bg_deeper shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+        >
+          <div className="flex-1 w-full p-4 flex justify-between items-center">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 pt-0.5">
+                <img
+                  className="h-10 w-10 rounded-full"
+                  src={user.avatarUrl}
+                  alt=""
+                />
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-white">
+                  {user.userName}
+                </p>
+                <p className="mt-1 text-sm text-white w-52 truncate">
+                  Come hangout with me in {room.roomDesc}
+                </p>
+              </div>
+            </div>
+            <div>
+              <Button
+                onClick={() => router.push(`/room/${room.roomId}`)}
+                className="bg-green-400"
+              >
+                Accept
+              </Button>
+            </div>
+          </div>
+          <div className="flex border-l border-app_bg_light">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-app_cta hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              Ignore
+            </button>
+          </div>
+        </div>
+      ));
     });
 
     return () => {
@@ -270,6 +329,7 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("toggle-room-chat");
       conn.off("toggle-hand-raise-enabled");
       conn.off("leave-room-all");
+      conn.off("room-invite");
     };
   }, [conn, userLoading]);
   return <>{children}</>;

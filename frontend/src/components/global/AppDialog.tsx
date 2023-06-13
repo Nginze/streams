@@ -6,7 +6,7 @@ type Props = {
   content: React.ReactNode;
 };
 
-const AppDialog = ({ children, content }: Props) => {
+const AppDialog = ({ children, content}: Props) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
