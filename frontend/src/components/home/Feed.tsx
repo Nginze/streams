@@ -9,13 +9,17 @@ import { useQuery } from "react-query";
 import { apiClient } from "@/lib/apiclient/client";
 import { useRouter } from "next/router";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
+import { Socket } from "socket.io-client";
 
 type FeedCardProps = {
   room: Room;
 };
 
-const Feed = () => {
-  const { conn } = useContext(WebSocketContext);
+type FeedProps = {
+  conn: Socket;
+};
+
+const Feed = ({ conn }: FeedProps) => {
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery({
     queryKey: ["live-rooms"],
     queryFn: async () => {
@@ -80,8 +84,8 @@ const FeedCard = ({ room }: FeedCardProps) => {
       </div>
       <div>{formatParticipantList(room.participants as any)}</div>
       <div className="w-full flex items-center space-x-3">
-        {room.categories.map(category => (
-          <Chip content={category} />
+        {room.categories.map((category, index) => (
+          <Chip key={index} content={category} />
         ))}
       </div>
     </div>

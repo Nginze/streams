@@ -39,12 +39,12 @@ const CreateRoom = ({ conn }: Props) => {
 
     onSuccess: async (data: { roomId: string }, variables) => {
       console.log(conn, data);
-      if (data && conn) {
-        console.log("sending room data to voice server", data.roomId);
-        conn.emit("create-room", { roomId: data.roomId });
-      } else {
-        alert("something went wront during creation try again");
-      }
+      // if (data && conn) {
+      console.log("sending room data to voice server", data.roomId);
+      conn.emit("create-room", { roomId: data.roomId });
+      // } else {
+      //   alert("something went wront during creation try again");
+      // }
     },
 
     onError: () => {
@@ -153,7 +153,7 @@ const CreateRoom = ({ conn }: Props) => {
 
       <div className="w-full">
         <Button
-          onClick={() =>
+          onClick={() => {
             createRoomMutation.mutate({
               roomDesc: roomdesc,
               creatorId: user.userId,
@@ -162,8 +162,8 @@ const CreateRoom = ({ conn }: Props) => {
               handRaiseEnabled: enableHandRaise,
               chatEnabled: enableRoomChat,
               categories: selectedToggles,
-            })
-          }
+            });
+          }}
           className="w-full bg-app_cta p-5 h-12 font-bold"
         >
           Create Room

@@ -84,6 +84,16 @@ const room = () => {
     room as Room
   );
 
+  useEffect(() => {
+    const cleanup = async () => {
+      await apiClient.post("/profile/ping?userId=" + user.userId);
+    };
+    window.addEventListener("beforeunload", cleanup);
+    return () => {
+      window.removeEventListener("beforeunload", cleanup);
+    };
+  }, []);
+
   // useEffect(() => {
   //   const cleanupConn = async (e: Event) => {
   //     e.preventDefault();

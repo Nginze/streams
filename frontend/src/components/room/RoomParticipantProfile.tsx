@@ -31,6 +31,10 @@ const RoomParticipantProfile = ({
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
 
+  const parseCamel = (snake: string) => {
+    return snake.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
+  };
+
   const followMutation = useMutation({
     mutationFn: async (params: {
       isAFollow: boolean;
@@ -97,16 +101,30 @@ const RoomParticipantProfile = ({
       ]);
 
       if (variables.userId === user.userId) {
+        console.log("our own state updating room-status")
+        console.log(variables.state, variables.value);
         queryClient.setQueryData(["room-status", room.roomId], (data: any) => ({
           ...data,
-          [variables.state]: variables.value,
+          [parseCamel(variables.state)]: variables.value,
         }));
+      } else {
+        console.log("not ours so updating room partiicpant");
+        console.log(variables.state, variables.value);
+        queryClient.setQueryData(
+          ["room-participant", participantId],
+          (data: any) => ({
+            ...data,
+            [parseCamel(variables.state)]: variables.value,
+          })
+        );
       }
 
       return { previousRoomStatus };
     },
 
-    onSuccess: () => {},
+    onSuccess: () => {
+      // queryClient.invalidateQueries(["room-participant", participantId]);
+    },
 
     onError: (error, variables, context) => {
       if (variables.userId === user.userId) {
@@ -145,7 +163,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false);
+      // toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_speaker",
@@ -162,7 +180,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false);
+      // toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_speaker",
@@ -179,7 +197,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false);
+      // toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_mod",
@@ -196,7 +214,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
       });
 
-      toggleDialog(false);
+      // toggleDialog(false);
 
       statusMutation.mutate({
         state: "is_mod",
@@ -267,7 +285,7 @@ const RoomParticipantProfile = ({
               }
               className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
-              {participant.isMod ? "Demote to Listener" : "Promote to Mod"}
+              {participant.isMod ? "Demote from Mod" : "Promote to Mod"}
             </button>
 
             <button

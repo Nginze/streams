@@ -128,7 +128,7 @@ const home: React.FC<IProps> = () => {
       <AppLayout
         navbar={<Navbar />}
         column1={<PeopleList />}
-        column2={<Feed />}
+        column2={<Feed conn={conn!} />}
       />
     </>
     // <>

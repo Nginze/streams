@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useRef } from "react";
+import React, { createContext, useEffect, useRef, useState } from "react";
 import { ManagerOptions, Socket, SocketOptions, io } from "socket.io-client";
 
 type Props = {
@@ -13,24 +13,32 @@ export const WebSocketContext = createContext<WsContext>({} as WsContext);
 
 export const WebSocketProvider = ({ children }: Props) => {
   const opts = {
-    transports: ['polling'],
+    transports: ["polling"],
     reconnectionAttempts: 5,
     withCredentials: true,
   } as Partial<ManagerOptions & SocketOptions>;
 
-  const conn = useRef<Socket | null>(null);
+  // const conn = useRef<Socket | null>(null);
+  const [conn, setConn] = useState<Socket | null>(null);
 
   useEffect(() => {
     const ws = io("http://localhost:8000", opts);
-    conn.current = ws;
+    setConn(ws);
+    // conn.current = ws;
 
     return () => {
       ws.disconnect();
     };
   }, []);
 
+  console.log(conn);
+
+  if (!conn) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <WebSocketContext.Provider value={{ conn: conn.current }}>
+    <WebSocketContext.Provider value={{ conn: conn }}>
       {children}
     </WebSocketContext.Provider>
   );

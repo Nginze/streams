@@ -1,11 +1,12 @@
 import { useRouter } from "next/router";
 import { useContext } from "react";
 import { BsMicMute } from "react-icons/bs";
-import { useQueryClient } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../contexts/UserContext";
 import { useRoomProfileModalStore } from "../../global-stores/useRoomProfileModal";
 import AppDialog from "../global/AppDialog";
 import RoomParticipantProfile from "./RoomParticipantProfile";
+import useLoadRoomMeta from "@/lib/room/hooks/useLoadRoomMeta";
 
 type Props = {
   participant: RoomParticipant;
@@ -20,10 +21,16 @@ const RoomAvatar = ({ participant }: Props) => {
   const router = useRouter();
   const { id: roomId } = router.query;
 
-  const myRoomStatus = queryClient.getQueryData<RoomStatus>([
-    "room-status",
-    roomId,
-  ]);
+  const { room, roomStatus: myRoomStatus } = useLoadRoomMeta(
+    roomId as string,
+    user
+  );
+  // const room = queryClient.getQueryData<Room>(["room", roomId]);
+
+  // const myRoomStatus = queryClient.getQueryData<RoomStatus>([
+  //   "room-status",
+  //   roomId,
+  // ]);
 
   const canShowIndicator = participant.indicatorOn && !participant.isMuted;
 
@@ -44,7 +51,7 @@ const RoomAvatar = ({ participant }: Props) => {
             <RoomParticipantProfile
               myRoomStatus={myRoomStatus!}
               participantId={participant.userId}
-              room={{} as Room}
+              room={room!}
               toggleDialog={() => {}}
             />
           }
