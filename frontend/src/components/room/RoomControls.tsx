@@ -36,7 +36,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
   const router = useRouter();
 
   const { closeAll } = useConsumerStore();
-  const { close } = useProducerStore();
+  const { close, producer } = useProducerStore();
 
   const parseCamel = (snake: string) => {
     return snake.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
@@ -91,7 +91,8 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     }
     myRoomStatus.isMuted ? playSoundEffect("unmute") : playSoundEffect("mute");
     conn.emit("user-muted-mic", { roomId, userId: user.userId });
-    mic.enabled = !mic.enabled;
+    // mic.enabled = !mic.enabled;
+    producer?.paused ? producer.resume() : producer?.pause();
 
     try {
       statusMutation.mutate({
@@ -125,18 +126,17 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
       if (room.creatorId == user.userId) {
         conn?.emit("leave-room-all", { roomId, hostId: user.userId });
       } else {
-        await apiClient.post(`/room/leave?roomId=${roomId}`).then(res => {
+        await apiClient.post(`/room/leave?roomId=${roomId}`).then(async res => {
           conn?.emit("leave-room", { roomId });
           nullify();
           closeAll();
           close();
-          router.push("/");
+          await router.push("/");
+          queryClient.invalidateQueries(["user"]);
+          queryClient.removeQueries(["room"]);
+          queryClient.removeQueries(["room-status"]);
+          queryClient.removeQueries(["room-chat"]);
         });
-        
-        queryClient.invalidateQueries(["user"]);
-        queryClient.removeQueries(["room"]);
-        queryClient.removeQueries(["room-status"]);
-        queryClient.removeQueries(["room-chat"]);
       }
     } catch (error) {
       console.log(error);
@@ -151,8 +151,8 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
           onClick={myRoomStatus.isSpeaker ? handleMute : handleHandRaise}
           className={`${
             myRoomStatus!.isMuted || myRoomStatus!.raisedHand
-              ? "bg-app_bg_deeper focus:outline-none focus:ring focus:ring-app_cta"
-              : "bg-app_cta focus:outline-none focus:ring focus:ring-app_cta"
+              ? "bg-app_bg_deeper"
+              : "bg-app_cta "
           } w-20`}
         >
           {myRoomStatus.isSpeaker ? (

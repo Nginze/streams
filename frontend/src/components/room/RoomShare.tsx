@@ -37,7 +37,7 @@ const ShareListItem = ({ person, room }: ShareListItemProps) => {
       <div>
         <Button
           onClick={() => {
-            console.log("inviting...")
+            console.log("inviting...");
             conn?.emit("room-invite", { room, user, to: person.userId });
           }}
           className="bg-app_cta p-4 h-10"
@@ -67,9 +67,9 @@ type RoomShareProps = {
 
 const RoomShare = ({ room }: RoomShareProps) => {
   const { isLoading: peopleLoading, data: people } = useQuery({
-    queryKey: ["people"],
+    queryKey: ["invites"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/profile/following/onlineList");
+      const { data } = await apiClient.get("/profile/invite/online");
       return data;
     },
   });
@@ -85,9 +85,11 @@ const RoomShare = ({ room }: RoomShareProps) => {
           <Copy size={16} />
         </div>
       </div>
-      <div>
-        <span className="font-bold text-lg">People</span>
-      </div>
+      {people?.length > 0 && (
+        <div>
+          <span className="font-bold text-lg">People</span>
+        </div>
+      )}
       <div className="chat space-y-4 h-auto max-h-[200px] overflow-auto ">
         {peopleLoading ? (
           <div className="space-y-4 pt-6">

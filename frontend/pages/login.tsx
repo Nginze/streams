@@ -3,6 +3,8 @@ import Head from "next/head";
 import { useContext } from "react";
 import { WebSocketContext } from "../src/contexts/WebsocketContext";
 import { AiFillGithub } from "react-icons/ai";
+import { Github, GithubIcon } from "lucide-react";
+import { BsDiscord, BsGithub, BsGoogle } from "react-icons/bs";
 
 const BACKEND_URI = "http://localhost:8000";
 const width = 600;
@@ -60,11 +62,41 @@ const Home: NextPage = () => {
           crossOrigin=""
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Avestan&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
-        />
+        ></link>
       </Head>
-      <div className="font-display text-white bg-zinc-800 w-screen h-screen flex flex-col justify-center items-center">
+      <div className="w-screen h-screen text-white font-display bg-app_bg_deepest flex items-center justify-center">
+        <div className="w-[400px] h-auto bg-app_bg_deeper rounded-lg p-6">
+          <div className="text-white flex flex-col items-start">
+            <span className="text-2xl font-bold">Welcome</span>
+            <span className="text-sm">
+              By logging in you accept our Privacy Policy and Terms of Service.
+            </span>
+          </div>
+          <div className="text-white space-y-4 my-4">
+            <button
+              onClick={() => {
+                githubLogin();
+              }}
+              className="bg-app_bg_deep p-4 space-x-2 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+            >
+              <BsGithub size={25} style={{ marginRight: "1rem" }} />
+              Log in with Github
+            </button>
+            <button className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
+              <BsGoogle size={21} style={{ marginRight: "1rem" }} />
+              Log in with Google
+            </button>
+            <button className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
+              <BsDiscord size={21} style={{ marginRight: "1rem" }} />
+              Log in with Discord
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* <div className="font-display text-white bg-zinc-800 w-screen h-screen flex flex-col justify-center items-center">
         <div className="mb-6 text-left w-1/3">
           <h1 className="font-bold text-4xl mb-3">Welcome to Drop 🎧</h1>
           <p className="font-bold text-2xl">
@@ -90,7 +122,7 @@ const Home: NextPage = () => {
             Login with Github
           </button>
         </div>
-      </div>
+      </div> */}
     </>
     // <div className="text-white flex min-h-screen flex-col items-center justify-center py-2 overflow-x-hidden">
     // </div>

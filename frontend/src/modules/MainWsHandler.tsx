@@ -249,13 +249,28 @@ export const MainWsHandler = ({ children }: Props) => {
 
       if (user.userId == hostId) {
         console.log("you are the host");
-        await apiClient.post(`/room/destroy?roomId=${roomId}`);
+        // await apiClient.post(`/room/destroy?roomId=${roomId}`);
         await router.push("/");
-        alert("you ended meeting");
+
+        toast("Meeting ended", {
+          icon: "ℹ",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
       } else {
         await router.push("/");
-        alert("host ended meeting");
-        console.log("host ended meeting");
+
+        toast("Host ended meeting", {
+          icon: "🔔",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
       }
 
       queryClient.invalidateQueries(["user"]);

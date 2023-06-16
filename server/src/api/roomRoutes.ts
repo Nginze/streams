@@ -77,8 +77,32 @@ router.get("/:roomId", async (req: Request, res: Response) => {
 
   const client = await pool.connect();
 
+  const { rows: room } = await client.query(
+    `
+      SELECT *
+      FROM room
+      WHERE room_id = $1;
+      `,
+    [roomId]
+  );
+
+  if (!room) {
+    console.log("no room found");
+    return res.status(404).json({ msg: "room doesn't exist" });
+  }
+
   try {
     await client.query("BEGIN");
+
+    await pool.query(
+      `
+      UPDATE room
+      SET ended = false
+      WHERE room_id = $1
+      `,
+      [roomId]
+    );
+
     await client.query(
       `
       UPDATE user_data
@@ -107,9 +131,9 @@ router.get("/:roomId", async (req: Request, res: Response) => {
       [
         roomId,
         userId,
-        parseCamel(room[0]).autoSpeaker ||
-          parseCamel(room[0]).creatorId == userId,
-        parseCamel(room[0]).creatorId === userId,
+        parseCamel(room[0])?.autoSpeaker ||
+          parseCamel(room[0])?.creatorId == userId,
+        parseCamel(room[0])?.creatorId === userId,
         false,
         false,
       ]
@@ -157,6 +181,7 @@ router.get("/rooms/live", async (req: Request, res: Response) => {
     ARRAY(SELECT user_name FROM user_data WHERE current_room_id = room.room_id) AS participants,
     ARRAY(SELECT category FROM room_category WHERE room_id = room.room_id) AS categories
     FROM room
+    WHERE ended = false
     LIMIT 5
     `
   );
@@ -194,11 +219,14 @@ router.post("/leave", async (req: Request, res: Response) => {
   const { roomId } = req.query;
 
   console.log("hit leave end point");
+
   if (!roomId || !userId) {
     return res
       .status(400)
       .json({ msg: "Bad request, invalid credentials sent" });
   }
+
+  console.log(roomId, userId)
 
   const client = await pool.connect();
 
@@ -244,35 +272,64 @@ router.post("/destroy", async (req: Request, res: Response) => {
 
   const client = await pool.connect();
 
-  await client.query(`BEGIN`);
+  try {
+    await client.query(`BEGIN`);
 
-  await client.query(
-    `
+    await client.query(
+      `
     DELETE FROM room_category
     WHERE room_id = $1
     `,
-    [roomId]
-  );
+      [roomId]
+    );
 
-  await client.query(
-    `
+    await client.query(
+      `
       DELETE FROM room_status
       WHERE room_id = $1;
       `,
-    [roomId]
-  );
+      [roomId]
+    );
 
-  await client.query(
-    `
+    await client.query(
+      `
     DELETE FROM room
     WHERE room_id = $1
     `,
+      [roomId]
+    );
+
+    await client.query(`COMMIT`);
+
+    return res.status(200).json({ msg: "room destroyed" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+});
+
+router.post(`/soft-delete`, async (req: Request, res: Response) => {
+  const { roomId } = req.query;
+
+  console.log("hit destroy end point");
+  if (!roomId) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, invalid credentials sent" });
+  }
+
+  await pool.query(
+    `
+  UPDATE room
+  SET ended = true, room_ended_at = NOW()
+  WHERE room_id = $1
+  `,
     [roomId]
   );
 
-  await client.query(`COMMIT`);
-
-  return res.status(200).json({ msg: "room destroyed" });
+  res.status(200).json({ msg: "room soft ended" });
 });
 
 router.put(

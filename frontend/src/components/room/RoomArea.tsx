@@ -70,7 +70,7 @@ const RoomArea = ({}: Props) => {
                     {speakers.length}
                   </span>
                 </p>
-                <div className="grid grid-cols-5 gap-2">{speakers}</div>
+                <div className="grid grid-cols-4 gap-2">{speakers}</div>
               </div>
 
               {askedToSpeak.length > 0 &&
@@ -82,7 +82,7 @@ const RoomArea = ({}: Props) => {
                         {askedToSpeak.length}
                       </span>
                     </p>
-                    <div className="grid grid-cols-5 gap-x-2">
+                    <div className="grid grid-cols-4 gap-x-2">
                       {askedToSpeak}
                     </div>
                   </div>
@@ -95,7 +95,7 @@ const RoomArea = ({}: Props) => {
                     {listeners.length}
                   </span>
                 </p>
-                <div className="grid grid-cols-5 gap-x-2">{listeners}</div>
+                <div className="grid grid-cols-4 gap-x-2">{listeners}</div>
               </div>
             </>
           )}

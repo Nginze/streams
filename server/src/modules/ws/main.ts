@@ -64,6 +64,10 @@ export async function main(
       redisClient.srem("onlineUsers", user.userId);
       redisClient.del(user.userId);
 
+      if (!roomId) {
+        return;
+      }
+
       channel.sendToQueue(
         sendQueue,
         Buffer.from(
@@ -74,21 +78,28 @@ export async function main(
         )
       );
 
+      console.log("leaving room");
+
+      socket.leave(roomId);
+
+      console.log(clients);
+      console.log(clients?.size);
+
+      console.log("at performing leave transactions");
+      await apiClient.post(
+        `/room/leave?roomId=${roomId}&&userId=${user.userId}`
+      );
+
+      console.log("at pinging timestamp");
       await apiClient.post(`/profile/ping?userId=${user.userId}`);
 
       if (!clients) {
         return;
       }
 
-      await apiClient.post(
-        `/room/leave?roomId=${roomId}&&userId=${user.userId}`
-      );
-
-      console.log(clients.size);
-
-      if (clients.size < 1) {
-        console.log("destroying room", roomId);
-        await apiClient.post(`/room/destroy?roomId=${roomId}`);
+      if (clients!.size < 1) {
+        console.log("destroying room on voice server (idempotent)", roomId);
+        await apiClient.post(`/room/soft-delete?roomId=${roomId}`);
         channel.sendToQueue(
           sendQueue,
           Buffer.from(
@@ -99,8 +110,6 @@ export async function main(
           )
         );
       }
-
-      socket.leave(roomId);
     });
 
     socket.on("disconnect", () => {
@@ -128,9 +137,12 @@ export async function main(
         return;
       }
 
+      console.log("leaving room");
+      socket.leave(roomId);
+
       console.log(clients.size);
 
-      if (clients.size <= 1) {
+      if (clients.size < 1) {
         console.log("destroying room", roomId);
         await apiClient.post(`/room/destroy?roomId=${roomId}`);
         channel.sendToQueue(
@@ -143,8 +155,6 @@ export async function main(
           )
         );
       }
-
-      socket.leave(roomId);
     });
 
     socket.on("create-room", async ({ roomId }) => {

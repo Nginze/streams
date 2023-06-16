@@ -16,6 +16,8 @@ import { authMiddleware } from "./middleware/authMiddleware";
 import { internalErrorMiddleware } from "./middleware/internalError";
 import { main } from "./modules/ws/main";
 import { wrap } from "./utils/wrap";
+import { reqLogger } from "./middleware/reqLogger";
+import "./jobs/cron";
 
 const app = express();
 const server = http.createServer(app);
@@ -51,6 +53,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(internalErrorMiddleware);
 app.use(authMiddleware);
+app.use(reqLogger);
 
 app.use("/", rootRoutes);
 app.use("/auth", authRoutes);

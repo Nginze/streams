@@ -9,7 +9,8 @@ export const authMiddleware = (
     req.originalUrl.startsWith("/auth") ||
     req.originalUrl.includes("/room/leave") ||
     req.originalUrl.includes("/room/destroy") ||
-    req.originalUrl.includes("/ping")
+    req.originalUrl.includes("/ping") ||
+    req.originalUrl.includes("/soft-delete")
   ) {
     next();
   } else if (req.user) {
