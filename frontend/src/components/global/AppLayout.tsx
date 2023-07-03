@@ -6,9 +6,10 @@ type Props = {
   navbar: React.ReactNode;
   column1: React.ReactNode;
   column2: React.ReactNode;
+  footer?: React.ReactNode | undefined;
 };
 
-const AppLayout = ({ navbar, column1, column2 }: Props) => {
+const AppLayout = ({ navbar, column1, column2, footer }: Props) => {
   return (
     <>
       <Head>
@@ -20,9 +21,9 @@ const AppLayout = ({ navbar, column1, column2 }: Props) => {
         ></link>
       </Head>
       <main className="w-screen h-screen bg-app_bg_deepest text-white font-display overflow-auto">
-        <div className="w-2/3 m-auto space-y-16 pt-5">
+        <div className="w-3/4 m-auto space-y-16 pt-7">
           {navbar}
-          <div className="grid grid-cols-4 gap-1 w-full max-h-96 h-96">
+          <div className="grid grid-cols-4 gap-x-52 w-full max-h-96 h-96">
             <div className="col-span-1 max-h-screen sticky top-0">
               {column1}
             </div>
@@ -30,6 +31,7 @@ const AppLayout = ({ navbar, column1, column2 }: Props) => {
           </div>
         </div>
       </main>
+      <footer>{footer}</footer>
     </>
   );
 };

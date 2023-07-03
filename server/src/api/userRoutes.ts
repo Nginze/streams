@@ -181,3 +181,65 @@ router.post("/ping", async (req: Request, res: Response) => {
   );
   res.status(200).json({ msg: "last seen updated" });
 });
+
+router.get("/notification/:userId", async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { rows: notifications } = await pool.query(
+    `
+      SELECT * 
+      FROM user_notification
+      WHERE user_id = $1
+      `,
+    [userId]
+  );
+  res.status(200).json(parseCamel(notifications));
+});
+
+router.post("/notification/:userId", async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { category, content, roomId } = req.body;
+  await pool.query(
+    `
+      INSERT into user_notification
+      VALUES (
+        $1, $2, $3, $4
+      )
+    `,
+    [userId, roomId, category, content]
+  );
+  res.status(200).json({ msg: "notification created" });
+});
+
+router.patch(
+  "/notification/markAsRead/:userId",
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+    await pool.query(
+      `
+      UPDATE user_notification
+      SET is_read = true
+      WHERE user_id = $1
+    `,
+
+      [userId]
+    );
+    res.status(200).json({ msg: "notification marked as read" });
+  }
+);
+
+router.delete(
+  "/notification/:notificationId",
+  async (req: Request, res: Response) => {
+    const { notificationId } = req.params;
+    await pool.query(
+      `
+      DELETE FROM
+      user_notification
+      WHERE notification_id = $1
+    `,
+
+      [notificationId]
+    );
+    res.status(200).json({ msg: "notification deleted" });
+  }
+);

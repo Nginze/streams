@@ -71,47 +71,23 @@ const PeopleListItem = ({ person }: PeopleListItemProps) => {
   const { user } = useContext(userContext);
   return (
     <div className="flex items-center space-x-4 cursor-pointer">
-      <div>
+      <div className="min-w-[38px] relative">
         <img
           className="w-[38px] h-[38px] rounded-full object-cover"
           src={person?.avatarUrl}
         />
+        {person.online && (
+          <div className="bg-app_bg_deepest rounded-full w-5 h-5  absolute -right-1 bottom-0 flex items-center justify-center">
+            <div className="bg-green-400 rounded-full w-2.5 h-2.5 "></div>
+          </div>
+        )}
       </div>
       <div className="flex flex-col item-start ">
-        <span className="text-lg font-semibold">{person?.userName}</span>
-        <span
-          onClick={() => {
-            if (
-              person.online &&
-              person.roomDesc &&
-              person.currentRoomId != user.currentRoomId
-            ) {
-              router.push(`room/${person.currentRoomId}`);
-            }
-          }}
-          className={`text-sm w-32 truncate ${
-            person.online &&
-            person.roomDesc &&
-            person.currentRoomId != user.currentRoomId
-              ? "hover:underline"
-              : ""
-          } `}
-        >
-          {person.online ? (
-            person.roomDesc && person.currentRoomId != user.currentRoomId ? (
-              person.roomDesc
-            ) : person.roomDesc &&
-              person.currentRoomId == user.currentRoomId ? (
-              "hanging out together"
-            ) : (
-              <div className="flex items-center w-full">
-                online
-                <div className="w-2 h-2 bg-green-500 ml-2 rounded-full"></div>
-              </div>
-            )
-          ) : (
-            `Last Seen ${formatRelativeDate(person.lastSeen)}`
-          )}
+        <span className="font-semibold">{person?.userName}</span>
+        <span className={`text-sm w-32 truncate`}>
+          {person.online
+            ? ""
+            : `Last Seen ${formatRelativeDate(person.lastSeen)}`}
         </span>
       </div>
     </div>
@@ -121,7 +97,9 @@ const PeopleListItem = ({ person }: PeopleListItemProps) => {
 const PeopleListItemSkeleton = () => {
   return (
     <div className="flex items-center space-x-4">
-      <Skeleton className="h-12 w-12 rounded-full bg-app_bg_deep" />
+      <div className="min-w-12">
+        <Skeleton className="h-12 w-12 rounded-full bg-app_bg_deep" />
+      </div>
       <div className="space-y-2">
         <Skeleton className="h-4 w-[150px] rounded-sm bg-app_bg_deep" />
         <Skeleton className="h-4 w-[100px] rounded-sm bg-app_bg_deep" />
@@ -136,14 +114,14 @@ const FilterList = ({ peopleList }: FilterListProps) => {
     <div className="space-y-3">
       {onlineList.length > 0 && (
         <div className="space-y-3">
-          <span className="text-sm font-semibold opacity-75">Online</span>
+          <span className="text-sm text-[#424549] font-semibold">Online</span>
           <div className="space-y-3">{onlineList}</div>
         </div>
       )}
 
       {offlineList.length > 0 && (
         <div className="space-y-3">
-          <span className="text-sm font-semibold opacity-75">Offline</span>
+          <span className="text-sm text-[#424549] font-semibold">Offline</span>
           <div className="space-y-3">{offlineList}</div>
         </div>
       )}
@@ -162,7 +140,7 @@ const PeopleList = () => {
 
   return (
     <div className="w-full space-y-3">
-      <span className="font-extrabold text-xl">People</span>
+      <span className="font-semibold text-xl">People</span>
       {peopleLoading ? (
         <div className="space-y-4 pt-6">
           {Array.from({ length: 8 }, (_, index) => (

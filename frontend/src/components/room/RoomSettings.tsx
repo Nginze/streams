@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from "react-query";
 import { apiClient } from "../../lib/apiclient/client";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
 import { userContext } from "../../contexts/UserContext";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
+import RoomBanList from "./RoomBanList";
 
 type Props = {
   room: Room;
@@ -25,7 +26,7 @@ const RoomSettings = ({ room }: Props) => {
   const RoomSettingMutation = useMutation({
     mutationFn: async (params: {
       state: string;
-      value: boolean;
+      value: boolean | string;
       roomId: string;
     }) => {
       await apiClient.put(
@@ -34,13 +35,12 @@ const RoomSettings = ({ room }: Props) => {
     },
 
     onMutate: async variables => {
-      // await queryClient.cancelQueries(["room", roomId]);
-      // const previousRoomStatus = queryClient.getQueryData(["room", roomId]);
-      // queryClient.setQueryData(["room-status", roomId], (data: any) => ({
-      //   ...data,
-      //   [parseCamel(variables.state)]: variables.value,
-      // }));
-      // return { previousRoomStatus };
+      if (variables.state == "room_desc") {
+        conn?.emit("room-name-changed", {
+          roomId: variables.roomId,
+          value: variables.value,
+        });
+      }
     },
 
     onSuccess: () => {},
@@ -56,7 +56,7 @@ const RoomSettings = ({ room }: Props) => {
   });
 
   const handleAllowChat = (e: any) => {
-    setChatEnabled(e.target.checked);
+    setChatEnabled(!chatEnabled);
     try {
       conn?.emit("toggle-room-chat", {
         roomId: room.roomId,
@@ -71,7 +71,7 @@ const RoomSettings = ({ room }: Props) => {
   };
 
   const handleAllowHandRaising = (e: any) => {
-    setHandRaiseEnabled(e.target.checked);
+    setHandRaiseEnabled(!handRaiseEnabled);
     try {
       conn?.emit("toggle-hand-raise-enabled", {
         roomId: room.roomId,
@@ -85,6 +85,17 @@ const RoomSettings = ({ room }: Props) => {
     } catch (error) {}
   };
 
+  // const handleRoomDescChange = (e: any) => {
+  //   setRoomDesc(e.target.checked);
+  //   // try {
+  //   //   RoomSettingMutation.mutate({
+  //   //     roomId: room.roomId,
+  //   //     state: "room_desc",
+  //   //     value: updatedRoomDesc,
+  //   //   });
+  //   // } catch (error) {}
+  // };
+
   const handleMuteAllSpeakers = (e: any) => {
     setMuteAllSpeakers(e.target.checked);
     try {
@@ -93,6 +104,22 @@ const RoomSettings = ({ room }: Props) => {
       });
     } catch (error) {}
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (updatedRoomDesc) {
+        try {
+          RoomSettingMutation.mutate({
+            roomId: room.roomId,
+            state: "room_desc",
+            value: updatedRoomDesc,
+          });
+        } catch (error) {}
+      }
+    }, 1000); // Adjust the delay time as needed (in milliseconds)
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [updatedRoomDesc]);
 
   return (
     <>
@@ -108,23 +135,34 @@ const RoomSettings = ({ room }: Props) => {
             className="outline-none border-none bg-app_bg_light w-full p-2 rounded-sm"
           />
         </div>
+        {RoomSettingMutation.isLoading && (
+          <div className="text-sm">Saving ...</div>
+        )}
         <div>
           <span className="font-bold text-lg">Options</span>
         </div>
         <div className="space-y-4">
-          <div className="flex items-center justify-between w-full">
+          {/* <div className="flex items-center justify-between w-full">
             <label htmlFor="autospeaker">Enable Auto-Speaker</label>
             <Switch id="autospeaker" />
-          </div>
+          </div> */}
 
           <div className="flex items-center justify-between w-full">
             <label htmlFor="enablechat">Enable Chat</label>
-            <Switch id="enablechat" />
+            <Switch
+              checked={chatEnabled}
+              onCheckedChange={handleAllowChat}
+              id="enablechat"
+            />
           </div>
 
           <div className="flex items-center justify-between w-full">
             <label htmlFor="enablehandraise">Enable Hand Raise</label>
-            <Switch  id="enablehandraise" />
+            <Switch
+              checked={handRaiseEnabled}
+              onCheckedChange={handleAllowHandRaising}
+              id="enablehandraise"
+            />
           </div>
           {/* <div className="flex items-center">
             <input
@@ -157,10 +195,11 @@ const RoomSettings = ({ room }: Props) => {
             <label htmlFor="room-chat">Allow room chat</label>
           </div> */}
         </div>
+        <RoomBanList roomId={room.roomId}/>
 
-        <div className="w-full">
+        {/* <div className="w-full">
           <Button className="w-full bg-app_cta p-5 h-12 font-bold">Save</Button>
-        </div>
+        </div> */}
       </div>
     </>
   );

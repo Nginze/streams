@@ -1,12 +1,23 @@
 import { useRouter } from "next/router";
 import { useContext } from "react";
-import { BsMicMute } from "react-icons/bs";
+import { BsMicMute, BsShield, BsShieldFill } from "react-icons/bs";
 import { useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../contexts/UserContext";
 import { useRoomProfileModalStore } from "../../global-stores/useRoomProfileModal";
 import AppDialog from "../global/AppDialog";
 import RoomParticipantProfile from "./RoomParticipantProfile";
 import useLoadRoomMeta from "@/lib/room/hooks/useLoadRoomMeta";
+import {
+  Crown,
+  Shield,
+  ShieldAlert,
+  ShieldIcon,
+  Sword,
+  SwordIcon,
+} from "lucide-react";
+import { SwordsIcon } from "lucide-react";
+import { TbCrown, TbCrownOff } from "react-icons/tb";
+import { AiFillCrown } from "react-icons/ai";
 
 type Props = {
   participant: RoomParticipant;
@@ -77,8 +88,8 @@ const RoomAvatar = ({ participant }: Props) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              right: 5,
-              top: 2,
+              right: 17,
+              top: 1,
             }}
           >
             <span>✋</span>
@@ -91,16 +102,32 @@ const RoomAvatar = ({ participant }: Props) => {
               borderRadius: "100%",
               padding: "0.2rem",
               position: "absolute",
-              right: 10,
-              bottom: 6,
+              right: 22,
+              bottom: 5,
             }}
           >
             <BsMicMute fontSize={"0.8rem"} />
           </div>
         )}
         <span>
-          <span className="text-xs font-semibold">
-            {participant.isMod && <span>👑</span>}
+          <span className="text-xs font-semibold flex items-center">
+            {participant.userId == room?.creatorId && (
+              <AiFillCrown
+                style={{ marginRight: "1px" }}
+                size={17}
+                color="#ffc500"
+              />
+            )}
+            {participant.isMod && (
+              <img
+                src="https://i0.wp.com/www.alphr.com/wp-content/uploads/2021/03/How-to-Make-Someone-a-Mod-in-Twitch-scaled.jpg?fit=2560%2C2560&ssl=1"
+                className="w-3 h-3 object-contain mr-1"
+              />
+              // <div className="flex items-center justify-center mr-1 w-5 h-5 p-1 bg-blue-500 ">
+              //   <Shield fontSize={29} />
+              // </div>
+            )}
+            {/* <span className="h-10 w-10 bg-green-400"><SwordsIcon /></span> */}
             {user.userId === participant.userId ? "You" : participant.userName}
           </span>
         </span>

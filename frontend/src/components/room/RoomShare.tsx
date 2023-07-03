@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { TbUserPlus } from "react-icons/tb";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { userContext } from "@/contexts/UserContext";
+import { FaUserPlus } from "react-icons/fa";
 
 type Person = User & { online: boolean };
 type ShareListItemProps = {
@@ -40,9 +41,9 @@ const ShareListItem = ({ person, room }: ShareListItemProps) => {
             console.log("inviting...");
             conn?.emit("room-invite", { room, user, to: person.userId });
           }}
-          className="bg-app_cta p-4 h-10"
+          className="bg-app_cta p-3 h-10"
         >
-          <LucideUserPlus size={18} />
+          <FaUserPlus size={18} />
         </Button>
       </div>
     </div>
@@ -77,17 +78,17 @@ const RoomShare = ({ room }: RoomShareProps) => {
   return (
     <div className="mt-4 space-y-4">
       <div>
-        <span className="font-bold text-lg">Copy Room Link</span>
+        <span className="font-semibold text-lg">Share with others</span>
       </div>
       <div className="w-full">
-        <div className=" flex justify-between items-center outline-none border-none bg-app_bg_light w-full p-3 rounded-sm text-center font-semibold text-sm cursor-pointer">
+        <div className=" flex items-center justify-center outline-none border-none bg-app_bg_deep w-full p-3.5 rounded-sm text-center cursor-pointer">
           http://drop.tv/room/alkajsdflkasl
-          <Copy size={16} />
+          {/* <Copy size={16} /> */}
         </div>
       </div>
       {people?.length > 0 && (
         <div>
-          <span className="font-bold text-lg">People</span>
+          <span className="font-semibold text-lg">People</span>
         </div>
       )}
       <div className="chat space-y-4 h-auto max-h-[200px] overflow-auto ">

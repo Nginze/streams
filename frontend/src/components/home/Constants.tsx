@@ -1,13 +1,13 @@
 export const categories = [
+  "🔌 Technology",
   "🎵 Music",
   "🎮 Gaming",
-  "🔌 Technology",
-  "📚 Books and Literature",
-  "🎥 Movies and TV Shows",
-  "⚽️ Sports",
   "✈️ Travel",
+  "📚 Books and Literature",
+  "⚽️ Sports",
+  "🎥 Movies and TV Shows",
   "🍽️ Food and Cooking",
   "💪 Fitness and Wellness",
   "🎨 Art and Design",
-  "📰 Current Events"
+  "📰 Current Events",
 ];
