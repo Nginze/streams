@@ -147,26 +147,28 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
   return (
     <div className="bg-app_bg_deep w-full rounded-b-lg flex items-center justify-between p-3">
       <div className="space-x-1.5 flex items-center">
-        <Button
-          onClick={myRoomStatus.isSpeaker ? handleMute : handleHandRaise}
-          className={`${
-            myRoomStatus!.isMuted || myRoomStatus!.raisedHand
-              ? "bg-app_bg_deeper"
-              : "bg-app_cta "
-          } w-20`}
-        >
-          {myRoomStatus.isSpeaker ? (
-            myRoomStatus!.isMuted ? (
-              <MicOff size={16} />
+        {(myRoomStatus.isSpeaker || room.handRaiseEnabled) && (
+          <Button
+            onClick={myRoomStatus.isSpeaker ? handleMute : handleHandRaise}
+            className={`${
+              myRoomStatus!.isMuted || myRoomStatus!.raisedHand
+                ? "bg-app_bg_deeper"
+                : "bg-app_cta "
+            } w-20`}
+          >
+            {myRoomStatus.isSpeaker ? (
+              myRoomStatus!.isMuted ? (
+                <MicOff size={16} />
+              ) : (
+                <Mic size={16} />
+              )
+            ) : myRoomStatus!.raisedHand ? (
+              <TbHandOff fontSize={"1.2rem"} />
             ) : (
-              <Mic size={16} />
-            )
-          ) : myRoomStatus!.raisedHand ? (
-            <TbHandOff fontSize={"1.2rem"} />
-          ) : (
-            <MdOutlineWavingHand size={16} />
-          )}
-        </Button>
+              <MdOutlineWavingHand size={16} />
+            )}
+          </Button>
+        )}
         <AppDialog content={<RoomShare room={room} />}>
           <Button className="bg-app_bg_deeper">
             <UserPlus size={16} />

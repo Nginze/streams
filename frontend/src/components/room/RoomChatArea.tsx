@@ -1,12 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { Socket } from "socket.io-client";
 import { customEmojis, emoteMap } from "../../lib/room/chat/EmoteData";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
-import { AiOutlineClose } from "react-icons/ai";
+import { AiFillCrown, AiOutlineClose } from "react-icons/ai";
+import { BiMessageAltError } from "react-icons/bi";
 import { MentionsInput, Mention, SuggestionDataItem } from "react-mentions";
 import { HiReply } from "react-icons/hi";
+import { userColorContext } from "../global/UserColorProvider";
+import { MessageCircle } from "lucide-react";
+import { apiClient } from "@/lib/apiclient/client";
+import { useQuery } from "react-query";
 
 type Props = {
   conn: Socket | null;
@@ -26,7 +31,17 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   const [replyOn, setReplyOn] = useState<boolean>(false);
   const [reply, setReply] = useState<ChatMessage | undefined>();
 
+  const { userColor } = useContext(userColorContext);
+
   const chatInputRef = useRef<HTMLInputElement>(null);
+
+  const { isLoading: roomBansLoading, data: roomBans } = useQuery(
+    ["room-bans", room.roomId],
+    async () => {
+      const { data } = await apiClient.get(`/room/ban/${room.roomId}`);
+      return data;
+    }
+  );
 
   // const parseMessage = (msg: string) => {
   //   let tokens: any = msg.split(" ");
@@ -96,6 +111,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
       reply,
       content: chatContent,
       createdAt: new Date(),
+      color: userColor,
     };
     conn?.emit("new-chat-message", { roomId: room.roomId, message });
     setMessage("");
@@ -107,58 +123,77 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
     setMessage(chatContent => chatContent + emoji);
   };
 
-  return chatOpen && room.chatEnabled ? (
+  const checkIsBanned = (userId: string) => {
+    return roomBans.some((ban: any) => ban.userId === userId);
+  };
+
+  return chatOpen ? (
     <div className="h-[570px] flex flex-col items-center">
       <div
         className={`chat w-full px-2  overflow-y-auto overflow-x-hidden flex  flex-col-reverse flex-1 items-start space-y-1`}
       >
-        {chatMessages ? (
-          (chatMessages as any).messages
-            .slice()
-            .reverse()
-            .map((msg: ChatMessage) => (
-              <div className="relative group w-full hover:bg-app_bg_deep cursor-pointer rounded-md px-2 ">
-                <div
-                  onClick={() => {
-                    setReply(msg);
-                  }}
-                  className="hidden group-hover:block absolute right-0 -top-2 cursor-pointer bg-zinc-800 p-1 rounded-md shadow-lg hover:bg-zinc-700 z-50"
-                >
-                  <HiReply color="white" size={18} />
-                </div>
-
-                {msg.reply && (
-                  <span className="text-sm text-gray-400 inline-block max-w-full w-full truncate">
-                    Replying to @{msg.reply.userName}: {msg.reply.content}
-                  </span>
-                )}
-                <div
-                  className="relative"
-                  key={msg.userId + msg.createdAt.toString()}
-                >
-                  <span>
-                    <img
-                      className="inline rounded-full mr-2 w-4 h-4 object-cover "
-                      src={msg.avatarUrl}
-                    />
-                  </span>
-                  <span
-                    style={{ color: user.color }}
-                    className={`font-semibold text-sm `}
+        {chatMessages
+          ? (chatMessages as any).messages
+              .slice()
+              .reverse()
+              .map((msg: ChatMessage) => (
+                <div className="relative group w-full hover:bg-app_bg_deep cursor-pointer rounded-md px-2 ">
+                  <div
+                    onClick={() => {
+                      setReply(msg);
+                    }}
+                    className="hidden group-hover:block absolute right-0 -top-2 cursor-pointer bg-zinc-800 p-1 rounded-md shadow-lg hover:bg-zinc-700 z-50"
                   >
-                    {msg.userName}:{" "}
-                  </span>
-                  <span className="text-white mb-3 max-w-full break-words text-sm font-semibold">
-                    {parseMessage(msg.content)}
-                  </span>
+                    <HiReply color="white" size={18} />
+                  </div>
+
+                  {/* {msg.reply && (
+                    <span className="text-sm text-gray-400 inline-block max-w-full w-full truncate">
+                      Replying to @{msg.reply.userName}: {msg.reply.content}
+                    </span>
+                  )} */}
+                  <div
+                    className="relative "
+                    key={msg.userId + msg.createdAt.toString()}
+                  >
+                    <span>
+                      {msg.userId == room?.creatorId && (
+                        <AiFillCrown
+                          style={{ marginRight: "1px" }}
+                          size={17}
+                          color="#ffc500"
+                          className="inline"
+                        />
+                      )}
+                      {/* {
+                        
+                        <img
+                          src="https://i0.wp.com/www.alphr.com/wp-content/uploads/2021/03/How-to-Make-Someone-a-Mod-in-Twitch-scaled.jpg?fit=2560%2C2560&ssl=1"
+                          className="w-3 h-3 object-contain mr-1 inline"
+                        />
+                      } */}
+                      <img
+                        className="inline rounded-full mr-2 w-4 h-4 object-cover "
+                        src={msg.avatarUrl}
+                      />
+                    </span>
+                    <span
+                      style={{ color: msg.color }}
+                      className={`font-semibold text-sm `}
+                    >
+                      {msg.userName}:{" "}
+                    </span>
+                    <span className=" mb-3 max-w-full break-words text-sm font-semibold">
+                      {parseMessage(msg.content)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
-        ) : (
-          <span className="text-white text-sm font-semibold px-2">
-            Welcome to Chat ✨
-          </span>
-        )}
+              ))
+          : room.chatEnabled && (
+              <span className="text-white text-sm font-semibold px-2">
+                Welcome to Chat ✨
+              </span>
+            )}
       </div>
       <div className={`w-full py-1 relative`}>
         <form className="w-full text-white relative" onSubmit={handleChatSend}>
@@ -197,29 +232,40 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
                   </button>
                 </div>
                 <div className="max-h-24 overflow-y-auto chat font-normal text-xs">
-                  {reply.userName}: {reply.content}
+                  {reply.userName}: {parseMessage(reply.content)}
                 </div>
               </>
             )}
-            <div className="flex items-center bg-app_bg_deep rounded-sm py-1.5 px-2.5">
-              <input
-                value={chatContent}
-                ref={chatInputRef}
-                onChange={e => setMessage(e.target.value)}
-                className="w-full border-none bg-app_bg_deep outline-none"
-                placeholder="Send a message"
-              />
+            {room.chatEnabled && !checkIsBanned(user.userId) ? (
+              <div className="flex items-center bg-app_bg_deep rounded-sm py-1.5 px-2.5">
+                <input
+                  value={chatContent}
+                  ref={chatInputRef}
+                  onChange={e => setMessage(e.target.value)}
+                  className="w-full border-none bg-app_bg_deep outline-none"
+                  placeholder="Send a message"
+                />
 
-              <span
-                className="cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
-                onClick={() => {
-                  chatInputRef.current?.focus();
-                  setPicker(!showPicker);
-                }}
-              >
-                <MdOutlineEmojiEmotions fontSize={"1.2rem"} />
-              </span>
-            </div>
+                <span
+                  className="cursor-pointer hover:bg-zinc-600 active:bg-zinc-700 p-1 rounded-md "
+                  onClick={() => {
+                    chatInputRef.current?.focus();
+                    setPicker(!showPicker);
+                  }}
+                >
+                  <MdOutlineEmojiEmotions fontSize={"1.2rem"} />
+                </span>
+              </div>
+            ) : (
+              <div>
+                <span className="flex items-center space-x-2 italic justify-center font-semibold text-app_bg_light">
+                  <MessageCircle size={20} className="mr-2" />
+                  {checkIsBanned(user.userId)
+                    ? "host banned you from chat"
+                    : "host disabled chat"}
+                </span>
+              </div>
+            )}
           </div>
         </form>
       </div>

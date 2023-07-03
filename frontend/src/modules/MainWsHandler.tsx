@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { useSoundEffectStore } from "@/global-stores/useSoundEffectStore";
+import { Check, X } from "lucide-react";
 
 type Props = {
   children: React.ReactNode;
@@ -74,6 +75,7 @@ export const MainWsHandler = ({ children }: Props) => {
                 ...p,
                 isSpeaker: false,
                 raisedHand: false,
+                isMuted: true,
               }
             : p
         ),
@@ -204,14 +206,14 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("you-are-now-a-mod", ({ roomId }) => {
       console.log("i am now a mod");
-      queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
+      queryClient.setQueryData(["room-status", roomId], (data: any) => ({
         ...data,
         isMod: true,
       }));
     });
 
     conn.on("you-are-no-longer-a-mod", ({ roomId }) => {
-      queryClient.setQueryData(["room-permissions", roomId], (data: any) => ({
+      queryClient.setQueryData(["room-status", roomId], (data: any) => ({
         ...data,
         isMod: false,
       }));
@@ -277,6 +279,7 @@ export const MainWsHandler = ({ children }: Props) => {
       queryClient.removeQueries(["room"]);
       queryClient.removeQueries(["room-status"]);
       queryClient.removeQueries(["room-chat"]);
+      queryClient.removeQueries(["room-bans"]);
     });
 
     conn.on("room-invite", ({ room, user }) => {
@@ -302,29 +305,101 @@ export const MainWsHandler = ({ children }: Props) => {
                   {user.userName}
                 </p>
                 <p className="mt-1 text-sm text-white w-52 truncate">
-                  Come hangout with me in {room.roomDesc}
+                  invites you to {room.roomDesc}
                 </p>
               </div>
             </div>
+          </div>
+          <div className="flex items-center space-x-2 px-3">
             <div>
               <Button
                 onClick={() => router.push(`/room/${room.roomId}`)}
-                className="bg-green-400"
+                className="bg-green-400 p-4"
               >
-                Accept
+                <Check size={12} />
+              </Button>
+            </div>
+            <div className="flex border-l border-app_bg_light py-2 px-2">
+              <Button
+                onClick={() => toast.dismiss(t.id)}
+                className="bg-[#FF5E5E] p-4"
+              >
+                <X size={12} />
               </Button>
             </div>
           </div>
-          <div className="flex border-l border-app_bg_light">
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-app_cta hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              Ignore
-            </button>
-          </div>
         </div>
       ));
+    });
+
+    conn.on("room-name-changed", ({ roomId, value }) => {
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        roomDesc: value,
+      }));
+    });
+
+    conn.on("ban-list-change", ({ roomId, banType, isBan, bannedUser }) => {
+      if (bannedUser.userId == user.userId) {
+        toast(`You've been ${isBan ? "unbanned" : "banned"} from ${banType}`, {
+          icon: "ℹ",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
+      } else {
+        toast(
+          `${bannedUser.userName} ${
+            isBan ? "unbanned" : "banned"
+          } from ${banType}`,
+          {
+            icon: "ℹ",
+            style: {
+              borderRadius: "10px",
+              background: "#333",
+              color: "#fff",
+            },
+          }
+        );
+      }
+
+      if (isBan) {
+        queryClient.setQueryData(["room-bans", roomId], (data: any) =>
+          data.filter((b: any) => b.userId != bannedUser.userId)
+        );
+      } else {
+        queryClient.setQueryData(["room-bans", roomId], (data: any) => [
+          ...data,
+          bannedUser,
+        ]);
+      }
+      // queryClient.invalidateQueries(["room-bans", roomId]);
+    });
+
+    conn.on("kicked-from-room", async ({ roomId }) => {
+      await apiClient.post(`/room/leave?roomId=${roomId}`).then(async res => {
+        await router.push("/");
+        toast("Host kicked you ⚒", {
+          icon: "ℹ",
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        });
+        conn?.emit("leave-room", { roomId });
+        nullify();
+        closeAll();
+        close();
+
+        queryClient.invalidateQueries(["user"]);
+        queryClient.removeQueries(["room"]);
+        queryClient.removeQueries(["room-status"]);
+        queryClient.removeQueries(["room-chat"]);
+        queryClient.removeQueries(["room-bans"]);
+      });
     });
 
     return () => {
@@ -345,6 +420,8 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("toggle-hand-raise-enabled");
       conn.off("leave-room-all");
       conn.off("room-invite");
+      conn.off("ban-list-change");
+      conn.off("kicked-from-room");
     };
   }, [conn, userLoading]);
   return <>{children}</>;

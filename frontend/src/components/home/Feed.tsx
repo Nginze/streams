@@ -1,15 +1,26 @@
 import React, { useContext } from "react";
-import { Plus } from "lucide-react";
+import {
+  Archive,
+  Globe,
+  Plug,
+  Plug2,
+  Plus,
+  PlusCircle,
+  RefreshCwIcon,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import Dialog from "../global/Dialog";
 import CreateRoom from "./CreateRoom";
 import AppDialog from "../global/AppDialog";
 import { Skeleton } from "../ui/skeleton";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { apiClient } from "@/lib/apiclient/client";
 import { useRouter } from "next/router";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { Socket } from "socket.io-client";
+import { BiGlobe, BiPlug } from "react-icons/bi";
+import { BsGlobeAmericas, BsGlobeCentralSouthAsia } from "react-icons/bs";
+import { VscDebugDisconnect } from "react-icons/vsc";
 
 type FeedCardProps = {
   room: Room;
@@ -20,6 +31,7 @@ type FeedProps = {
 };
 
 const Feed = ({ conn }: FeedProps) => {
+  const queryClient = useQueryClient();
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery({
     queryKey: ["live-rooms"],
     queryFn: async () => {
@@ -31,11 +43,14 @@ const Feed = ({ conn }: FeedProps) => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <span className="font-extrabold text-xl">Your Feed</span>
+        <div className="flex items-center justify-end space-x-2">
+          {/* <span className="text-xl flex items-center font-semibold ">
+            <BsGlobeAmericas className="mr-2" color="#424549" />
+            Live rooms
+          </span> */}
           <AppDialog content={<CreateRoom conn={conn!} />}>
-            <Button className="bg-app_cta focus:outline-none focus:ring focus:ring-app_cta">
-              <Plus className="mr-2 h-4 2-4" /> New Room
+            <Button className="bg-app_cta focus:outline-none focus:ring focus:ring-app_cta rounded-sm">
+              <PlusCircle className="mr-1 h-4 2-4" /> New Room
             </Button>
           </AppDialog>
         </div>
@@ -50,7 +65,20 @@ const Feed = ({ conn }: FeedProps) => {
 
           {(!liveRoomsLoading && !liveRooms) ||
             (liveRooms?.length == 0 && (
-              <div className="text-center">🔨 No live rooms</div>
+              <div className="text-center font-semibold ml-52 w-1/4 mt-14 ">
+                <div className="flex flex-col items-center space-y-3">
+                  <RefreshCwIcon color="white" size={50} />
+                  <div className="text-white">No active rooms available</div>
+                  <Button
+                    onClick={() => {
+                      queryClient.resetQueries(["live-rooms"]);
+                    }}
+                    className="w-full bg-app_bg_deeper p-3 h-12 font-bold"
+                  >
+                    Reload Feed
+                  </Button>
+                </div>
+              </div>
             ))}
         </div>
       </div>
@@ -60,8 +88,9 @@ const Feed = ({ conn }: FeedProps) => {
 
 const Chip = ({ content }: { content: string }) => {
   return (
-    <div className="w-20 h-7 rounded-lg bg-app_bg_deepest text-sm p-1 inline-block  truncate">
-      <span className="w-full flex items-center justify-center">{content}</span>
+    <div className="w-30 max-w-30 h-auto rounded-sm bg-app_bg_light text-sm py-1 px-2 inline-block truncate">
+      {content}
+      {/* <span className="w-full text-sm">{content}</span> */}
     </div>
   );
 };
@@ -73,10 +102,10 @@ const FeedCard = ({ room }: FeedCardProps) => {
       onClick={() => {
         router.push(`/room/${room.roomId}`);
       }}
-      className="bg-app_bg_deep h-[142px] p-5 rounded-md cursor-pointer space-y-4 hover:bg-app_bg_deeper active:bg-app_bg_light"
+      className="bg-app_bg_deeper h-[142px] p-5 rounded-md cursor-pointer space-y-4 hover:bg-app_bg_deep active:bg-app_bg_light"
     >
       <div className="flex items-center justify-between">
-        <span className="font-extrabold text-lg">{room.roomDesc}</span>
+        <span className="font-semibold text-lg">{room.roomDesc}</span>
         <span className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-app_cta  rounded-full"></div>
           <span>{room.participants.length}</span>

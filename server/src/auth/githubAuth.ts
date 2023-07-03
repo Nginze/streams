@@ -98,7 +98,6 @@ const githubStrategyMiddleware = new GithubStrategy(
 
 const serializeMiddleware = (user: Partial<UserDTO>, done: any) => {
   
-  console.log("serializing user", user)
   done(null, user.userId);
 };
 

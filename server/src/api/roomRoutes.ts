@@ -75,9 +75,7 @@ router.get("/:roomId", async (req: Request, res: Response) => {
       .json({ msg: "Bad request, incorrect credentials sent" });
   }
 
-  const client = await pool.connect();
-
-  const { rows: room } = await client.query(
+  const { rows: room } = await pool.query(
     `
       SELECT *
       FROM room
@@ -86,15 +84,33 @@ router.get("/:roomId", async (req: Request, res: Response) => {
     [roomId]
   );
 
-  if (!room) {
+  const { rows: banned } = await pool.query(
+    `
+    SELECT *
+    FROM room_ban
+    WHERE user_id = $1
+    AND room_id = $2
+    AND ban_type=$3
+    `,
+    [userId, roomId, "room_ban"]
+  );
+
+  if (!room[0]) {
     console.log("no room found");
-    return res.status(404).json({ msg: "room doesn't exist" });
+    return res.status(200).json('404');
   }
+
+  if (banned[0]) {
+    console.log("no room found");
+    return res.status(200).json('403');
+  }
+
+  const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    await pool.query(
+    await client.query(
       `
       UPDATE room
       SET ended = false
@@ -135,7 +151,7 @@ router.get("/:roomId", async (req: Request, res: Response) => {
           parseCamel(room[0])?.creatorId == userId,
         parseCamel(room[0])?.creatorId === userId,
         false,
-        false,
+        true,
       ]
     );
 
@@ -226,7 +242,7 @@ router.post("/leave", async (req: Request, res: Response) => {
       .json({ msg: "Bad request, invalid credentials sent" });
   }
 
-  console.log(roomId, userId)
+  console.log(roomId, userId);
 
   const client = await pool.connect();
 
@@ -376,4 +392,80 @@ router.put("/settings/:roomId", async (req: Request, res: Response) => {
   );
 
   res.status(200).json({ msg: "Room settings updated" });
+});
+
+router.post("/ban/:roomId", async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+
+  const { userId, banType } = req.query;
+  if (!userId || !banType) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, invalid credentials sent" });
+  }
+
+  await pool.query(
+    `
+    INSERT INTO
+    room_ban values 
+    (
+      $1, $2, $3, NOW()
+    )
+    `,
+    [roomId, userId, banType]
+  );
+
+  res.status(200).json({ msg: "User banned" });
+});
+
+router.delete("/unban/:roomId", async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+
+  const { userId, banType } = req.query;
+  if (!userId || !banType) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, invalid credentials sent" });
+  }
+
+  await pool.query(
+    `
+    DELETE FROM 
+    room_ban
+    WHERE room_id = $1 
+    AND user_id = $2
+    AND ban_type = $3
+    `,
+    [roomId, userId, banType]
+  );
+
+  res.status(200).json({ msg: "User unbanned" });
+});
+
+router.get("/ban/:roomId", async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+
+  if (!roomId) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, invalid credentials sent" });
+  }
+
+  const { rows: bans } = await pool.query(
+    `
+     SELECT
+     room_ban.user_id,
+     user_data.avatar_url,
+     user_data.user_name,
+     user_data.display_name 
+     FROM room_ban
+     INNER JOIN user_data
+     ON room_ban.user_id = user_data.user_id 
+     WHERE room_id = $1
+     ORDER BY room_ban.created_at 
+    `,
+    [roomId]
+  );
+
+  res.status(200).json(parseCamel(bans));
 });

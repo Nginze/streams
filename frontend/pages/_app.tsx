@@ -10,6 +10,7 @@ import { MainWsHandler } from "../src/modules/MainWsHandler";
 import { ChatWsHandler } from "../src/modules/ChatWsHandler";
 import { Toaster } from "react-hot-toast";
 import SoundEffectPlayer from "../src/lib/room/sound/SoundEffectPlayer";
+import UserColorProvider from "@/components/global/UserColorProvider";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
@@ -20,7 +21,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         <UserProvider>
           <MainWsHandler>
             <WebrtcApp />
-            <Component {...pageProps} />
+            <UserColorProvider>
+              <Component {...pageProps} />
+            </UserColorProvider>
           </MainWsHandler>
           <ChatWsHandler />
           <SoundEffectPlayer />

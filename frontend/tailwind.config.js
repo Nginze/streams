@@ -16,7 +16,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ["Inter"],
+        display: ["Lexand Deca,Inter,Roboto Mono"],
+        logo: ["Lexend Deca", "Inter"],
       },
       colors: {
         app_cta: "#7289da",

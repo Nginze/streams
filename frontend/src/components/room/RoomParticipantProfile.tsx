@@ -4,6 +4,10 @@ import { apiClient } from "../../lib/apiclient/client";
 import { userContext } from "../../contexts/UserContext";
 import { toast } from "react-hot-toast";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
+import { BeatLoader } from "react-spinners";
+import { useVoiceStore } from "@/lib/webrtc/store/useVoiceStore";
+import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
+import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
 
 type Props = {
   participantId: String;
@@ -27,9 +31,22 @@ const RoomParticipantProfile = ({
       },
     });
 
+  const {
+    isLoading: roomBansLoading,
+    data: roomBans,
+    isRefetching,
+  } = useQuery(["room-bans", room.roomId], async () => {
+    const { data } = await apiClient.get(`/room/ban/${room.roomId}`);
+    return data;
+  });
+
   const { user } = useContext(userContext);
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
+
+  const { nullify } = useVoiceStore();
+  const { closeAll } = useConsumerStore();
+  const { close } = useProducerStore();
 
   const parseCamel = (snake: string) => {
     return snake.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
@@ -101,7 +118,7 @@ const RoomParticipantProfile = ({
       ]);
 
       if (variables.userId === user.userId) {
-        console.log("our own state updating room-status")
+        console.log("our own state updating room-status");
         console.log(variables.state, variables.value);
         queryClient.setQueryData(["room-status", room.roomId], (data: any) => ({
           ...data,
@@ -134,6 +151,46 @@ const RoomParticipantProfile = ({
         );
       }
     },
+  });
+
+  const banMutation = useMutation({
+    mutationFn: async (params: {
+      isBan: boolean;
+      banType: string;
+      userId: string;
+    }) => {
+      console.log(params.isBan);
+
+      !params.isBan
+        ? await apiClient.post(
+            `/room/ban/${room.roomId}?userId=${params.userId}&banType=${params.banType}`
+          )
+        : await apiClient.delete(
+            `/room/unban/${room.roomId}?userId=${params.userId}&banType=${params.banType}`
+          );
+    },
+
+    onMutate: variables => {
+      conn?.emit("ban-list-change", {
+        roomId: room.roomId,
+        bannedUser: {
+          avatarUrl: participant?.avatarUrl,
+          displayName: participant?.displayName,
+          userId: participant?.userId,
+          userName: participant?.userName,
+        },
+        banType: variables.banType,
+        isBan: variables.isBan,
+      });
+    },
+
+    onSuccess: async (data, variables) => {
+      if (variables.banType === "room_ban") {
+        conn?.emit('kicked-from-room', {userId: participant?.userId, roomId: room.roomId})
+      }
+    },
+
+    onError: (error, variables, context) => {},
   });
 
   const handleFollow = async (e: any) => {
@@ -187,6 +244,12 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
         value: false,
       });
+
+      statusMutation.mutate({
+        state: "is_muted",
+        userId: participant!.userId,
+        value: true,
+      });
     } catch (error) {}
   };
 
@@ -224,9 +287,29 @@ const RoomParticipantProfile = ({
     } catch (error) {}
   };
 
-  const handleChatBan = async () => {};
+  const handleChatBan = async () => {
+    try {
+      banMutation.mutate({
+        isBan: checkIsBanned(participant!.userId),
+        banType: "chat_ban",
+        userId: participant!.userId,
+      });
+    } catch (error) {}
+  };
 
-  const handleKickFromRoom = async () => {};
+  const handleKickFromRoom = async () => {
+    try {
+      banMutation.mutate({
+        isBan: false,
+        banType: "room_ban",
+        userId: participant!.userId,
+      });
+    } catch (error) {}
+  };
+
+  const checkIsBanned = (userId: string) => {
+    return roomBans.some((ban: any) => ban.userId === userId);
+  };
 
   return myRoomStatus && participant ? (
     <>
@@ -300,7 +383,9 @@ const RoomParticipantProfile = ({
               onClick={handleChatBan}
               className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
-              Ban from Chat
+              {!checkIsBanned(participant.userId)
+                ? "Ban from Chat"
+                : "Unban from Chat"}
             </button>
             <button
               onClick={handleKickFromRoom}

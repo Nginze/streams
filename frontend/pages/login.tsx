@@ -3,8 +3,18 @@ import Head from "next/head";
 import { useContext } from "react";
 import { WebSocketContext } from "../src/contexts/WebsocketContext";
 import { AiFillGithub } from "react-icons/ai";
-import { Github, GithubIcon } from "lucide-react";
+import {
+  Activity,
+  Brackets,
+  Code2,
+  FileCode,
+  Github,
+  GithubIcon,
+  Tag,
+} from "lucide-react";
 import { BsDiscord, BsGithub, BsGoogle } from "react-icons/bs";
+import { BiLock } from "react-icons/bi";
+import { MdLock } from "react-icons/md";
 
 const BACKEND_URI = "http://localhost:8000";
 const width = 600;
@@ -65,35 +75,67 @@ const Home: NextPage = () => {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         ></link>
+
+        <link
+          href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100;200;300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        ></link>
       </Head>
       <div className="w-screen h-screen text-white font-display bg-app_bg_deepest flex items-center justify-center">
-        <div className="w-[400px] h-auto bg-app_bg_deeper rounded-lg p-6">
-          <div className="text-white flex flex-col items-start">
+        <div className="w-[350px] space-y-3 h-auto bg-app_bg_deeper rounded-lg p-6">
+          <div className="text-white flex flex-col items-start space-y-2 ">
             <span className="text-2xl font-bold">Welcome</span>
-            <span className="text-sm">
+            <span className="text-[12px]">
               By logging in you accept our Privacy Policy and Terms of Service.
             </span>
           </div>
-          <div className="text-white space-y-4 my-4">
+          <div className="text-white space-y-3 my-2">
             <button
               onClick={() => {
                 githubLogin();
               }}
-              className="bg-app_bg_deep p-4 space-x-2 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep p-3 space-x-2 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
-              <BsGithub size={25} style={{ marginRight: "1rem" }} />
+              <BsGithub size={17} style={{ marginRight: "1rem" }} />
               Log in with Github
             </button>
-            <button className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
-              <BsGoogle size={21} style={{ marginRight: "1rem" }} />
+            <button className="bg-app_bg_deep p-3 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
+              <BsGoogle size={16} style={{ marginRight: "1rem" }} />
               Log in with Google
             </button>
-            <button className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
-              <BsDiscord size={21} style={{ marginRight: "1rem" }} />
+            <button className="bg-app_bg_deep p-3 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300">
+              <BsDiscord size={16} style={{ marginRight: "1rem" }} />
               Log in with Discord
             </button>
           </div>
         </div>
+
+        <footer className="py-7 px-10 fixed bottom-0 left-0 w-full flex justify-between items-center space-x-10">
+          <h1 className="font-logo text-[1.5rem] leading-[2.3rem] flex items-center relative">
+            <Activity size={20} className="mr-2" color="#7289da" />
+            chatterbox
+          </h1>
+          <div className="flex items-baseline space-x-6 leading=[2.3em]">
+            <a
+              target="_blank"
+              href="https://github.com/Nginze/drop-next"
+              className="text-sm flex items-center text-[#424549]"
+            >
+              <Code2 className="mr-1" color="#424549" size={17} />
+              Github
+            </a>
+
+            <a className="text-sm flex items-center text-[#424549] ">
+              <FileCode className="mr-1" color="#424549" size={17} />
+              Terms
+            </a>
+
+            <a className="text-sm flex items-center text-[#424549]">
+              <MdLock className="mr-1" color="#424549" size={17} />
+              Privacy
+            </a>
+          </div>
+        </footer>
       </div>
 
       {/* <div className="font-display text-white bg-zinc-800 w-screen h-screen flex flex-col justify-center items-center">

@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { userContext } from "@/contexts/UserContext";
 import { Socket } from "socket.io-client";
+import { BeatLoader, ClipLoader, FadeLoader } from "react-spinners";
 
 type Props = {
   conn: Socket;
@@ -60,7 +61,7 @@ const CreateRoom = ({ conn }: Props) => {
   });
 
   return (
-    <div className="w-full space-y-6 mt-5">
+    <div className="w-full space-y-4 mt-5">
       <div>
         <span className="text-lg font-bold">Room Details</span>
       </div>
@@ -69,8 +70,11 @@ const CreateRoom = ({ conn }: Props) => {
           value={roomdesc}
           onChange={e => setRoomDesc(e.target.value)}
           placeholder="Describe topics shared in your room"
-          className="outline-none border-none bg-app_bg_light w-full p-2 rounded-sm"
+          className="outline-none border-none bg-app_bg_light w-full py-3 px-3 text-sm font-semibold rounded-sm placeholder:text-sm placeholder:font-semibold"
         />
+        <div className="flex flex-1 justify-end text-[0.85em] py-1">
+          {roomdesc.length}/50
+        </div>
       </div>
       <div className="flex flex-col items-start space-y-4">
         <div className="space-y-1 flex flex-col items-start">
@@ -80,9 +84,9 @@ const CreateRoom = ({ conn }: Props) => {
             rooms
           </span>
         </div>
-        <div className="chat w-full space-y-2 space-x-3 max-h-[120px] overflow-y-auto">
+        <div className="chat w-full space-x-2 space-y-2 max-h-[120px] overflow-y-auto">
           {categories.map(category => (
-            <Toggle
+            <Toggle className="bg-app_bg_deep"
               key={category}
               onClick={e => {
                 if (selectedToggles.includes(category)) {
@@ -152,22 +156,28 @@ const CreateRoom = ({ conn }: Props) => {
       </div>
 
       <div className="w-full">
-        <Button
-          onClick={() => {
-            createRoomMutation.mutate({
-              roomDesc: roomdesc,
-              creatorId: user.userId,
-              isPrivate,
-              autoSpeaker: enableAutoSpeaker,
-              handRaiseEnabled: enableHandRaise,
-              chatEnabled: enableRoomChat,
-              categories: selectedToggles,
-            });
-          }}
-          className="w-full bg-app_cta p-5 h-12 font-bold"
-        >
-          Create Room
-        </Button>
+        {createRoomMutation.isLoading ? (
+          <div className="flex items-center justify-center space-x-2 w-full">
+            <BeatLoader size={10} color="white" className="mr-2" />
+          </div>
+        ) : (
+          <Button
+            onClick={() => {
+              createRoomMutation.mutate({
+                roomDesc: roomdesc,
+                creatorId: user.userId,
+                isPrivate,
+                autoSpeaker: enableAutoSpeaker,
+                handRaiseEnabled: enableHandRaise,
+                chatEnabled: enableRoomChat,
+                categories: selectedToggles,
+              });
+            }}
+            className="w-full bg-app_cta p-5 h-12 font-bold"
+          >
+            Create Room
+          </Button>
+        )}
       </div>
     </div>
   );

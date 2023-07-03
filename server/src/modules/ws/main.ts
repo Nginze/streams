@@ -351,5 +351,26 @@ export async function main(
         user,
       });
     });
+
+    socket.on("room-name-changed", async ({ roomId, value }) => {
+      io.to(roomId).emit("room-name-changed", { roomId, value });
+    });
+
+    socket.on(
+      "ban-list-change",
+      async ({ roomId, banType, bannedUser, isBan }) => {
+        io.to(roomId).emit("ban-list-change", {
+          roomId,
+          banType,
+          bannedUser,
+          isBan,
+        });
+      }
+    );
+
+    socket.on("kicked-from-room", async ({ userId, roomId }) => {
+      const peerId = await redisClient.get(userId);
+      io.to(peerId as string).emit("kicked-from-room", { userId, roomId });
+    });
   });
 }

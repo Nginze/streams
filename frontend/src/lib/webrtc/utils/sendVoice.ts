@@ -31,6 +31,9 @@ export const sendVoice = async () => {
         appData: { mediaTag: "cam-audio" },
       })
     );
+
+    useProducerStore.getState().producer?.pause();
+
     set({ mic: track, micStream });
     return;
   }
