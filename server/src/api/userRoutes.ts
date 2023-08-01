@@ -70,9 +70,9 @@ router.delete(
   }
 );
 
-router.patch("/update", async (req: Request, res: Response) => {
+router.patch("/update/bio", async (req: Request, res: Response) => {
   const { userId } = req.user as UserDTO;
-  const { userName, bio, displayName, bannerUrl, avatarUrl } = req.body;
+  const { bio } = req.body;
 
   if (!userId || !req.body) {
     return res
@@ -83,11 +83,10 @@ router.patch("/update", async (req: Request, res: Response) => {
   await pool.query(
     `
     UPDATE user_data
-    SET bio = $1,
-        avatar_url = $2
-    WHERE user_id = $3
+    SET bio = $1
+    WHERE user_id = $2
     `,
-    [bio, avatarUrl, userId]
+    [bio , userId]
   );
 
   res.status(200).json({ msg: "updated user data" });
@@ -186,8 +185,8 @@ router.get("/notification/:userId", async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { rows: notifications } = await pool.query(
     `
-      SELECT * 
-      FROM user_notification
+      SELECT un.* , TO_CHAR(un.created_at, 'YYYY-MM-DD HH:MI:SS') as createdAt 
+      FROM user_notification un
       WHERE user_id = $1
       `,
     [userId]

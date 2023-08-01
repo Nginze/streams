@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
 import { Button } from "../ui/button";
 import { useMutation, useQuery } from "react-query";
-import { apiClient } from "@/lib/apiclient/client";
 import { userContext } from "@/contexts/UserContext";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { useRouter } from "next/router";
+import { api } from "@/api";
 
 const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
   const router = useRouter();
@@ -20,10 +20,10 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
       console.log(params.isBan);
 
       !params.isBan
-        ? await apiClient.post(
+        ? await api.post(
             `/room/ban/${roomId}?userId=${params.userId}&banType=${params.banType}`
           )
-        : await apiClient.delete(
+        : await api.delete(
             `/room/unban/${roomId}?userId=${params.userId}&banType=${params.banType}`
           );
     },
@@ -58,7 +58,7 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
     data: roomBans,
     isRefetching,
   } = useQuery(["room-bans", roomId], async () => {
-    const { data } = await apiClient.get(`/room/ban/${roomId}`);
+    const { data } = await api.get(`/room/ban/${roomId}`);
     return data;
   });
 
@@ -94,7 +94,7 @@ const RoomBanList = ({ roomId }: { roomId: string }) => {
   const { isLoading: roomBansLoading, data: roomBans } = useQuery(
     ["room-bans", roomId],
     async () => {
-      const { data } = await apiClient.get(`/room/ban/${roomId}`);
+      const { data } = await api.get(`/room/ban/${roomId}`);
       return data;
     }
   );

@@ -4,23 +4,28 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "preinstall": "sudo apt-get update && sudo apt-get install -y python3-pip build-essential",
     "start": "ts-node ./src/index.ts",
-    "dev": "nodemon ./src/index.ts"
+    "dev": "nodemon ./src/index.ts",
+    "test": "yarn jest"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/jest": "^29.5.3",
     "@types/node": "^18.13.0",
+    "jest": "^29.6.1",
     "nodemon": "^2.0.20",
+    "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
   },
   "dependencies": {
     "@types/amqplib": "^0.10.1",
     "amqplib": "^0.10.3",
+    "bullmq": "^4.4.0",
     "dotenv": "^16.0.3",
     "mediasoup": "^3.11.8",
+    "mediasoup-client": "^3.6.98",
     "socket.io": "^4.6.0",
     "winston": "^3.8.2"
   }

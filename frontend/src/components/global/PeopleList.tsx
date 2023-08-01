@@ -1,9 +1,9 @@
-import { apiClient } from "@/lib/apiclient/client";
 import React, { useContext, useEffect, useState } from "react";
 import { useQuery } from "react-query";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/router";
 import { userContext } from "@/contexts/UserContext";
+import { api } from "@/api";
 
 type Person = User & { online: boolean; lastSeen: string; roomDesc: string };
 
@@ -133,13 +133,13 @@ const PeopleList = () => {
   const { isLoading: peopleLoading, data: people } = useQuery({
     queryKey: ["people"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/profile/following/onlineList");
+      const { data } = await api.get("/profile/following/onlineList");
       return data;
     },
   });
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-3 sticky top-24">
       <span className="font-semibold text-xl">People</span>
       {peopleLoading ? (
         <div className="space-y-4 pt-6">

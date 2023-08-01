@@ -23,7 +23,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/lib/room/sound/SoundEffectPlayer.tsx"
+    "src/app/room/sound/SoundEffectPlayer.tsx"
   ],
   "exclude": ["node_modules"]
 }

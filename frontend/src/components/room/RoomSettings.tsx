@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "react-query";
-import { apiClient } from "../../lib/apiclient/client";
+import { api } from "../../api";
 import { useContext, useEffect, useState } from "react";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
 import { userContext } from "../../contexts/UserContext";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
 import RoomBanList from "./RoomBanList";
+import { toast } from "react-hot-toast";
 
 type Props = {
   room: Room;
@@ -29,59 +30,66 @@ const RoomSettings = ({ room }: Props) => {
       value: boolean | string;
       roomId: string;
     }) => {
-      await apiClient.put(
+      await api.put(
         `/room/settings/${params.roomId}?state=${params.state}&value=${params.value}`
       );
     },
 
     onMutate: async variables => {
       if (variables.state == "room_desc") {
-        conn?.emit("room-name-changed", {
+        conn?.emit("mod:change_room_name", {
           roomId: variables.roomId,
-          value: variables.value,
+          newRoomName: variables.value,
         });
       }
     },
 
-    onSuccess: () => {},
-
-    onError: (error, variables, context) => {
-      // if (variables.userId === user.userId) {
-      //   queryClient.setQueryData(
-      //     ["room-status", roomId],
-      //     context!.previousRoomStatus
-      //   );
-      // }
-    },
   });
 
-  const handleAllowChat = (e: any) => {
+  const handleAllowChat = async (e: any) => {
+    const event = chatEnabled ? "mod:disable_chat" : "mod:enable_chat"
     setChatEnabled(!chatEnabled);
     try {
-      conn?.emit("toggle-room-chat", {
+      conn?.emit(event, {
         roomId: room.roomId,
       });
 
-      RoomSettingMutation.mutate({
-        roomId: room.roomId,
-        state: "chat_enabled",
-        value: !room.chatEnabled,
-      });
+      await toast.promise(
+        RoomSettingMutation.mutateAsync({
+          roomId: room.roomId,
+          state: "chat_enabled",
+          value: !room.chatEnabled,
+        }),
+        {
+
+          loading: "Syncing settings ",
+          success: "Room settings updated",
+          error: "Sync failed",
+        }
+      );
     } catch (error) {}
   };
 
-  const handleAllowHandRaising = (e: any) => {
+  const handleAllowHandRaising = async (e: any) => {
+    const event = handRaiseEnabled ? "mod:disable_hand" : "mod:enable_hand"
     setHandRaiseEnabled(!handRaiseEnabled);
     try {
-      conn?.emit("toggle-hand-raise-enabled", {
+      conn?.emit(event, {
         roomId: room.roomId,
       });
 
-      RoomSettingMutation.mutate({
-        roomId: room.roomId,
-        state: "hand_raise_enabled",
-        value: !room.handRaiseEnabled,
-      });
+      await toast.promise(
+        RoomSettingMutation.mutateAsync({
+          roomId: room.roomId,
+          state: "hand_raise_enabled",
+          value: !room.handRaiseEnabled,
+        }),
+        {
+          loading: "Syncing settings ",
+          success: "Room settings updated",
+          error: "Sync failed",
+        }
+      );
     } catch (error) {}
   };
 
@@ -105,66 +113,80 @@ const RoomSettings = ({ room }: Props) => {
     } catch (error) {}
   };
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (updatedRoomDesc) {
-        try {
-          RoomSettingMutation.mutate({
-            roomId: room.roomId,
-            state: "room_desc",
-            value: updatedRoomDesc,
-          });
-        } catch (error) {}
-      }
-    }, 1000); // Adjust the delay time as needed (in milliseconds)
+  // useEffect(() => {
+  //   const delayDebounceFn = setTimeout(() => {
+  //     if (updatedRoomDesc) {
+  //       try {
+  //         RoomSettingMutation.mutate({
+  //           roomId: room.roomId,
+  //           state: "room_desc",
+  //           value: updatedRoomDesc,
+  //         });
+  //       } catch (error) {}
+  //     }
+  //   }, 1000); // Adjust the delay time as needed (in milliseconds)
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [updatedRoomDesc]);
+  //   return () => clearTimeout(delayDebounceFn);
+  // }, [updatedRoomDesc]);
+
+  const handleRoomNameChange = async () => {
+    if (room.roomDesc !== updatedRoomDesc) {
+      await toast.promise(
+        RoomSettingMutation.mutateAsync({
+          roomId: room.roomId,
+          state: "room_desc",
+          value: updatedRoomDesc,
+        }),
+        {
+          loading: "Syncing room name ",
+          success: "Room name updated",
+          error: "Sync failed",
+        }
+      );
+    }
+  };
 
   return (
-    <>
-      <div className="mt-4 space-y-4">
-        <div>
-          <span className="font-bold text-lg">Update Settings</span>
-        </div>
-        <div className="w-full">
-          <input
-            value={updatedRoomDesc}
-            onChange={e => setRoomDesc(e.target.value)}
-            placeholder="Describe topics shared in your room"
-            className="outline-none border-none bg-app_bg_light w-full p-2 rounded-sm"
-          />
-        </div>
-        {RoomSettingMutation.isLoading && (
-          <div className="text-sm">Saving ...</div>
-        )}
-        <div>
-          <span className="font-bold text-lg">Options</span>
-        </div>
-        <div className="space-y-4">
-          {/* <div className="flex items-center justify-between w-full">
+    <div className="mt-4 space-y-4">
+      <div>
+        <span className="font-semibold text-lg">Room Details ✨</span>
+      </div>
+      <div className="w-full">
+        <input
+          onBlur={handleRoomNameChange}
+          value={updatedRoomDesc}
+          onChange={e => setRoomDesc(e.target.value)}
+          placeholder="Describe topics shared in your room"
+          className="shadow-app_shadow outline-none border-none bg-app_bg_light w-full p-2 rounded-sm"
+        />
+      </div>
+      <div>
+        <span className="font-semibold text-lg">Room Options ⚙</span>
+      </div>
+      <div className="space-y-4">
+        {/* <div className="flex items-center justify-between w-full">
             <label htmlFor="autospeaker">Enable Auto-Speaker</label>
             <Switch id="autospeaker" />
           </div> */}
 
-          <div className="flex items-center justify-between w-full">
-            <label htmlFor="enablechat">Enable Chat</label>
-            <Switch
-              checked={chatEnabled}
-              onCheckedChange={handleAllowChat}
-              id="enablechat"
-            />
-          </div>
+        <div className="flex items-center justify-between w-full">
+          <label htmlFor="enablechat">Enable Chat</label>
+          <Switch
+            checked={chatEnabled}
+            onCheckedChange={handleAllowChat}
+            id="enablechat"
+          />
+        </div>
 
-          <div className="flex items-center justify-between w-full">
-            <label htmlFor="enablehandraise">Enable Hand Raise</label>
-            <Switch
-              checked={handRaiseEnabled}
-              onCheckedChange={handleAllowHandRaising}
-              id="enablehandraise"
-            />
-          </div>
-          {/* <div className="flex items-center">
+        <div className="flex items-center justify-between w-full">
+          <label htmlFor="enablehandraise">Enable Hand Raise</label>
+          <Switch
+            checked={handRaiseEnabled}
+            onCheckedChange={handleAllowHandRaising}
+            id="enablehandraise"
+          />
+        </div>
+        {/* <div className="flex items-center">
             <input
               onChange={handleMuteAllSpeakers}
               checked={muteAllSpeakers}
@@ -194,14 +216,13 @@ const RoomSettings = ({ room }: Props) => {
             />
             <label htmlFor="room-chat">Allow room chat</label>
           </div> */}
-        </div>
-        <RoomBanList roomId={room.roomId}/>
+      </div>
+      <RoomBanList roomId={room.roomId} />
 
-        {/* <div className="w-full">
+      {/* <div className="w-full">
           <Button className="w-full bg-app_cta p-5 h-12 font-bold">Save</Button>
         </div> */}
-      </div>
-    </>
+    </div>
   );
 };
 

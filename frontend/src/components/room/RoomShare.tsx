@@ -1,7 +1,7 @@
-import { Copy, LucideUserPlus, UserPlus } from "lucide-react";
-import React, { useContext } from "react";
+import { Check, CheckCheck, Copy, LucideUserPlus, UserPlus } from "lucide-react";
+import React, { useContext, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
-import { apiClient } from "@/lib/apiclient/client";
+import { api } from "@/api";
 import { useQuery } from "react-query";
 import PeopleList from "../global/PeopleList";
 import { Button } from "../ui/button";
@@ -9,6 +9,7 @@ import { TbUserPlus } from "react-icons/tb";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { userContext } from "@/contexts/UserContext";
 import { FaUserPlus } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 
 type Person = User & { online: boolean };
 type ShareListItemProps = {
@@ -67,23 +68,46 @@ type RoomShareProps = {
 };
 
 const RoomShare = ({ room }: RoomShareProps) => {
+  const [copied, setCopied] = useState(false);
   const { isLoading: peopleLoading, data: people } = useQuery({
     queryKey: ["invites"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/profile/invite/online");
+      const { data } = await api.get("/profile/invite/online");
       return data;
     },
   });
 
+  const handleCopy = async (link: string) => {
+    await navigator.clipboard.writeText(link);
+    setCopied(true)
+    toast.success("Copied room link", {
+      style: {
+        borderRadius: "10px",
+        background: "#333",
+        color: "#fff",
+      },
+    });
+  };
+
   return (
     <div className="mt-4 space-y-4">
       <div>
-        <span className="font-semibold text-lg">Share with others</span>
+        <span className="font-semibold text-lg">Share with others 🤙</span>
       </div>
-      <div className="w-full">
-        <div className=" flex items-center justify-center outline-none border-none bg-app_bg_deep w-full p-3.5 rounded-sm text-center cursor-pointer">
+      <div
+        onClick={() => handleCopy("http://drop.tv/room/alkajsdflkasl")}
+        className="w-full"
+      >
+        <div className="flex items-center justify-center shadow-app_shadow outline-none border-none bg-app_bg_deep w-full p-3.5 rounded-sm text-center cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500">
           http://drop.tv/room/alkajsdflkasl
-          {/* <Copy size={16} /> */}
+          {!copied ? (
+            <Copy
+              size="16"
+              className="ml-5 copy-icon opacity-0 group-hover:opacity-100"
+            />
+          ) : (
+            <CheckCheck size={"16"} className="ml-5 text-green-400" />
+          )}
         </div>
       </div>
       {people?.length > 0 && (

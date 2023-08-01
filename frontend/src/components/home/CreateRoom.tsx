@@ -4,12 +4,15 @@ import { Button } from "../ui/button";
 import { Toggle } from "../ui/toggle";
 import { categories } from "./Constants";
 import { useMutation } from "react-query";
-import { apiClient } from "@/lib/apiclient/client";
 import { toast } from "react-hot-toast";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { userContext } from "@/contexts/UserContext";
 import { Socket } from "socket.io-client";
 import { BeatLoader, ClipLoader, FadeLoader } from "react-spinners";
+import { api } from "@/api";
+import { ArrowRight, ArrowRightFromLine, MoveRight } from "lucide-react";
+import Loader from "../global/Loader";
+import { useRTCStore } from "@/engine/webrtc/store/useRTCStore";
 
 type Props = {
   conn: Socket;
@@ -24,6 +27,8 @@ const CreateRoom = ({ conn }: Props) => {
 
   const { user } = useContext(userContext);
 
+  const { createRoomLoading, setCreateLoading } = useRTCStore();
+
   const createRoomMutation = useMutation({
     mutationFn: async (params: {
       roomDesc: string;
@@ -34,7 +39,7 @@ const CreateRoom = ({ conn }: Props) => {
       handRaiseEnabled: boolean;
       categories: string[];
     }) => {
-      const { data } = await apiClient.post("/room/create", params);
+      const { data } = await api.post("/room/create", params);
       return data;
     },
 
@@ -42,7 +47,7 @@ const CreateRoom = ({ conn }: Props) => {
       console.log(conn, data);
       // if (data && conn) {
       console.log("sending room data to voice server", data.roomId);
-      conn.emit("create-room", { roomId: data.roomId });
+      conn.emit("rtc:create_room", { roomId: data.roomId });
       // } else {
       //   alert("something went wront during creation try again");
       // }
@@ -61,16 +66,16 @@ const CreateRoom = ({ conn }: Props) => {
   });
 
   return (
-    <div className="w-full space-y-4 mt-5">
+    <div className="w-full space-y-3 mt-5">
       <div>
-        <span className="text-lg font-bold">Room Details</span>
+        <span className="text-lg font-semibold">Room Details</span>
       </div>
       <div className="w-full">
         <input
           value={roomdesc}
           onChange={e => setRoomDesc(e.target.value)}
           placeholder="Describe topics shared in your room"
-          className="outline-none border-none bg-app_bg_light w-full py-3 px-3 text-sm font-semibold rounded-sm placeholder:text-sm placeholder:font-semibold"
+          className="outline-none border-none bg-app_bg_light shadow-app_shadow w-full py-3 px-3 text-sm font-semibold rounded-sm placeholder:text-sm placeholder:font-semibold"
         />
         <div className="flex flex-1 justify-end text-[0.85em] py-1">
           {roomdesc.length}/50
@@ -78,15 +83,16 @@ const CreateRoom = ({ conn }: Props) => {
       </div>
       <div className="flex flex-col items-start space-y-4">
         <div className="space-y-1 flex flex-col items-start">
-          <span className="text-lg font-bold">Reach a Wider Audience</span>
-          <span className="text-sm">
+          <span className="text-lg font-semibold">Reach a Wider Audience</span>
+          <span className="text-sm opacity-70">
             Topics make it easier for people with similar interests to find your
-            rooms
+            rooms 🤩
           </span>
         </div>
-        <div className="chat w-full space-x-2 space-y-2 max-h-[120px] overflow-y-auto">
+        <div className="chat w-full space-y-1 max-h-[120px] overflow-y-auto">
           {categories.map(category => (
-            <Toggle className="bg-app_bg_deep"
+            <Toggle
+              className="bg-app_bg_deep mr-1 rounded-sm shadow-app_shadow"
               key={category}
               onClick={e => {
                 if (selectedToggles.includes(category)) {
@@ -108,11 +114,11 @@ const CreateRoom = ({ conn }: Props) => {
         </div>
       </div>
       <div className="space-y-3">
-        <span className="text-lg font-bold">Room Settings</span>
+        <span className="text-lg font-semibold">Room Settings</span>
         <div className="flex flex-col items-start space-y-3">
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer" htmlFor="isprivate">
-              Private Room
+              Private Room 🔒
             </label>
             <Switch
               checked={isPrivate}
@@ -122,7 +128,7 @@ const CreateRoom = ({ conn }: Props) => {
           </div>
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer" htmlFor="autospeaker">
-              Enable Auto-Speaker
+              Enable Auto-Speaker 🗣
             </label>
             <Switch
               checked={enableAutoSpeaker}
@@ -133,7 +139,7 @@ const CreateRoom = ({ conn }: Props) => {
 
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer" htmlFor="enablechat">
-              Enable Chat
+              Enable Chat 🤳
             </label>
             <Switch
               checked={enableRoomChat}
@@ -144,7 +150,7 @@ const CreateRoom = ({ conn }: Props) => {
 
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer" htmlFor="enablehandraise">
-              Enable Hand Raise
+              Enable Hand Raising ✋
             </label>
             <Switch
               checked={enableHandRaise}
@@ -156,13 +162,14 @@ const CreateRoom = ({ conn }: Props) => {
       </div>
 
       <div className="w-full">
-        {createRoomMutation.isLoading ? (
+        {createRoomMutation.isLoading || createRoomLoading ? (
           <div className="flex items-center justify-center space-x-2 w-full">
-            <BeatLoader size={10} color="white" className="mr-2" />
+            <Loader width={25} height={25} bgColor="white" />
           </div>
         ) : (
           <Button
             onClick={() => {
+              setCreateLoading(true);
               createRoomMutation.mutate({
                 roomDesc: roomdesc,
                 creatorId: user.userId,
@@ -173,9 +180,9 @@ const CreateRoom = ({ conn }: Props) => {
                 categories: selectedToggles,
               });
             }}
-            className="w-full bg-app_cta p-5 h-12 font-bold"
+            className="w-full bg-app_cta space-x-1 p-5 h-12 font-semibold"
           >
-            Create Room
+            Start Room
           </Button>
         )}
       </div>

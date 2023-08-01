@@ -1,16 +1,16 @@
-import "../styles/globals.css";
+import UserColorProvider from "@/components/global/UserColorProvider";
 import type { AppProps } from "next/app";
+import { useState } from "react";
+import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
-import { useState } from "react";
-import { WebSocketProvider } from "../src/contexts/WebsocketContext";
-import WebrtcApp from "../src/lib/webrtc/WebrtcApp";
+import { ChatWsHandler } from "../src/engine/global/ChatWsHandler";
+import { MainWsHandler } from "../src/engine/global/MainWsHandler";
+import SoundEffectPlayer from "../src/engine/room/sound/SoundEffectPlayer";
+import WebrtcApp from "../src/engine/webrtc/WebrtcApp";
 import UserProvider from "../src/contexts/UserContext";
-import { MainWsHandler } from "../src/modules/MainWsHandler";
-import { ChatWsHandler } from "../src/modules/ChatWsHandler";
-import { Toaster } from "react-hot-toast";
-import SoundEffectPlayer from "../src/lib/room/sound/SoundEffectPlayer";
-import UserColorProvider from "@/components/global/UserColorProvider";
+import { WebSocketProvider } from "../src/contexts/WebsocketContext";
+import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());

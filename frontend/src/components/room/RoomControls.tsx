@@ -11,16 +11,23 @@ import { MdOutlineWavingHand } from "react-icons/md";
 import { TbHandOff } from "react-icons/tb";
 import { useMutation, useQueryClient } from "react-query";
 import { Socket } from "socket.io-client";
-import { apiClient } from "../../lib/apiclient/client";
-import { useVoiceStore } from "../../lib/webrtc/store/useVoiceStore";
-import { useSoundEffectStore } from "../../global-stores/useSoundEffectStore";
+import { api } from "../../api";
+import { useVoiceStore } from "../../engine/webrtc/store/useVoiceStore";
+import { useSoundEffectStore } from "../../store/useSoundEffectStore";
 import { Button } from "../ui/button";
 import { MessageSquare, Mic, MicOff, UserPlus } from "lucide-react";
 import AppDialog from "../global/AppDialog";
 import RoomShare from "./RoomShare";
-import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
-import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
+import { useConsumerStore } from "@/engine/webrtc/store/useConsumerStore";
+import { useProducerStore } from "@/engine/webrtc/store/useProducerStore";
 import { useRouter } from "next/router";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { TooltipArrow } from "@radix-ui/react-tooltip";
 
 type Props = {
   conn: Socket | null;
@@ -50,7 +57,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
       value: boolean;
       userId: string;
     }) => {
-      await apiClient.put(
+      await api.put(
         `/room/room-status/update/${params.userId}?state=${params.state}&value=${params.value}&roomId=${roomId}`
       );
     },
@@ -89,10 +96,11 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     if (!conn || !mic) {
       return;
     }
+    const event = myRoomStatus.isMuted ? "action:unmute" : "action:mute";
     myRoomStatus.isMuted ? playSoundEffect("unmute") : playSoundEffect("mute");
-    conn.emit("user-muted-mic", { roomId, userId: user.userId });
-    // mic.enabled = !mic.enabled;
-    producer?.paused ? producer.resume() : producer?.pause();
+
+    conn.emit(event, { roomId, userId: user.userId });
+    mic?.enabled ? mic.enabled = false : mic.enabled = true;
 
     try {
       statusMutation.mutate({
@@ -108,10 +116,14 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
       return;
     }
 
+    const event = myRoomStatus.raisedHand
+      ? "action:hand_down"
+      : "action:hand_raise";
+
     myRoomStatus.raisedHand
       ? playSoundEffect("unmute")
       : playSoundEffect("mute");
-    conn.emit("user-asked-to-speak", { roomId, userId: user.userId });
+    conn.emit(event, { roomId, userId: user.userId });
     try {
       statusMutation.mutate({
         state: "raised_hand",
@@ -126,7 +138,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
       if (room.creatorId == user.userId) {
         conn?.emit("leave-room-all", { roomId, hostId: user.userId });
       } else {
-        await apiClient.post(`/room/leave?roomId=${roomId}`).then(async res => {
+        await api.post(`/room/leave?roomId=${roomId}`).then(async res => {
           conn?.emit("leave-room", { roomId });
           nullify();
           closeAll();
@@ -154,7 +166,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
               myRoomStatus!.isMuted || myRoomStatus!.raisedHand
                 ? "bg-app_bg_deeper"
                 : "bg-app_cta "
-            } w-20`}
+            } shadow-app_shadow px-8`}
           >
             {myRoomStatus.isSpeaker ? (
               myRoomStatus!.isMuted ? (
@@ -170,16 +182,16 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
           </Button>
         )}
         <AppDialog content={<RoomShare room={room} />}>
-          <Button className="bg-app_bg_deeper">
+          <Button className="bg-app_bg_deeper shadow-app_shadow">
             <UserPlus size={16} />
           </Button>
         </AppDialog>
-        <Button className="bg-app_bg_deeper">
+        {/* <Button className="bg-app_bg_deeper">
           <MessageSquare size={16} />
-        </Button>
+        </Button> */}
       </div>
       <div>
-        <Button onClick={handleLeave} className="w-28 bg-app_bg_deeper">
+        <Button onClick={handleLeave} className="w-28 bg-app_bg_deeper shadow-app_shadow">
           {room!.creatorId == user.userId ? "End" : "Leave"}
         </Button>
       </div>

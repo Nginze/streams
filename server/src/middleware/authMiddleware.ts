@@ -1,10 +1,6 @@
-import { NextFunction, Request, Response } from "express";
+import { RequestHandler } from "express";
 
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const authMiddleware: RequestHandler = (req, res, next) => {
   if (
     req.originalUrl.startsWith("/auth") ||
     req.originalUrl.includes("/room/leave") ||
@@ -16,6 +12,10 @@ export const authMiddleware = (
   } else if (req.user) {
     next();
   } else {
-    res.status(400).json({ error: "Authentication failed" });
+    res.status(401).json({
+      error: {
+        message: "Unauthorized request for resource",
+      },
+    });
   }
 };

@@ -1,7 +1,7 @@
 import { useState, useRef, useContext } from "react";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { Socket } from "socket.io-client";
-import { customEmojis, emoteMap } from "../../lib/room/chat/EmoteData";
+import { customEmojis, emoteMap } from "../../engine/room/chat/EmoteData";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { AiFillCrown, AiOutlineClose } from "react-icons/ai";
@@ -9,8 +9,8 @@ import { BiMessageAltError } from "react-icons/bi";
 import { MentionsInput, Mention, SuggestionDataItem } from "react-mentions";
 import { HiReply } from "react-icons/hi";
 import { userColorContext } from "../global/UserColorProvider";
-import { MessageCircle } from "lucide-react";
-import { apiClient } from "@/lib/apiclient/client";
+import { Ban, MessageCircle } from "lucide-react";
+import { api } from "@/api";
 import { useQuery } from "react-query";
 
 type Props = {
@@ -38,7 +38,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   const { isLoading: roomBansLoading, data: roomBans } = useQuery(
     ["room-bans", room.roomId],
     async () => {
-      const { data } = await apiClient.get(`/room/ban/${room.roomId}`);
+      const { data } = await api.get(`/room/ban/${room.roomId}`);
       return data;
     }
   );
@@ -71,7 +71,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
       if (emoteMap[parsedToken] && t.indexOf(":") > -1) {
         parsedMessage.push(
           <img
-            className="inline"
+            className="inline align-baseline"
             src={emoteMap[parsedToken]}
             alt={parsedToken}
           />
@@ -113,7 +113,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
       createdAt: new Date(),
       color: userColor,
     };
-    conn?.emit("new-chat-message", { roomId: room.roomId, message });
+    conn?.emit("chat:global_new_message", { roomId: room.roomId, message });
     setMessage("");
   };
 
@@ -128,7 +128,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   };
 
   return chatOpen ? (
-    <div className="h-[570px] flex flex-col items-center">
+    <div className="h-[570px] flex flex-col items-center shadow-app_shadow">
       <div
         className={`chat w-full px-2  overflow-y-auto overflow-x-hidden flex  flex-col-reverse flex-1 items-start space-y-1`}
       >
@@ -208,7 +208,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
           </div>
           <div
             className={`h-auto text-white mt-1 ${
-              reply ? "ring-1 ring-app_bg_light w-[220px] m-auto p-2" : "p-2"
+              reply ? "ring-1 ring-app_bg_light w-full m-auto p-2" : "p-2"
             } space-y-2 text-sm rounded-sm`}
           >
             {reply && (
@@ -237,7 +237,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
               </>
             )}
             {room.chatEnabled && !checkIsBanned(user.userId) ? (
-              <div className="flex items-center bg-app_bg_deep rounded-sm py-1.5 px-2.5">
+              <div className="flex shadow-app_shadow items-center bg-app_bg_deep rounded-sm py-1.5 px-2.5">
                 <input
                   value={chatContent}
                   ref={chatInputRef}
@@ -258,11 +258,11 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
               </div>
             ) : (
               <div>
-                <span className="flex items-center space-x-2 italic justify-center font-semibold text-app_bg_light">
-                  <MessageCircle size={20} className="mr-2" />
+                <span className="flex items-center space-x-2 justify-center font-semibold opacity-90">
+                  <Ban size={20} className="mr-2" />
                   {checkIsBanned(user.userId)
-                    ? "host banned you from chat"
-                    : "host disabled chat"}
+                    ? "Host banned you from chat"
+                    : "Chat disabled"}
                 </span>
               </div>
             )}

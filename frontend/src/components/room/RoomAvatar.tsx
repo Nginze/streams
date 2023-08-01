@@ -3,10 +3,9 @@ import { useContext } from "react";
 import { BsMicMute, BsShield, BsShieldFill } from "react-icons/bs";
 import { useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../contexts/UserContext";
-import { useRoomProfileModalStore } from "../../global-stores/useRoomProfileModal";
+import { useRoomProfileModalStore } from "../../store/useRoomProfileModal";
 import AppDialog from "../global/AppDialog";
 import RoomParticipantProfile from "./RoomParticipantProfile";
-import useLoadRoomMeta from "@/lib/room/hooks/useLoadRoomMeta";
 import {
   Crown,
   Shield,
@@ -18,6 +17,7 @@ import {
 import { SwordsIcon } from "lucide-react";
 import { TbCrown, TbCrownOff } from "react-icons/tb";
 import { AiFillCrown } from "react-icons/ai";
+import useLoadRoomMeta from "@/hooks/useLoadRoomMeta";
 
 type Props = {
   participant: RoomParticipant;
@@ -77,7 +77,7 @@ const RoomAvatar = ({ participant }: Props) => {
             alt=""
           />
         </AppDialog>
-        {participant.raisedHand && (
+        {participant.raisedHand && !participant.isSpeaker && (
           <div
             style={{
               borderRadius: "100%",

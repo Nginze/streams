@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import { useQuery } from "react-query";
-import { apiClient } from "../lib/apiclient/client";
+import { api } from "../api";
 
 type Props = {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ export const userContext = createContext<UContext>({} as UContext);
 
 const UserProvider = ({ children }: Props) => {
   const getUser = async () => {
-    const { data: user } = await apiClient.get("/user");
+    const { data: user } = await api.get("/user");
     return user;
   };
 

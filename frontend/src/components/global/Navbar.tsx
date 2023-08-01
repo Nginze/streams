@@ -9,7 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Activity, Footprints, LogOut, LogOutIcon, User } from "lucide-react";
+import {
+  Activity,
+  Footprints,
+  LogOut,
+  LogOutIcon,
+  PlusCircle,
+  User,
+} from "lucide-react";
 import { userContext } from "@/contexts/UserContext";
 import { Skeleton } from "../ui/skeleton";
 import { ActivityIcon } from "lucide-react";
@@ -29,20 +36,28 @@ import SettingsSheet from "./SettingsSheet";
 import AppDialog from "./AppDialog";
 import ProfileSheet from "./ProfileSheet";
 import NotificationsSheet from "./NotificationsSheet";
-import { apiClient } from "@/lib/apiclient/client";
 import { useQuery, useQueryClient } from "react-query";
+import Search from "./Search";
+import Logout from "./Logout";
+import { api } from "@/api";
+import { Button } from "../ui/button";
+import CreateRoom from "../home/CreateRoom";
+import { WebSocketContext } from "@/contexts/WebsocketContext";
+import { useRouter } from "next/router";
 
 type Props = {};
 
 const Navbar = ({}: Props) => {
   const { user, userLoading } = useContext(userContext);
   const queryClient = useQueryClient();
+
+  const { conn } = useContext(WebSocketContext);
+  const router = useRouter();
+
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
     async () => {
-      const { data } = await apiClient.get(
-        `/profile/notification/${user.userId}`
-      );
+      const { data } = await api.get(`/profile/notification/${user.userId}`);
       return data;
     },
     { enabled: !!user }
@@ -51,70 +66,95 @@ const Navbar = ({}: Props) => {
     (notification: any) => notification.isRead === false
   );
   return (
-    <div className="w-full flex items-center justify-between">
-      {/* {userLoading ? (
+    <div className="w-full shadow-app_shadow flex items-center py-3 bg-app_bg_deepest sticky top-0 z-10">
+      <div className="w-3/4 bg-app_bg_deepest flex itesm-center mx-auto justify-between ">
+        {/* {userLoading ? (
         <Skeleton className="h-6 w-1/4 rounded-sm bg-app_bg_deep" />
       ) : ( */}
-      <h1 className="font-logo text-[2rem] leading-[2.3rem] flex items-center relative">
-        <Activity size={30} className="mr-2" color="#7289da" />
-        chatterbox
-      </h1>
-      {/* )} */}
-      <div className="space-x-6 flex items-center">
-        <button>
-          <MdLogout size={23} className="text-[#424549] hover:text-white" />
-        </button>
-        <Sheet>
-          <SheetTrigger asChild>
-            <button
-              onClick={async () => {
-                await apiClient.patch(
-                  `/profile/notification/markAsRead/${user.userId}`
-                );
-                queryClient.invalidateQueries(["notifications", user?.userId]);
-              }}
-              className="relative"
+        <h1
+          onClick={() => {
+            router.push("/home");
+          }}
+          className="font-logo bg-app_bg_deepest text-[1rem] leading-[2.3rem] flex items-center relative cursor-pointer"
+        >
+          <img src="/logo.svg" width={30} className="mr-2" />
+          <span className="relative">
+            Streams
+            <span className="absolute text-[8px] px-1 text-green-400">
+              Beta
+            </span>
+          </span>
+        </h1>
+        {/* )} */}
+        <div className="space-x-6 flex items-center ">
+          {/* <Search /> */}
+          <AppDialog content={<CreateRoom conn={conn!} />}>
+            <Button
+              size={"sm"}
+              className="bg-app_bg_deep shadow-app_shadow rounded-sm"
             >
-              {hasNewNotifications && (
-                <div className="w-2 h-2 rounded-full bg-yellow-100 absolute right-0.5 top-0"></div>
-              )}
-              <MdNotifications
-                size={23}
-                className="text-[#424549] hover:text-white"
-              />
+              <PlusCircle className="mr-1 h-4 2-4" /> Start Room
+            </Button>
+          </AppDialog>
+          <AppDialog content={<Logout />}>
+            <button>
+              <MdLogout size={23} className="text-[#424549] hover:text-white" />
             </button>
-          </SheetTrigger>
-          <SheetContent position={"right"} size={"sm"}>
-            <SheetHeader>
-              <SheetTitle>Notifications </SheetTitle>
-            </SheetHeader>
-            <NotificationsSheet />
-          </SheetContent>
-        </Sheet>
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild> */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <button className="hover:opacity-60">
-              {userLoading ? (
-                <Skeleton className="w-7 h-7 rounded-full" />
-              ) : (
-                <img
-                  alt={`${user.userName}`}
-                  src={user.avatarUrl}
-                  className="rounded-full"
-                  width={28}
-                  height={28}
+          </AppDialog>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                onClick={async () => {
+                  await api.patch(
+                    `/profile/notification/markAsRead/${user.userId}`
+                  );
+                  queryClient.invalidateQueries([
+                    "notifications",
+                    user?.userId,
+                  ]);
+                }}
+                className="relative"
+              >
+                {hasNewNotifications && (
+                  <div className="w-2 h-2 rounded-full bg-yellow-100 absolute right-0.5 top-0"></div>
+                )}
+                <MdNotifications
+                  size={23}
+                  className="text-[#424549] hover:text-white"
                 />
-              )}
-            </button>
-          </SheetTrigger>
-          <SheetContent position={"right"} size={"sm"}>
-            <SheetHeader></SheetHeader>
-            <ProfileSheet />
-          </SheetContent>
-        </Sheet>
-        {/* </DropdownMenuTrigger>
+              </button>
+            </SheetTrigger>
+            <SheetContent position={"right"} size={"sm"}>
+              <SheetHeader>
+                <SheetTitle>Notifications </SheetTitle>
+              </SheetHeader>
+              <NotificationsSheet />
+            </SheetContent>
+          </Sheet>
+          {/* <DropdownMenu>
+          <DropdownMenuTrigger asChild> */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="hover:opacity-60">
+                {userLoading ? (
+                  <Skeleton className="w-7 h-7 rounded-full" />
+                ) : (
+                  <img
+                    alt={`${user.userName}`}
+                    src={user.avatarUrl}
+                    className="rounded-full ring-2"
+                    width={28}
+                    height={28}
+                  />
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent position={"right"} size={"sm"}>
+              <SheetHeader></SheetHeader>
+              <ProfileSheet />
+            </SheetContent>
+          </Sheet>
+          {/* </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -131,6 +171,7 @@ const Navbar = ({}: Props) => {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu> */}
+        </div>
       </div>
     </div>
   );

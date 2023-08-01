@@ -20,11 +20,11 @@ const AppLayout = ({ navbar, column1, column2, footer }: Props) => {
           rel="stylesheet"
         ></link>
       </Head>
-      <main className="w-screen h-screen bg-app_bg_deepest text-white font-display overflow-auto">
-        <div className="w-3/4 m-auto space-y-16 pt-7">
-          {navbar}
+      <main className="w-screen h-screen bg-app_bg_deepest text-white font-display overflow-auto space-y-8 chat">
+        {navbar}
+        <div className="w-3/4 m-auto space-y-16">
           <div className="grid grid-cols-4 gap-x-52 w-full max-h-96 h-96">
-            <div className="col-span-1 max-h-screen sticky top-0">
+            <div className="col-span-1 max-h-screen">
               {column1}
             </div>
             <div className="col-span-3">{column2}</div>

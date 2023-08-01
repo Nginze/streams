@@ -1,7 +1,8 @@
-import { Request, Response, Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { pool } from "../config/psql";
 import { UserDTO } from "../types/User";
 import { parseCamel } from "../utils/parseCamel";
+import createHttpError from "http-errors";
 
 export const router = Router();
 
@@ -15,55 +16,63 @@ type RoomInfo = {
   categories: string[];
 };
 
-router.post("/create", async (req: Request, res: Response) => {
-  const roomInfo = {
-    ...req.body,
-    creatorId: (req.user as UserDTO).userId,
-  } as RoomInfo;
-  const {
-    roomDesc,
-    creatorId,
-    isPrivate,
-    autoSpeaker,
-    chatEnabled,
-    handRaiseEnabled,
-    categories,
-  } = roomInfo;
+router.post(
+  "/create",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const roomInfo = {
+      ...req.body,
+      creatorId: (req.user as UserDTO).userId,
+    } as RoomInfo;
+    const {
+      roomDesc,
+      creatorId,
+      isPrivate,
+      autoSpeaker,
+      chatEnabled,
+      handRaiseEnabled,
+      categories,
+    } = roomInfo;
 
-  if (!roomInfo) {
-    return res
-      .status(400)
-      .json({ msg: "Bad request, invalide credentials sent" });
-  }
+    if (!roomInfo) {
+      throw createHttpError(400, "Bad request, invalid credentials sent");
+    }
 
-  const client = await pool.connect();
+    const client = await pool.connect();
 
-  await client.query(`BEGIN`);
+    await client.query(`BEGIN`);
 
-  const { rows } = await client.query(
-    `
+    const { rows } = await client.query(
+      `
     INSERT INTO room (room_desc, is_private, auto_speaker, creator_id, chat_enabled, hand_raise_enabled)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING room_id;
     `,
-    [roomDesc, isPrivate, autoSpeaker, creatorId, chatEnabled, handRaiseEnabled]
-  );
+      [
+        roomDesc,
+        isPrivate,
+        autoSpeaker,
+        creatorId,
+        chatEnabled,
+        handRaiseEnabled,
+      ]
+    );
 
-  categories.forEach(async category => {
-    await client.query(
-      `
+    categories.forEach(async category => {
+      await client.query(
+        `
     INSERT INTO room_category (room_id, category) VALUES ($1, $2) 
     `,
-      [rows[0].room_id, category]
-    );
-  });
+        [rows[0].room_id, category]
+      );
+    });
 
-  await client.query("COMMIT");
+    await client.query("COMMIT");
 
-  if (rows.length > 0) {
-    res.status(200).json(parseCamel(rows[0]));
+    if (rows.length > 0) {
+      res.status(200).json(parseCamel(rows[0]));
+    }
   }
-});
+);
 
 router.get("/:roomId", async (req: Request, res: Response) => {
   const { roomId } = req.params;
@@ -97,12 +106,12 @@ router.get("/:roomId", async (req: Request, res: Response) => {
 
   if (!room[0]) {
     console.log("no room found");
-    return res.status(200).json('404');
+    return res.status(200).json("404");
   }
 
   if (banned[0]) {
     console.log("no room found");
-    return res.status(200).json('403');
+    return res.status(200).json("403");
   }
 
   const client = await pool.connect();
@@ -139,10 +148,20 @@ router.get("/:roomId", async (req: Request, res: Response) => {
 
     await client.query(
       `
+      DELETE FROM room_status
+      WHERE user_id = $1
+      AND room_id = $2
+      `,
+      [
+        userId,
+        roomId, 
+      ]
+    );
+
+    await client.query(
+      `
       INSERT INTO room_status (room_id, user_id, is_speaker, is_mod, raised_hand, is_muted)
       VALUES ($1, $2, $3, $4, $5, $6)
-      ON CONFLICT DO NOTHING;
-
       `,
       [
         roomId,
@@ -194,7 +213,12 @@ router.get("/rooms/live", async (req: Request, res: Response) => {
   const { rows: rooms } = await pool.query(
     `
     SELECT *,
-    ARRAY(SELECT user_name FROM user_data WHERE current_room_id = room.room_id) AS participants,
+    (SELECT user_name FROM user_data WHERE user_id = room.creator_id) as creator,
+    (
+      SELECT json_agg(json_build_object('user_name', ud.user_name, 'avatar_url', ud.avatar_url))
+      FROM user_data ud
+      WHERE ud.current_room_id = room.room_id
+    ) AS participants,
     ARRAY(SELECT category FROM room_category WHERE room_id = room.room_id) AS categories
     FROM room
     WHERE ended = false
