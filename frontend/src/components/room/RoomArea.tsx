@@ -59,7 +59,9 @@ const RoomArea = ({}: Props) => {
     room as Room
   );
 
-  const host = room?.participants.filter(p => p.userId == room.creatorId);
+  const host = (room as Room)?.participants.filter(
+    p => p.userId == (room as Room)?.creatorId
+  );
 
   return myDevice == "isDesktop" ? (
     <>
@@ -72,7 +74,7 @@ const RoomArea = ({}: Props) => {
                   <div className="flex flex-col items-start w-ful">
                     <div className="flex justify-center items-center w-full">
                       <span className="font-semibold opacity-90 text-lg leading-7 flex-1 text-left">
-                        {room?.roomDesc}
+                        {(room as Room)?.roomDesc}
                       </span>
 
                       {/* {(roomStatus!.isMod || room!.creatorId == user.userId) && (
@@ -104,8 +106,8 @@ const RoomArea = ({}: Props) => {
                     </div>
                   </div>
                   <div>
-                    {(roomStatus!.isMod || room!.creatorId == user.userId) && (
-                      <AppDialog content={<RoomSettings room={room!} />}>
+                    {(roomStatus!.isMod || (room as Room)?.creatorId == user.userId) && (
+                      <AppDialog content={<RoomSettings room={room as Room} />}>
                         <Button className="p-1.5 h-7 bg-app_bg_light shadow-app_shadow">
                           <Settings size={16} />
                         </Button>
@@ -131,7 +133,7 @@ const RoomArea = ({}: Props) => {
                 </div>
 
                 {askedToSpeak.length > 0 &&
-                  (roomStatus.isMod || room.creatorId == user.userId) && (
+                  (roomStatus.isMod || (room as Room)?.creatorId == user.userId) && (
                     <div className="mb-6 w-full">
                       <p className="mb-4 text-sm font-bold flex items-center">
                         Requesting to speak
@@ -160,8 +162,8 @@ const RoomArea = ({}: Props) => {
           <RoomControls
             conn={conn}
             myRoomStatus={roomStatus!}
-            room={room!}
-            roomId={room!.roomId}
+            room={room as Room}
+            roomId={(room as Room).roomId}
             user={user}
           />
         </div>
@@ -170,7 +172,7 @@ const RoomArea = ({}: Props) => {
             chatMessages={chatMessages!}
             chatOpen={true}
             conn={conn}
-            room={room!}
+            room={room as Room}
             user={user}
           />
         </div>
@@ -190,7 +192,7 @@ const RoomArea = ({}: Props) => {
                   <div className="flex flex-col items-start w-ful">
                     <div className="flex justify-center items-center w-full">
                       <span className="font-semibold opacity-90 text-lg leading-7 flex-1 text-left">
-                        {room?.roomDesc}
+                        {(room as Room)?.roomDesc}
                       </span>
 
                       {/* {(roomStatus!.isMod || room!.creatorId == user.userId) && (
@@ -222,7 +224,7 @@ const RoomArea = ({}: Props) => {
                     </div>
                   </div>
                   <div>
-                    {(roomStatus!.isMod || room!.creatorId == user.userId) && (
+                    {(roomStatus!.isMod || (room as Room)?.creatorId == user.userId) && (
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button className="p-1.5 h-7 bg-app_bg_light shadow-app_shadow">
@@ -236,7 +238,7 @@ const RoomArea = ({}: Props) => {
                           size={myDevice !== "isMobile" ? "sm" : "content"}
                         >
                           <SheetHeader></SheetHeader>
-                          <RoomSettings room={room!} />
+                          <RoomSettings room={room as Room} />
                         </SheetContent>
                       </Sheet>
                     )}
@@ -260,7 +262,7 @@ const RoomArea = ({}: Props) => {
                 </div>
 
                 {askedToSpeak.length > 0 &&
-                  (roomStatus.isMod || room.creatorId == user.userId) && (
+                  (roomStatus.isMod || (room as Room)?.creatorId == user.userId) && (
                     <div className="mb-6 w-full">
                       <p className="mb-4 text-sm font-bold flex items-center">
                         Requesting to speak
@@ -289,8 +291,8 @@ const RoomArea = ({}: Props) => {
           <RoomControls
             conn={conn}
             myRoomStatus={roomStatus!}
-            room={room!}
-            roomId={room!.roomId}
+            room={room as Room}
+            roomId={(room as Room).roomId}
             user={user}
           />
         </div>

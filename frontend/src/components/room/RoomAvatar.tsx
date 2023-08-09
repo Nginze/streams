@@ -66,7 +66,7 @@ const RoomAvatar = ({ participant }: Props) => {
             <RoomParticipantProfile
               myRoomStatus={myRoomStatus!}
               participantId={participant.userId}
-              room={room!}
+              room={room as Room}
               toggleDialog={() => {}}
             />
           }
@@ -113,7 +113,7 @@ const RoomAvatar = ({ participant }: Props) => {
         )}
         <span>
           <span className="text-xs font-semibold flex items-center">
-            {participant.userId == room?.creatorId && (
+            {participant.userId == (room as Room)?.creatorId && (
               <AiFillCrown
                 style={{ marginRight: "1px" }}
                 size={17}
@@ -178,7 +178,7 @@ const RoomAvatar = ({ participant }: Props) => {
             <RoomParticipantProfile
               myRoomStatus={myRoomStatus!}
               participantId={participant.userId}
-              room={room!}
+              room={room as Room}
               toggleDialog={() => {}}
             />
           </SheetContent>
@@ -196,7 +196,7 @@ const RoomAvatar = ({ participant }: Props) => {
         )}
         <span>
           <span className="text-xs font-semibold flex items-center">
-            {participant.userId == room?.creatorId && (
+            {participant.userId == (room as Room)?.creatorId && (
               <AiFillCrown
                 style={{ marginRight: "1px" }}
                 size={17}
