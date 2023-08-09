@@ -322,7 +322,8 @@ const RoomParticipantProfile = ({
         <div>
           <div className="flex items-center space-x-3">
             <img
-              className="inline-block h-14 w-14 rounded-2xl active:opacity-80"
+              className="inline-block h-14 w-14 rounded-2xl active:opacity-80 object-cover"
+              
               src={participant.avatarUrl}
               alt=""
             />

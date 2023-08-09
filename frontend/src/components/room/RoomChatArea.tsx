@@ -12,6 +12,7 @@ import { userColorContext } from "../global/UserColorProvider";
 import { Ban, MessageCircle } from "lucide-react";
 import { api } from "@/api";
 import { useQuery } from "react-query";
+import useScreenType from "@/hooks/useScreenType";
 
 type Props = {
   conn: Socket | null;
@@ -60,6 +61,8 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   //   });
   //   return parsedMessage;
   // };
+
+  const myDevice = useScreenType()
 
   const parseMessage = (msg: string): React.ReactNode[] => {
     const tokens = msg.split(" ");
@@ -112,6 +115,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
       content: chatContent,
       createdAt: new Date(),
       color: userColor,
+      read: false
     };
     conn?.emit("chat:global_new_message", { roomId: room.roomId, message });
     setMessage("");
@@ -128,7 +132,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   };
 
   return chatOpen ? (
-    <div className="h-[570px] flex flex-col items-center shadow-app_shadow">
+    <div className="h-[570px] flex flex-col items-center">
       <div
         className={`chat w-full px-2  overflow-y-auto overflow-x-hidden flex  flex-col-reverse flex-1 items-start space-y-1`}
       >

@@ -15,7 +15,14 @@ import { api } from "../../api";
 import { useVoiceStore } from "../../engine/webrtc/store/useVoiceStore";
 import { useSoundEffectStore } from "../../store/useSoundEffectStore";
 import { Button } from "../ui/button";
-import { MessageSquare, Mic, MicOff, UserPlus } from "lucide-react";
+import {
+  MessageSquare,
+  Mic,
+  MicOff,
+  PhoneCall,
+  PhoneMissed,
+  UserPlus,
+} from "lucide-react";
 import AppDialog from "../global/AppDialog";
 import RoomShare from "./RoomShare";
 import { useConsumerStore } from "@/engine/webrtc/store/useConsumerStore";
@@ -28,6 +35,19 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { TooltipArrow } from "@radix-ui/react-tooltip";
+import useScreenType from "@/hooks/useScreenType";
+import ProfileSheet from "../global/ProfileSheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "../ui/sheet";
+import RoomChatArea from "./RoomChatArea";
+import useLoadRoomMeta from "@/hooks/useLoadRoomMeta";
+import { useEffect, useState } from "react";
 
 type Props = {
   conn: Socket | null;
@@ -41,15 +61,19 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
   const { mic, nullify } = useVoiceStore();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [chatOpen, setChatOpen] = useState(false);
 
   const { closeAll } = useConsumerStore();
   const { close, producer } = useProducerStore();
+  const myDevice = useScreenType();
 
   const parseCamel = (snake: string) => {
     return snake.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
   };
 
   const playSoundEffect = useSoundEffectStore(x => x.playSoundEffect);
+
+  const { chatMessages } = useLoadRoomMeta(roomId as string, user, true);
 
   const statusMutation = useMutation({
     mutationFn: async (params: {
@@ -156,7 +180,34 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     }
   };
 
-  return (
+  const hasUnreadMessages = (cm: any) => {
+    if (!cm) {
+      return;
+    }
+
+    return cm.messages?.some((msg: ChatMessage) => !msg.read);
+  };
+
+  const markAllAsRead = () => {
+    queryClient.setQueryData(["room-chat", roomId], (data: any) => {
+      if (data) {
+        const readChat = data?.messages.map((m: ChatMessage) => ({
+          ...m,
+          read: true,
+        }));
+        return { messages: readChat };
+      }
+      return data;
+    });
+  };
+
+  useEffect(() => {
+    if (chatOpen) {
+      markAllAsRead();
+    }
+  }, [chatMessages])
+
+  return myDevice == "isDesktop" ? (
     <div className="bg-app_bg_deep w-full rounded-b-lg flex items-center justify-between p-3">
       <div className="space-x-1.5 flex items-center">
         {(myRoomStatus.isSpeaker || room.handRaiseEnabled) && (
@@ -199,77 +250,157 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
         </Button>
       </div>
     </div>
-    // <div className="w-full h-16 flex flex-row items-center justify-center text-lg bg-zinc-700 bg-opacity-50 border-t-[1px] text-white p-3">
-    //   <div className="flex flex-row items-center w-4/5  justify-around ">
-    //     <button
-    //       onClick={() => setLeave(true)}
-    //       className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-    //     >
-    //       <BsTelephoneX fontSize={"1.2rem"} />
-    //       <span className="text-xs">Leave</span>
-    //     </button>
+  ) : (
+    <div className="w-full rounded-b-lg flex items-center justify-between p-3">
+      <div className="space-x-1.5 flex items-center">
+        {(myRoomStatus.isSpeaker || room.handRaiseEnabled) && (
+          <Button
+            onClick={myRoomStatus.isSpeaker ? handleMute : handleHandRaise}
+            className={`${
+              myRoomStatus!.isMuted || myRoomStatus!.raisedHand
+                ? "bg-app_bg_deeper"
+                : "bg-app_cta "
+            } shadow-app_shadow `}
+          >
+            {myRoomStatus.isSpeaker ? (
+              myRoomStatus!.isMuted ? (
+                <MicOff size={16} />
+              ) : (
+                <Mic size={16} />
+              )
+            ) : myRoomStatus!.raisedHand ? (
+              <TbHandOff fontSize={"1.2rem"} />
+            ) : (
+              <MdOutlineWavingHand size={16} />
+            )}
+          </Button>
+        )}
 
-    //     {myRoomStatus.isSpeaker ? (
-    //       <button
-    //         onClick={handleMute}
-    //         className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-    //       >
-    //         {!myRoomStatus?.isMuted ? (
-    //           <BsMic fontSize={"1.2rem"} />
-    //         ) : (
-    //           <BsMicMute fontSize={"1.2rem"} />
-    //         )}
-    //         <span className="text-xs">
-    //           {!myRoomStatus?.isMuted ? "Mute" : "Unmute"}
-    //         </span>
-    //       </button>
-    //     ) : (
-    //       handRaiseEnabled && (
-    //         <button
-    //           onClick={handleHandRaise}
-    //           className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-    //         >
-    //           {!myRoomStatus?.raisedHand ? (
-    //             <MdOutlineWavingHand fontSize={"1.2rem"} />
-    //           ) : (
-    //             <TbHandOff fontSize={"1.2rem"} />
-    //           )}
-    //           <span className="text-xs">
-    //             {!myRoomStatus?.raisedHand ? "Raise" : "Unraise"}
-    //           </span>
-    //         </button>
-    //       )
-    //     )}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="bg-app_bg_deeper shadow-app_shadow">
+              <UserPlus size={16} />
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            position={myDevice !== "isMobile" ? "right" : "bottom"}
+            size={myDevice !== "isMobile" ? "sm" : "content"}
+          >
+            <SheetHeader></SheetHeader>
+            <RoomShare room={room} />
+          </SheetContent>
+        </Sheet>
 
-    //     {chatEnabled && (
-    //       <button
-    //         onClick={() => setChat(!chatOpen)}
-    //         className="flex flex-col space-y-1 items-center cursor-pointer px-2 py-1 rounded-md active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-    //       >
-    //         <BsChatLeft fontSize={"1.2rem"} />
-    //         <span className="text-xs">Chat</span>
-    //       </button>
-    //     )}
-    //     <button
-    //       onClick={() => setInvite(true)}
-    //       className="flex flex-col space-y-1 items-center cursor-pointer px-2 py-1 rounded-md active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300 "
-    //     >
-    //       <BsPersonPlus />
-    //       <span className="text-xs">Invite</span>
-    //     </button>
-
-    //     {myRoomStatus.isMod && (
-    //       <button
-    //         onClick={() => setSettings(true)}
-    //         className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
-    //       >
-    //         <BsGear fontSize={"1.2rem"} />
-    //         <span className="text-xs">Settings</span>
-    //       </button>
-    //     )}
-    //   </div>
-    // </div>
+        <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+          <SheetTrigger asChild>
+            <Button
+              onClick={() => markAllAsRead()}
+              className="bg-app_bg_deeper shadow-app_shadow relative"
+            >
+              <MessageSquare size={16} />
+              {hasUnreadMessages(chatMessages) && (
+                <div className="w-2 h-2 rounded-full bg-yellow-100 absolute right-0.5 top-0"></div>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent
+            position={myDevice !== "isMobile" ? "right" : "bottom"}
+            size={myDevice !== "isMobile" ? "sm" : "content"}
+          >
+            <SheetHeader></SheetHeader>
+            <RoomChatArea
+              chatMessages={chatMessages!}
+              chatOpen={true}
+              conn={conn}
+              room={room!}
+              user={user}
+            />
+          </SheetContent>
+        </Sheet>
+        {/* <Button className="bg-app_bg_deeper">
+          <MessageSquare size={16} />
+        </Button> */}
+      </div>
+      <div>
+        <Button
+          onClick={handleLeave}
+          className="bg-app_bg_deeper shadow-app_shadow"
+        >
+          {room!.creatorId == user.userId ? <PhoneMissed size={16} /> : "✌"}
+        </Button>
+      </div>
+    </div>
   );
+  // <div className="w-full h-16 flex flex-row items-center justify-center text-lg bg-zinc-700 bg-opacity-50 border-t-[1px] text-white p-3">
+  //   <div className="flex flex-row items-center w-4/5  justify-around ">
+  //     <button
+  //       onClick={() => setLeave(true)}
+  //       className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+  //     >
+  //       <BsTelephoneX fontSize={"1.2rem"} />
+  //       <span className="text-xs">Leave</span>
+  //     </button>
+
+  //     {myRoomStatus.isSpeaker ? (
+  //       <button
+  //         onClick={handleMute}
+  //         className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+  //       >
+  //         {!myRoomStatus?.isMuted ? (
+  //           <BsMic fontSize={"1.2rem"} />
+  //         ) : (
+  //           <BsMicMute fontSize={"1.2rem"} />
+  //         )}
+  //         <span className="text-xs">
+  //           {!myRoomStatus?.isMuted ? "Mute" : "Unmute"}
+  //         </span>
+  //       </button>
+  //     ) : (
+  //       handRaiseEnabled && (
+  //         <button
+  //           onClick={handleHandRaise}
+  //           className="flex flex-col space-y-1 items-center px-2 py-1 rounded-md  cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+  //         >
+  //           {!myRoomStatus?.raisedHand ? (
+  //             <MdOutlineWavingHand fontSize={"1.2rem"} />
+  //           ) : (
+  //             <TbHandOff fontSize={"1.2rem"} />
+  //           )}
+  //           <span className="text-xs">
+  //             {!myRoomStatus?.raisedHand ? "Raise" : "Unraise"}
+  //           </span>
+  //         </button>
+  //       )
+  //     )}
+
+  //     {chatEnabled && (
+  //       <button
+  //         onClick={() => setChat(!chatOpen)}
+  //         className="flex flex-col space-y-1 items-center cursor-pointer px-2 py-1 rounded-md active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+  //       >
+  //         <BsChatLeft fontSize={"1.2rem"} />
+  //         <span className="text-xs">Chat</span>
+  //       </button>
+  //     )}
+  //     <button
+  //       onClick={() => setInvite(true)}
+  //       className="flex flex-col space-y-1 items-center cursor-pointer px-2 py-1 rounded-md active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300 "
+  //     >
+  //       <BsPersonPlus />
+  //       <span className="text-xs">Invite</span>
+  //     </button>
+
+  //     {myRoomStatus.isMod && (
+  //       <button
+  //         onClick={() => setSettings(true)}
+  //         className="flex flex-col space-y-1 px-2 py-1 rounded-md items-center cursor-pointer active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+  //       >
+  //         <BsGear fontSize={"1.2rem"} />
+  //         <span className="text-xs">Settings</span>
+  //       </button>
+  //     )}
+  //   </div>
+  // </div>
 };
 
 export default RoomControls;

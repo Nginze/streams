@@ -11,6 +11,7 @@ import WebrtcApp from "../src/engine/webrtc/WebrtcApp";
 import UserProvider from "../src/contexts/UserContext";
 import { WebSocketProvider } from "../src/contexts/WebsocketContext";
 import "../styles/globals.css";
+import "@uploadthing/react/styles.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());

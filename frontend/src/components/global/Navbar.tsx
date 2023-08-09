@@ -44,6 +44,7 @@ import { Button } from "../ui/button";
 import CreateRoom from "../home/CreateRoom";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { useRouter } from "next/router";
+import useScreenType from "@/hooks/useScreenType";
 
 type Props = {};
 
@@ -53,6 +54,7 @@ const Navbar = ({}: Props) => {
 
   const { conn } = useContext(WebSocketContext);
   const router = useRouter();
+  const myDevice = useScreenType();
 
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
@@ -66,8 +68,13 @@ const Navbar = ({}: Props) => {
     (notification: any) => notification.isRead === false
   );
   return (
-    <div className="w-full shadow-app_shadow flex items-center py-3 bg-app_bg_deepest sticky top-0 z-10">
-      <div className="w-3/4 bg-app_bg_deepest flex itesm-center mx-auto justify-between ">
+    <div className="w-full shadow-app_shadow flex items-center py-3 bg-app_bg_deepest sticky top-0 z-10 font-display">
+      <div
+        style={{
+          width: myDevice != "isDesktop" ? "90%" : "75%",
+        }}
+        className=" bg-app_bg_deepest flex itesm-center mx-auto justify-between "
+      >
         {/* {userLoading ? (
         <Skeleton className="h-6 w-1/4 rounded-sm bg-app_bg_deep" />
       ) : ( */}
@@ -88,19 +95,27 @@ const Navbar = ({}: Props) => {
         {/* )} */}
         <div className="space-x-6 flex items-center ">
           {/* <Search /> */}
-          <AppDialog content={<CreateRoom conn={conn!} />}>
-            <Button
-              size={"sm"}
-              className="bg-app_bg_deep shadow-app_shadow rounded-sm"
-            >
-              <PlusCircle className="mr-1 h-4 2-4" /> Start Room
-            </Button>
-          </AppDialog>
-          <AppDialog content={<Logout />}>
-            <button>
-              <MdLogout size={23} className="text-[#424549] hover:text-white" />
-            </button>
-          </AppDialog>
+          {myDevice != "isMobile" ? (
+            <>
+              <AppDialog content={<CreateRoom conn={conn!} />}>
+                <Button
+                  size={"sm"}
+                  className="bg-app_bg_deep shadow-app_shadow rounded-sm"
+                >
+                  <PlusCircle className="mr-1 h-4 2-4" /> Start Room
+                </Button>
+              </AppDialog>
+
+              <AppDialog content={<Logout />}>
+                <button>
+                  <MdLogout
+                    size={23}
+                    className="text-[#424549] hover:text-white"
+                  />
+                </button>
+              </AppDialog>
+            </>
+          ) : null}
           <Sheet>
             <SheetTrigger asChild>
               <button
@@ -124,9 +139,12 @@ const Navbar = ({}: Props) => {
                 />
               </button>
             </SheetTrigger>
-            <SheetContent position={"right"} size={"sm"}>
+            <SheetContent
+              position={myDevice !== "isMobile" ? "right" : "bottom"}
+              size={myDevice !== "isMobile" ? "sm" : "content"}
+            >
               <SheetHeader>
-                <SheetTitle>Notifications </SheetTitle>
+                <SheetTitle>Notifications ✨</SheetTitle>
               </SheetHeader>
               <NotificationsSheet />
             </SheetContent>
@@ -135,21 +153,24 @@ const Navbar = ({}: Props) => {
           <DropdownMenuTrigger asChild> */}
           <Sheet>
             <SheetTrigger asChild>
-              <button className="hover:opacity-60">
+              <button disabled={!user} className="hover:opacity-60">
                 {userLoading ? (
                   <Skeleton className="w-7 h-7 rounded-full" />
                 ) : (
-                  <img
-                    alt={`${user.userName}`}
-                    src={user.avatarUrl}
-                    className="rounded-full ring-2"
-                    width={28}
-                    height={28}
-                  />
+                  <div className="w-8 h-8">
+                    <img
+                      alt={`${user.userName}`}
+                      src={user.avatarUrl}
+                      className="rounded-full ring-2 object-cover w-8 h-8"
+                    />
+                  </div>
                 )}
               </button>
             </SheetTrigger>
-            <SheetContent position={"right"} size={"sm"}>
+            <SheetContent
+              position={myDevice !== "isMobile" ? "right" : "bottom"}
+              size={myDevice !== "isMobile" ? "sm" : "content"}
+            >
               <SheetHeader></SheetHeader>
               <ProfileSheet />
             </SheetContent>
