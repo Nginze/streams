@@ -58,7 +58,7 @@ const room = () => {
   const [showSettings, setSettings] = useState<boolean>(false);
   const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
-  const hasJoined = useRef<boolean>(false)
+  const hasJoined = useRef<boolean>(false);
 
   const { id: roomId } = router.query;
   const { conn } = useContext(WebSocketContext);
@@ -177,7 +177,6 @@ const room = () => {
     ) {
       return;
     }
-    
 
     conn.emit("rtc:join_room", {
       roomId,
@@ -187,8 +186,7 @@ const room = () => {
       },
     });
 
-    hasJoined.current = true
-
+    hasJoined.current = true;
   }, [roomId, userLoading, conn, roomLoading]);
 
   if (typeof room === "string") {
@@ -255,11 +253,7 @@ const room = () => {
       {(!room || !roomStatus || roomLoading) && (
         <div className="bg-transparent absolute font-display w-screen h-screen flex flex-row justify-center items-center z-10 backdrop-blur-sm">
           <div>
-            <Loader
-              message="Fetching Room Info"
-              textColor="white"
-              bgColor="white"
-            />
+            <Loader alt={true} textColor="white" bgColor="white" />
           </div>
         </div>
       )}
@@ -267,7 +261,7 @@ const room = () => {
         navbar={<Navbar />}
         column1={<PeopleList />}
         column2={<RoomArea />}
-        footer={<RoomFooter/>}
+        footer={<RoomFooter />}
       />
     </>
   ) : (
@@ -442,11 +436,7 @@ const room = () => {
       </Head>
       <main className="bg-app_bg_deepest absolute font-display w-screen h-screen flex flex-row justify-center items-center">
         <div>
-          <Loader
-            message="Reaching voice servers"
-            textColor="white"
-            bgColor="white"
-          />
+          <Loader alt={true} textColor="white" bgColor="white" width={25} />
         </div>
       </main>
     </>

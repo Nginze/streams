@@ -52,4 +52,5 @@ type ChatMessage = User & {
   reply?: ChatMessage;
   content: string;
   createdAt: Date;
+  read: boolean;
 };

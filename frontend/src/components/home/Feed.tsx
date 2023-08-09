@@ -7,6 +7,7 @@ import {
   Plug2,
   Plus,
   PlusCircle,
+  PlusIcon,
   RefreshCwIcon,
   Sparkle,
 } from "lucide-react";
@@ -32,6 +33,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Tooltip } from "@radix-ui/react-tooltip";
 import { AiFillApi } from "react-icons/ai";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger } from "../ui/sheet";
+import useScreenType from "@/hooks/useScreenType";
 
 type FeedCardProps = {
   room: RoomCard;
@@ -43,6 +46,7 @@ type FeedProps = {
 
 const Feed = ({ conn }: FeedProps) => {
   const queryClient = useQueryClient();
+  const myDevice = useScreenType();
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery({
     queryKey: ["live-rooms"],
     queryFn: async () => {
@@ -54,48 +58,67 @@ const Feed = ({ conn }: FeedProps) => {
   return (
     <>
       <div className="space-y-6 h-auto pb-5">
-        <div className="flex items-center justify-end space-x-2">
-          {/* <span className="text-xl flex items-center font-semibold ">
-            <BsGlobeAmericas className="mr-2" color="#424549" />
-            Live rooms
-          </span> */}
-          {/* <AppDialog content={<CreateRoom conn={conn!} />}>
-            <Button size={"lg"} className="bg-app_cta rounded-sm">
-              <PlusCircle className="mr-1 h-4 2-4" /> New Room
-            </Button>
-          </AppDialog> */}
-          <div className="space-x-2 flex items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
+        <div className="flex items-center justify-between space-x-2">
+          {myDevice == "isMobile" ? (
+            <Sheet>
+              <SheetTrigger asChild>
+                <div className="flex space-x-2 items-baseline">
                   <Button
                     size={"sm"}
-                    className="bg-app_bg_deep rounded-sm shadow-app_shadow"
+                    className="bg-green-800 rounded-sm shadow-app_shadow"
                   >
-                    <Sparkle size={20} />
+                    <PlusIcon size={20} className="text-green-400" />
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>For you</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  {/* <span className="text-[12px]">Start Room</span> */}
+                </div>
+              </SheetTrigger>
+              <SheetContent
+                position={myDevice !== "isMobile" ? "right" : "bottom"}
+                size={myDevice !== "isMobile" ? "sm" : "content"}
+              >
+                <SheetHeader></SheetHeader>
+                <CreateRoom conn={conn!} />
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <div>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Button
-                    size={"sm"}
-                    className="bg-app_bg_deep shadow-app_shadow rounded-sm"
-                  >
-                    <CalendarClock size={20} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Scheduled</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            </div>
+          )}
+          <div>
+            <div className="space-x-2 flex items-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      size={"sm"}
+                      className="bg-app_bg_deep rounded-sm shadow-app_shadow"
+                    >
+                      <Sparkle size={20} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>For you</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      size={"sm"}
+                      className="bg-app_bg_deep shadow-app_shadow rounded-sm"
+                    >
+                      <CalendarClock size={20} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Scheduled</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </div>
         <div className="space-y-4 overflow-auto ">
@@ -109,7 +132,7 @@ const Feed = ({ conn }: FeedProps) => {
 
           {(!liveRoomsLoading && !liveRooms) ||
             (liveRooms?.length == 0 && (
-              <div className="text-center font-semibold ml-52 w-1/4 mt-14 ">
+              <div className="text-center font-semibold mt-14 ">
                 <div className="flex flex-col items-center space-y-3">
                   <RefreshCwIcon color="white" size={50} />
                   <div className="text-white">No active rooms available</div>
@@ -117,7 +140,7 @@ const Feed = ({ conn }: FeedProps) => {
                     onClick={() => {
                       queryClient.resetQueries(["live-rooms"]);
                     }}
-                    className="w-full bg-app_bg_deeper p-3 h-12 font-bold shadow-app_shadow"
+                    className="w-[250px] bg-app_bg_deeper p-3 h-12 font-bold shadow-app_shadow"
                   >
                     Reload Feed
                   </Button>
@@ -180,21 +203,21 @@ const FeedCard = ({ room }: FeedCardProps) => {
             {room.participants?.slice(0, 3).map((rp, i) =>
               i == 0 ? (
                 <Avatar
-                  className="shadow-app_shadow"
+                  className="shadow-app_shadow object-cover"
                   style={{
                     width: "20px",
                     height: "20px",
                   }}
                 >
                   <AvatarImage
-                    className="shadow-app_shadow"
+                    className="shadow-app_shadow object-cover"
                     src={rp.avatarUrl}
                   />
                   <AvatarFallback className="bg-app_bg_light"></AvatarFallback>
                 </Avatar>
               ) : (
                 <Avatar
-                  className="shadow-app_shadow"
+                  className="shadow-app_shadow object-cover"
                   style={{
                     width: "20px",
                     height: "20px",
@@ -202,7 +225,7 @@ const FeedCard = ({ room }: FeedCardProps) => {
                   }}
                 >
                   <AvatarImage
-                    className="shadow-app_shadow"
+                    className="shadow-app_shadow object-cover"
                     src={rp.avatarUrl}
                   />
                   <AvatarFallback className="bg-app_bg_light"></AvatarFallback>

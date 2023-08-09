@@ -1,8 +1,9 @@
-import { Request, Response, Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { pool } from "../config/psql";
 import { UserDTO } from "../types/User";
 import { redisClient } from "../config/redis";
 import { parseCamel } from "../utils/parseCamel";
+import createHttpError from "http-errors";
 
 export const router = Router();
 
@@ -87,6 +88,30 @@ router.patch("/update/bio", async (req: Request, res: Response) => {
     WHERE user_id = $2
     `,
     [bio, userId]
+  );
+
+  res.status(200).json({ msg: "updated user data" });
+});
+
+router.patch("/update/avatar", async (req: Request, res: Response) => {
+  const { userId } = req.user as UserDTO;
+  const { avatarUrl } = req.body;
+
+  console.log(avatarUrl, req.body)
+
+  if (!userId || !req.body) {
+    return res
+      .status(400)
+      .json({ msg: "Bad request, incorrect credentials sent" });
+  }
+
+  await pool.query(
+    `
+    UPDATE user_data
+    SET avatar_url = $1
+    WHERE user_id = $2
+    `,
+    [avatarUrl, userId]
   );
 
   res.status(200).json({ msg: "updated user data" });
@@ -240,5 +265,31 @@ router.delete(
       [notificationId]
     );
     res.status(200).json({ msg: "notification deleted" });
+  }
+);
+
+router.get(
+  "/me/metrics/followCount",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.user as UserDTO;
+
+      const { rows } = await pool.query(
+        `
+        SELECT
+          (SELECT COUNT(*) FROM user_follows WHERE is_following = $1) AS followers,
+          (SELECT COUNT(*) FROM user_follows WHERE user_id = $1) AS following;
+        `,
+        [userId]
+      );
+
+      if (!rows) {
+        throw createHttpError(404, "User not found");
+      }
+
+      res.status(200).json(rows[0]);
+    } catch (error) {
+      next(error);
+    }
   }
 );

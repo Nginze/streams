@@ -16,7 +16,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ["Lexand Deca,Inter,Roboto Mono"],
+        display: ["Lexand Deca", "Inter", "Roboto Mono"],
         logo: ["Lexend Deca", "Inter"],
       },
       boxShadow: {
