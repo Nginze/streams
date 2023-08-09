@@ -12,6 +12,7 @@ import {
   RtpCapabilities,
   RtpParameters,
 } from "mediasoup/node/lib/RtpParameters";
+import { startBull } from "../utils/startBull";
 
 export async function main() {
   let workers: Array<{ worker: Worker; router: Router }> = [];
@@ -330,5 +331,6 @@ export async function main() {
     },
   } as HandlerMap;
 
-  startRabbit(handler);
+  // startRabbit(handler);
+  startBull(handler);
 }

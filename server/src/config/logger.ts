@@ -1,29 +1,32 @@
 import { addColors, transports, format, createLogger } from "winston";
 
-const { combine, colorize, simple, prettyPrint } = format;
-
-const logLevels = {
-  levels: { critical: 0, error: 1, warning: 2, debug: 3, info: 4 },
+const config = {
+  levels: { error: 0, warn: 1, info: 2, http: 3, debug: 4},
   colors: {
-    critical: "bold magenta",
-    error: "bold red",
-    warning: "bold yellow",
-    info: "bold blue",
-    debug: "bold green",
+    error: "red",
+    warn: "yellow",
+    info: "green",
+    http: "cyan",
+    debug: "white",
   },
 };
 
-addColors(logLevels.colors);
+addColors(config.colors);
 
 const transport =
   process.env.NODE_ENV !== "production"
-    ? new transports.Console({
-        format: combine(colorize(), simple()),
-      })
+    ? new transports.Console()
     : new transports.File({ filename: "file.log" });
 
+const f = format.combine(
+  format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
+  format.colorize({ all: true }),
+  format.printf(info => `${info.timestamp} ${info.level}: ${info.message}`)
+);
+
 export const logger = createLogger({
-  levels: logLevels.levels,
-  format: prettyPrint(),
+  level: "debug",
+  levels: config.levels,
+  format: f,
   transports: [transport],
 });

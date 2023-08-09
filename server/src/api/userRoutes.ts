@@ -70,9 +70,9 @@ router.delete(
   }
 );
 
-router.patch("/update", async (req: Request, res: Response) => {
+router.patch("/update/bio", async (req: Request, res: Response) => {
   const { userId } = req.user as UserDTO;
-  const { userName, bio, displayName, bannerUrl, avatarUrl } = req.body;
+  const { bio } = req.body;
 
   if (!userId || !req.body) {
     return res
@@ -83,11 +83,10 @@ router.patch("/update", async (req: Request, res: Response) => {
   await pool.query(
     `
     UPDATE user_data
-    SET bio = $1,
-        avatar_url = $2
-    WHERE user_id = $3
+    SET bio = $1
+    WHERE user_id = $2
     `,
-    [bio, avatarUrl, userId]
+    [bio, userId]
   );
 
   res.status(200).json({ msg: "updated user data" });
@@ -100,7 +99,7 @@ router.get("/following/onlineList", async (req: Request, res: Response) => {
 
   const { rows } = await pool.query(
     `
-    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id, TO_CHAR(u.last_seen, 'YYYY-MM-DD HH:MI:SS') as last_seen, r.room_desc
+    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id, u.last_seen, r.room_desc
     FROM user_follows f
     INNER JOIN user_data u ON f.is_following = u.user_id
     LEFT JOIN room r on r.room_id = u.current_room_id
@@ -148,7 +147,7 @@ router.get("/invite/online", async (req: Request, res: Response) => {
 
     const { rows } = await client.query(
       `
-    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id, TO_CHAR(u.last_seen, 'YYYY-MM-DD HH:MI:SS') as last_seen, r.room_desc
+    SELECT u.user_id, u.user_name, u.avatar_url, u.bio, u.current_room_id, u.last_seen, r.room_desc
     FROM user_follows f
     INNER JOIN user_data u ON f.is_following = u.user_id
     LEFT JOIN room r on r.room_id = u.current_room_id
@@ -186,8 +185,8 @@ router.get("/notification/:userId", async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { rows: notifications } = await pool.query(
     `
-      SELECT * 
-      FROM user_notification
+      SELECT un.* , TO_CHAR(un.created_at, 'YYYY-MM-DD HH:MI:SS') as createdAt 
+      FROM user_notification un
       WHERE user_id = $1
       `,
     [userId]

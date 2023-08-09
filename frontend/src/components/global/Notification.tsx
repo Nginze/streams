@@ -4,8 +4,8 @@ import { BsInfo, BsInfoCircleFill } from "react-icons/bs";
 import { MdCelebration, MdCoPresent, MdInfoOutline } from "react-icons/md";
 import { Button } from "../ui/button";
 import { useRouter } from "next/router";
-import { apiClient } from "@/lib/apiclient/client";
 import { useQueryClient } from "react-query";
+import { api } from "@/api";
 
 type NotificationProps = {
   notificationId: string;
@@ -43,7 +43,7 @@ const Notification = ({
             <div className="my-2 space-x-2">
               <Button
                 onClick={async () => {
-                  await apiClient.delete(
+                  await api.delete(
                     `/profile/notification/${notificationId}`
                   );
                   await router.push(`/room/${roomId}`);
@@ -54,7 +54,7 @@ const Notification = ({
               </Button>
               <Button
                 onClick={async () => {
-                  await apiClient.delete(
+                  await api.delete(
                     `/profile/notification/${notificationId}`
                   );
                   await queryClient.invalidateQueries(["notifications"]);

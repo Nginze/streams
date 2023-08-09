@@ -19,12 +19,17 @@ module.exports = {
         display: ["Lexand Deca,Inter,Roboto Mono"],
         logo: ["Lexend Deca", "Inter"],
       },
+      boxShadow: {
+        app_shadow:
+          "inset 0 0 0.5px 1px hsla(0, 0%, 100%, 0.075), 0 0 0 1px hsla(0, 0%, 0%, 0.05),0 0.3px 0.4px hsla(0, 0%, 0%, 0.02),0 0.9px 1.5px hsla(0, 0%, 0%, 0.045),0 3.5px 6px hsla(0, 0%, 0%, 0.09)",
+      },
       colors: {
         app_cta: "#7289da",
         app_bg_deepest: "#1e2124",
         app_bg_deeper: "#282b30",
         app_bg_deep: "#36393e",
         app_bg_light: "#424549",
+        app_bg_ultra: "#161618",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

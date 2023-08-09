@@ -1,13 +1,13 @@
 import React, { useContext } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { apiClient } from "../../lib/apiclient/client";
+import { api } from "../../api";
 import { userContext } from "../../contexts/UserContext";
 import { toast } from "react-hot-toast";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
 import { BeatLoader } from "react-spinners";
-import { useVoiceStore } from "@/lib/webrtc/store/useVoiceStore";
-import { useConsumerStore } from "@/lib/webrtc/store/useConsumerStore";
-import { useProducerStore } from "@/lib/webrtc/store/useProducerStore";
+import { useVoiceStore } from "@/engine/webrtc/store/useVoiceStore";
+import { useConsumerStore } from "@/engine/webrtc/store/useConsumerStore";
+import { useProducerStore } from "@/engine/webrtc/store/useProducerStore";
 
 type Props = {
   participantId: String;
@@ -26,7 +26,7 @@ const RoomParticipantProfile = ({
     useQuery<RoomParticipant>({
       queryKey: ["room-participant", participantId],
       queryFn: async () => {
-        const { data } = await apiClient.get(`/profile/${participantId}`);
+        const { data } = await api.get(`/profile/${participantId}`);
         return data;
       },
     });
@@ -36,7 +36,7 @@ const RoomParticipantProfile = ({
     data: roomBans,
     isRefetching,
   } = useQuery(["room-bans", room.roomId], async () => {
-    const { data } = await apiClient.get(`/room/ban/${room.roomId}`);
+    const { data } = await api.get(`/room/ban/${room.roomId}`);
     return data;
   });
 
@@ -44,7 +44,7 @@ const RoomParticipantProfile = ({
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
 
-  const { nullify } = useVoiceStore();
+  const { nullify, mic } = useVoiceStore();
   const { closeAll } = useConsumerStore();
   const { close } = useProducerStore();
 
@@ -59,10 +59,10 @@ const RoomParticipantProfile = ({
       userToUnFollow?: String;
     }) => {
       params.isAFollow
-        ? await apiClient.post("/profile/follow", {
+        ? await api.post("/profile/follow", {
             userToFollow: params.userToFollow,
           })
-        : await apiClient.delete(`/profile/unfollow/${params.userToUnFollow}`);
+        : await api.delete(`/profile/unfollow/${params.userToUnFollow}`);
     },
 
     onSuccess: async (data, variables) => {
@@ -104,7 +104,7 @@ const RoomParticipantProfile = ({
       value: boolean;
       userId: string;
     }) => {
-      await apiClient.put(
+      await api.put(
         `/room/room-status/update/${params.userId}?state=${params.state}&value=${params.value}&roomId=${room.roomId}`
       );
     },
@@ -144,6 +144,7 @@ const RoomParticipantProfile = ({
     },
 
     onError: (error, variables, context) => {
+      console.log("Error when making you speaker");
       if (variables.userId === user.userId) {
         queryClient.setQueryData(
           ["room-status", room.roomId],
@@ -162,16 +163,16 @@ const RoomParticipantProfile = ({
       console.log(params.isBan);
 
       !params.isBan
-        ? await apiClient.post(
+        ? await api.post(
             `/room/ban/${room.roomId}?userId=${params.userId}&banType=${params.banType}`
           )
-        : await apiClient.delete(
+        : await api.delete(
             `/room/unban/${room.roomId}?userId=${params.userId}&banType=${params.banType}`
           );
     },
 
     onMutate: variables => {
-      conn?.emit("ban-list-change", {
+      conn?.emit("mod:ban_list_change", {
         roomId: room.roomId,
         bannedUser: {
           avatarUrl: participant?.avatarUrl,
@@ -186,7 +187,10 @@ const RoomParticipantProfile = ({
 
     onSuccess: async (data, variables) => {
       if (variables.banType === "room_ban") {
-        conn?.emit('kicked-from-room', {userId: participant?.userId, roomId: room.roomId})
+        conn?.emit("mod:kicked_from_room", {
+          userId: participant?.userId,
+          roomId: room.roomId,
+        });
       }
     },
 
@@ -215,7 +219,7 @@ const RoomParticipantProfile = ({
 
   const handleAddSpeaker = async () => {
     try {
-      conn?.emit("add-speaker", {
+      conn?.emit("rtc:add_speaker", {
         roomId: room.roomId,
         userId: participant!.userId,
       });
@@ -232,7 +236,7 @@ const RoomParticipantProfile = ({
 
   const handleRemoveSpeaker = async () => {
     try {
-      conn?.emit("remove-speaker", {
+      conn?.emit("rtc:remove_speaker", {
         roomId: room.roomId,
         userId: participant!.userId,
       });
@@ -250,12 +254,13 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
         value: true,
       });
+
     } catch (error) {}
   };
 
   const handlePromoteToMod = async () => {
     try {
-      conn?.emit("mod-added", {
+      conn?.emit("mod:promote", {
         roomId: room.roomId,
         userId: participant!.userId,
       });
@@ -272,7 +277,7 @@ const RoomParticipantProfile = ({
 
   const handleDemoteToListener = async () => {
     try {
-      conn?.emit("mod-removed", {
+      conn?.emit("mod:demote", {
         roomId: room.roomId,
         userId: participant!.userId,
       });
@@ -343,19 +348,19 @@ const RoomParticipantProfile = ({
           <div className="flex flex-col items-start space-y-3 mt-2  text-sm">
             <div className="flex flex-col items-start">
               {/* <span>{participant.userName}</span> */}
-              <span className="text-md font-semibold text-[16px]">
+              <span className="text-md text-[16px]">
                 @{participant.userName}
               </span>
             </div>
             <div className="w-2/3 flex justify-between">
-              <span className="font-semibold text-[16px]">
+              <span className="text-[16px]">
                 {participant.followers} followers
               </span>
-              <span className="font-semibold text-[16px]">
+              <span className="text-[16px]">
                 {participant.following} following
               </span>
             </div>
-            <span className="font-semibold text-[16px]">{participant.bio}</span>
+            <span className="text-[16px]">{participant.bio}</span>
           </div>
         </div>
       </div>
@@ -366,7 +371,7 @@ const RoomParticipantProfile = ({
               onClick={
                 participant.isMod ? handleDemoteToListener : handlePromoteToMod
               }
-              className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep shadow-app_shadow p-3 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
               {participant.isMod ? "Demote from Mod" : "Promote to Mod"}
             </button>
@@ -375,13 +380,13 @@ const RoomParticipantProfile = ({
               onClick={
                 participant.isSpeaker ? handleRemoveSpeaker : handleAddSpeaker
               }
-              className="bg-app_bg_deep p-4 flex font-semibold items-center justify-center rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep p-3 shadow-app_shadow flex font-semibold items-center justify-center rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
               {participant.isSpeaker ? "Move to Listener" : "Move to Speaker"}
             </button>
             <button
               onClick={handleChatBan}
-              className="bg-app_bg_deep p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
+              className="bg-app_bg_deep p-3 shadow-app_shadow font-semibold flex items-center justify-center  rounded-md w-full active:bg-sky-800 focus:outline-none focus:ring focus:ring-sky-300"
             >
               {!checkIsBanned(participant.userId)
                 ? "Ban from Chat"
@@ -389,7 +394,7 @@ const RoomParticipantProfile = ({
             </button>
             <button
               onClick={handleKickFromRoom}
-              className="bg-red-500 p-4 font-semibold flex items-center justify-center  rounded-md w-full active:bg-red-800 focus:outline-none focus:ring focus:ring-red-300"
+              className="bg-red-500 p-3 shadow-app_shadow font-semibold flex items-center justify-center  rounded-md w-full active:bg-red-800 focus:outline-none focus:ring focus:ring-red-300"
             >
               Ban from Room
             </button>

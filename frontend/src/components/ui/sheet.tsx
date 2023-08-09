@@ -5,7 +5,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/engine/utils";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -57,7 +57,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 scale-100 gap-4 bg-app_bg_deeper text-white p-6 opacity-100 shadow-lg ",
+  "fixed z-50 scale-100 gap-4 bg-app_bg_deeper text-white p-6 opacity-100 shadow-app_shadow",
   {
     variants: {
       position: {

@@ -1,9 +1,9 @@
-import { apiClient } from "@/lib/apiclient/client";
 import React, { useContext, useEffect, useState } from "react";
 import { useQuery } from "react-query";
 import { Skeleton } from "../ui/skeleton";
 import { useRouter } from "next/router";
 import { userContext } from "@/contexts/UserContext";
+import { api } from "@/api";
 
 type Person = User & { online: boolean; lastSeen: string; roomDesc: string };
 
@@ -16,33 +16,30 @@ type PeopleListItemProps = {
 };
 
 function formatRelativeDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const timeDifference = now.getTime() - date.getTime();
+    const currentDate = new Date();
+    const inputDate = new Date(dateString);
 
-  // Calculate time differences in milliseconds
-  const seconds = Math.floor(timeDifference / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+    const timeDifference = currentDate.getTime() - inputDate.getTime();
+    const seconds = Math.floor(timeDifference / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
-  if (seconds < 60) {
-    return `${seconds} second(s) ago`;
-  } else if (minutes < 60) {
-    return `${minutes} minute(s) ago`;
-  } else if (hours < 24) {
-    return `${hours} hour(s) ago`;
-  } else if (days === 1) {
-    return "yesterday";
-  } else {
-    // Format the date in a desired format (e.g., 'MMMM dd, yyyy')
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    return date.toLocaleDateString("en-US", options);
-  }
+    console.log(days, hours, minutes, seconds)
+
+    if (days > 0) {
+        if (days === 1) {
+            return "yesterday";
+        } else {
+            return `${days} days ago`;
+        }
+    } else if (hours > 0) {
+        return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    } else if (minutes > 0) {
+        return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+    } else {
+        return `${seconds} ${seconds === 1 ? "second" : "seconds"} ago`;
+    }
 }
 
 const useSplitOnlineUsers = (peopleList: Person[]) => {
@@ -133,13 +130,13 @@ const PeopleList = () => {
   const { isLoading: peopleLoading, data: people } = useQuery({
     queryKey: ["people"],
     queryFn: async () => {
-      const { data } = await apiClient.get("/profile/following/onlineList");
+      const { data } = await api.get("/profile/following/onlineList");
       return data;
     },
   });
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-3 sticky top-24">
       <span className="font-semibold text-xl">People</span>
       {peopleLoading ? (
         <div className="space-y-4 pt-6">

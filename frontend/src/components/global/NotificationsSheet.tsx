@@ -1,10 +1,10 @@
 import React, { useContext, useEffect } from "react";
 import Notification from "./Notification";
 import { useQuery, useQueryClient } from "react-query";
-import { apiClient } from "@/lib/apiclient/client";
 import { userContext } from "@/contexts/UserContext";
 import { ClipLoader } from "react-spinners";
 import { BsInbox } from "react-icons/bs";
+import { api } from "@/api";
 
 const NotificationsSheet = () => {
   const queryClient = useQueryClient()
@@ -12,7 +12,7 @@ const NotificationsSheet = () => {
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
     async () => {
-      const { data } = await apiClient.get(
+      const { data } = await api.get(
         `/profile/notification/${user.userId}`
       );
       return data;
@@ -21,7 +21,7 @@ const NotificationsSheet = () => {
   );
 
   useEffect(() => {
-    apiClient
+    api
       .patch(`/profile/notification/markAsRead/${user.userId}`)
       .then(() => {
         queryClient.invalidateQueries(["notifications", user?.userId]);
@@ -29,11 +29,11 @@ const NotificationsSheet = () => {
   });
 
   return notificationsLoading ? (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center px-3">
       <ClipLoader color="white" />
     </div>
   ) : (
-    <div className="mt-5 h-full overflow-y-auto">
+    <div className="mt-5 h-full overflow-y-auto px-3">
       {notifications &&
         notifications.map(
           (

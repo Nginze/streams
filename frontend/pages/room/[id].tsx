@@ -18,14 +18,12 @@ import { TbHandOff } from "react-icons/tb";
 import { useMutation, useQuery, useQueryClient } from "react-query";
 import { userContext } from "../../src/contexts/UserContext";
 import { WebSocketContext } from "../../src/contexts/WebsocketContext";
-import { useRoomProfileModalStore } from "../../src/global-stores/useRoomProfileModal";
-import { apiClient } from "../../src/lib/apiclient/client";
-import { customEmojis, emoteMap } from "../../src/lib/room/chat/EmoteData";
-import useSplitUsersIntoSections from "../../src/lib/room/hooks/useSplitUsersIntoSections";
-import { useConsumerStore } from "../../src/lib/webrtc/store/useConsumerStore";
-import { useProducerStore } from "../../src/lib/webrtc/store/useProducerStore";
-import { useVoiceStore } from "../../src/lib/webrtc/store/useVoiceStore";
-import useLoadRoomMeta from "../../src/lib/room/hooks/useLoadRoomMeta";
+import { useRoomProfileModalStore } from "../../src/store/useRoomProfileModal";
+import { api } from "../../src/api";
+import { customEmojis, emoteMap } from "../../src/engine/room/chat/EmoteData";
+import { useConsumerStore } from "../../src/engine/webrtc/store/useConsumerStore";
+import { useProducerStore } from "../../src/engine/webrtc/store/useProducerStore";
+import { useVoiceStore } from "../../src/engine/webrtc/store/useVoiceStore";
 import Dialog from "../../src/components/global/Dialog";
 import RoomParticipantProfile from "../../src/components/room/RoomParticipantProfile";
 import RoomChatArea from "../../src/components/room/RoomChatArea";
@@ -39,6 +37,11 @@ import RoomArea from "@/components/room/RoomArea";
 import { Button } from "@/components/ui/button";
 import { VscDebugDisconnect } from "react-icons/vsc";
 import { BanIcon } from "lucide-react";
+import useSplitUsersIntoSections from "@/hooks/useSplitUsersIntoSections";
+import useLoadRoomMeta from "@/hooks/useLoadRoomMeta";
+import Loader from "@/components/global/Loader";
+import { GridOverlay } from "@/components/global/GridOverlay";
+import RoomFooter from "@/components/room/RoomFooter";
 
 const room = () => {
   const router = useRouter();
@@ -55,6 +58,8 @@ const room = () => {
   const [showSettings, setSettings] = useState<boolean>(false);
   const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
+  const hasJoined = useRef<boolean>(false)
+
   const { id: roomId } = router.query;
   const { conn } = useContext(WebSocketContext);
   const { user, userLoading } = useContext(userContext);
@@ -70,7 +75,7 @@ const room = () => {
     chatMessages,
     room,
     roomStatus,
-  } = useLoadRoomMeta(roomId as string, user);
+  } = useLoadRoomMeta(roomId as string, user, hasJoined.current);
 
   const handleCopy = async (link: string) => {
     await navigator.clipboard.writeText(link);
@@ -87,15 +92,15 @@ const room = () => {
     room as Room
   );
 
-  useEffect(() => {
-    const cleanup = async () => {
-      await apiClient.post("/profile/ping?userId=" + user.userId);
-    };
-    window.addEventListener("beforeunload", cleanup);
-    return () => {
-      window.removeEventListener("beforeunload", cleanup);
-    };
-  }, []);
+  // useEffect(() => {
+  //   const cleanup = async () => {
+  //     await api.post("/profile/ping?userId=" + user.userId);
+  //   };
+  //   window.addEventListener("beforeunload", cleanup);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", cleanup);
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   const cleanupConn = async (e: Event) => {
@@ -104,14 +109,14 @@ const room = () => {
   //       return;
   //     }
 
-  //     await apiClient.post(`/room/leave?roomId=${roomId}`);
+  //     await api.post(`/room/leave?roomId=${roomId}`);
   //     nullify();
   //     closeAll();
   //     close();
 
   //     if (room!.participants!.length <= 1) {
 
-  //       await apiClient.post(`/room/destroy?roomId=${roomId}`);
+  //       await api.post(`/room/destroy?roomId=${roomId}`);
   //     }
 
   //     return null;
@@ -131,7 +136,7 @@ const room = () => {
 
   //     // Perform the first API call
 
-  //     apiClient
+  //     api
   //       .post(`/room/leave?roomId=${roomId}`)
   //       .then(() => {
   //         nullify();
@@ -160,16 +165,21 @@ const room = () => {
   }, [roomId]);
 
   useEffect(() => {
+    chatInputRef.current?.focus();
+
     if (
       !roomId ||
       !conn ||
       userLoading ||
       roomLoading ||
-      typeof room === "string"
+      typeof room === "string" ||
+      hasJoined.current
     ) {
       return;
     }
-    conn.emit("join-room", {
+    
+
+    conn.emit("rtc:join_room", {
       roomId,
       roomMeta: {
         isAutospeaker: room!.autoSpeaker,
@@ -177,7 +187,8 @@ const room = () => {
       },
     });
 
-    chatInputRef.current?.focus();
+    hasJoined.current = true
+
   }, [roomId, userLoading, conn, roomLoading]);
 
   if (typeof room === "string") {
@@ -220,7 +231,7 @@ const room = () => {
   return room && roomStatus && !roomLoading ? (
     <>
       <Head>
-        <title>{(room as Room).roomDesc}</title>
+        <title>Chatterbox | {(room as Room).roomDesc}</title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
@@ -241,10 +252,22 @@ const room = () => {
           rel="stylesheet"
         ></link>
       </Head>
+      {(!room || !roomStatus || roomLoading) && (
+        <div className="bg-transparent absolute font-display w-screen h-screen flex flex-row justify-center items-center z-10 backdrop-blur-sm">
+          <div>
+            <Loader
+              message="Fetching Room Info"
+              textColor="white"
+              bgColor="white"
+            />
+          </div>
+        </div>
+      )}
       <AppLayout
         navbar={<Navbar />}
         column1={<PeopleList />}
         column2={<RoomArea />}
+        footer={<RoomFooter/>}
       />
     </>
   ) : (
@@ -417,14 +440,14 @@ const room = () => {
           rel="stylesheet"
         ></link>
       </Head>
-      <main className="bg-app_bg_deepest font-display w-screen h-screen flex flex-row justify-center items-center relative">
-        <div className="lds-ring">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
+      <main className="bg-app_bg_deepest absolute font-display w-screen h-screen flex flex-row justify-center items-center">
+        <div>
+          <Loader
+            message="Reaching voice servers"
+            textColor="white"
+            bgColor="white"
+          />
         </div>
-        <div className="text-white">Reaching voice servers</div>
       </main>
     </>
   );

@@ -34,6 +34,10 @@ type Room = {
   categories: string[];
 };
 
+type RoomCard = Room & {
+  creator: string;
+}
+
 type RoomStatus = {
   roomId: string;
   userId: string;

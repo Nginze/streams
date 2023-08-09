@@ -1,3 +1,4 @@
+import Loader from "@/components/global/Loader";
 import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import Head from "next/head";
@@ -62,12 +63,13 @@ export const WebSocketProvider = ({ children }: Props) => {
             rel="stylesheet"
           ></link>
         </Head>
-        <div className="bg-app_bg_deepest w-screen h-screen flex items-center justify-center text-white font-logo">
+        {/* <div className="bg-app_bg_deepest w-screen h-screen flex items-center justify-center text-white font-logo">
+          <Loader />
           <h1 className="font-logo text-[2rem] leading-[2.3rem] flex items-center relative">
             <Activity size={30} className="mr-2" color="#7289da" />
             chatterbox
           </h1>
-        </div>
+        </div> */}
       </>
     );
   }

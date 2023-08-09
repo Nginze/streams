@@ -1,6 +1,6 @@
+import "dotenv/config";
 import { Router } from "express";
 import passport from "passport";
-import "dotenv/config";
 import "../auth/githubAuth";
 
 export const router = Router();
