@@ -31,6 +31,7 @@ import { Toggle } from "@radix-ui/react-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Tooltip } from "@radix-ui/react-tooltip";
+import { AiFillApi } from "react-icons/ai";
 
 type FeedCardProps = {
   room: RoomCard;
@@ -116,7 +117,7 @@ const Feed = ({ conn }: FeedProps) => {
                     onClick={() => {
                       queryClient.resetQueries(["live-rooms"]);
                     }}
-                    className="w-full bg-app_bg_deeper p-3 h-12 font-bold"
+                    className="w-full bg-app_bg_deeper p-3 h-12 font-bold shadow-app_shadow"
                   >
                     Reload Feed
                   </Button>
@@ -150,8 +151,14 @@ const FeedCard = ({ room }: FeedCardProps) => {
       <div className="p-5 space-y-3">
         <div>
           <span className="flex items-center">
-            <BsSoundwave className="mr-2" size={20} />
-            Live
+            {!room.participants || room.participants.length == 0 ? (
+              <AiFillApi className="mr-2" size={20} />
+            ) : (
+              <BsSoundwave className="mr-2" size={20} />
+            )}
+            {!room.participants || room.participants.length == 0
+              ? "Ended"
+              : "Live"}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -203,9 +210,13 @@ const FeedCard = ({ room }: FeedCardProps) => {
               )
             )}
           </div>
-          <span className="text-sm">
-            {room?.participants?.length} listening
-          </span>
+          {room.participants ? (
+            <span className="text-sm">
+              {room?.participants?.length} listening
+            </span>
+          ) : (
+            "-"
+          )}
         </div>
       </div>
       {/* <div className="w-full h-full bg-app_bg_deep rounded-b-xl space-y-2 py-2 px-5 flex items-center">

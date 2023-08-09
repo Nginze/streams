@@ -1,5 +1,11 @@
-import { Check, CheckCheck, Copy, LucideUserPlus, UserPlus } from "lucide-react";
-import React, { useContext, useState } from "react";
+import {
+  Check,
+  CheckCheck,
+  Copy,
+  LucideUserPlus,
+  UserPlus,
+} from "lucide-react";
+import React, { useContext, useEffect, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 import { api } from "@/api";
 import { useQuery } from "react-query";
@@ -10,6 +16,7 @@ import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { userContext } from "@/contexts/UserContext";
 import { FaUserPlus } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import { useInviteStore } from "@/store/useInviteStore";
 
 type Person = User & { online: boolean };
 type ShareListItemProps = {
@@ -20,6 +27,40 @@ type ShareListItemProps = {
 const ShareListItem = ({ person, room }: ShareListItemProps) => {
   const { conn } = useContext(WebSocketContext);
   const { user } = useContext(userContext);
+
+  const { inviteLog, updateLastInvite } = useInviteStore();
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
+
+  useEffect(() => {
+    const lastInvitedTimestamp = inviteLog?.get(person.userId);
+
+    if (lastInvitedTimestamp) {
+      const currentTime = Math.floor(Date.now() / 1000);
+      const cooldownDuration = 5 * 60; // 5 minutes in seconds
+      const timePassed = currentTime - lastInvitedTimestamp;
+
+      if (timePassed < cooldownDuration) {
+        setCooldownActive(true);
+        setRemainingTime(cooldownDuration - timePassed);
+      }
+    }
+  }, [inviteLog, person.userId]);
+
+  useEffect(() => {
+    let countdownInterval: any;
+
+    if (cooldownActive && remainingTime > 0) {
+      countdownInterval = setInterval(() => {
+        setRemainingTime(prevTime => prevTime - 1);
+      }, 1000);
+    } else if (cooldownActive && remainingTime === 0) {
+      setCooldownActive(false);
+    }
+
+    return () => clearInterval(countdownInterval);
+  }, [cooldownActive, remainingTime]);
+
   return (
     <div className="flex items-center justify-between space-x-4 cursor-pointer">
       <div className="flex items-center space-x-4">
@@ -37,19 +78,65 @@ const ShareListItem = ({ person, room }: ShareListItemProps) => {
         </div>
       </div>
       <div>
-        <Button
-          onClick={() => {
-            console.log("inviting...");
-            conn?.emit("room-invite", { room, user, to: person.userId });
-          }}
-          className="bg-app_cta p-3 h-10"
-        >
-          <FaUserPlus size={18} />
-        </Button>
+        {cooldownActive ? (
+          <p className="text-sm opacity-70">{Math.floor(remainingTime / 60)}:{remainingTime % 60}</p>
+        ) : (
+          <Button
+            onClick={() => {
+              console.log("inviting...");
+              conn?.emit("action:invite", { room, user, to: person.userId });
+              updateLastInvite(person.userId)
+              // set(person.userId, Math.floor(Date.now() / 1000)); // Update inviteLog with current timestamp
+              setCooldownActive(true); // Start cooldown
+              setRemainingTime(5 * 60); // Reset remaining time
+            }}
+            className={`bg-app_cta p-3 h-10 ${cooldownActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={cooldownActive}
+          >
+            <FaUserPlus size={18} />
+          </Button>
+        )}
       </div>
     </div>
   );
 };
+// const ShareListItem = ({ person, room }: ShareListItemProps) => {
+//   const { conn } = useContext(WebSocketContext);
+//   const { user } = useContext(userContext);
+
+//   const { inviteLog, set } = useInviteStore();
+//   return (
+//     <div className="flex items-center justify-between space-x-4 cursor-pointer">
+//       <div className="flex items-center space-x-4">
+//         <div>
+//           <img
+//             className="w-[38px] h-[38px] rounded-full object-cover"
+//             src={person?.avatarUrl}
+//           />
+//         </div>
+//         <div className="flex flex-col item-start ">
+//           <span className="text-lg font-semibold leading-tight">
+//             {person?.userName}
+//           </span>
+//           <span className="text-sm leading-tight">online</span>
+//         </div>
+//       </div>
+//       <div>
+//         {
+//           <Button
+//             onClick={() => {
+//               console.log("inviting...");
+//               conn?.emit("action:invite", { room, user, to: person.userId });
+//             }}
+//             className="bg-app_cta p-3 h-10"
+//           >
+//             <FaUserPlus size={18} />
+//           </Button>
+//         }
+//       </div>
+//     </div>
+//   );
+// };
 
 const ShareListItemSkeleton = () => {
   return (
@@ -79,7 +166,7 @@ const RoomShare = ({ room }: RoomShareProps) => {
 
   const handleCopy = async (link: string) => {
     await navigator.clipboard.writeText(link);
-    setCopied(true)
+    setCopied(true);
     toast.success("Copied room link", {
       style: {
         borderRadius: "10px",
@@ -111,8 +198,11 @@ const RoomShare = ({ room }: RoomShareProps) => {
         </div>
       </div>
       {people?.length > 0 && (
-        <div>
+        <div className="flex flex-col items-start">
           <span className="font-semibold text-lg">People</span>
+          <span className="text-sm opacity-70">
+            You can only send an invite every 5 minutes
+          </span>
         </div>
       )}
       <div className="chat space-y-4 h-auto max-h-[200px] overflow-auto ">

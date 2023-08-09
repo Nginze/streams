@@ -18,6 +18,7 @@ import { httpLogger } from "./middleware/httpLogger";
 import { sessionMiddleware } from "./middleware/sessionMiddleware";
 import { wrap } from "./utils/wrap";
 import { setupWs } from "./ws";
+import { limiter } from "./config/rate-limiter";
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +41,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use(httpLogger);
 app.use(authMiddleware);
+// app.use(limiter)
 
 app.use("/", rootRoutes);
 app.use("/auth", authRoutes);

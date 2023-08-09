@@ -1,3 +1,39 @@
+import { Queue, SandboxedJob } from "bullmq";
+import { connection } from "../config/bull";
+import { pool } from "../config/psql";
+import { logger } from "../config/logger";
+
+const cleanupQueue = new Queue("cleanupqueue", { connection });
+
+// cleanupQueue.add(
+//   "clean_up",
+//   {},
+//   {
+//     repeat: {
+//       every: 300000
+//     },
+//   }
+// );
+
+module.exports = async (job: SandboxedJob) => {
+  try {
+    await pool.query(
+      `
+      DELETE FROM room
+      WHERE (current_timestamp - last_active) > interval '2 minute'
+      AND room_id NOT IN (
+          SELECT current_room_id
+          FROM user_data
+          WHERE current_room_id IS NOT NULL
+      )
+      `
+    );
+
+  } catch (error) {
+    throw error;
+  }
+};
+
 // import { pool } from "../config/psql";
 // import { logger } from "../config/logger";
 // import { redisClient } from "../config/redis";
@@ -14,7 +50,7 @@
 //       logger.info("No users online, cleaning up");
 //       await client.query("BEGIN");
 //       await client.query(`
-//         DELETE FROM room_status 
+//         DELETE FROM room_status
 //       `);
 //       await client.query(
 //         `
@@ -37,7 +73,7 @@
 
 //     // Kick out offline users from their rooms
 //     await client.query(`
-//       DELETE FROM room_status 
+//       DELETE FROM room_status
 //       WHERE user_id NOT IN (${onlineUsers.map(id => `'${id}'`).join(", ")})
 //     `);
 
@@ -73,7 +109,7 @@
 //           const randomModUserId = onlineUsersInRoom[randomModIndex];
 
 //           await client.query(`
-//             UPDATE room_status 
+//             UPDATE room_status
 //             SET is_mod = true
 //             WHERE user_id = '${randomModUserId}' AND room_id = '${room_id}';
 //           `);
@@ -115,16 +151,6 @@
 
 //   return rows[0].current_room_id;
 // };
-
-// const scheduledQueue = new Queue('scheduledqueue')
-
-// scheduledQueue.add('clean_up_participants', {}, {
-//   repeat: {
-//     pattern: "*/10 * * * * *"
-//   }
-// })
-
-
 
 // Delete Idle/Ended Rooms
 // cron.schedule("*/10 * * * * *", async () => {

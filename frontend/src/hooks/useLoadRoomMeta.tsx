@@ -1,7 +1,7 @@
 import { api } from "@/api";
 import { useQuery } from "react-query";
 
-const useLoadRoomMeta = (roomId: string, user: User) => {
+const useLoadRoomMeta = (roomId: string, user: User, hasJoined: boolean = true) => {
   const { isLoading: chatLoading, data: chatMessages } = useQuery<
     ChatMessage[] | undefined
   >(["room-chat", roomId], {
@@ -13,11 +13,11 @@ const useLoadRoomMeta = (roomId: string, user: User) => {
     ["room", roomId],
     async () => {
       const { data } = await api.get(
-        `/room/${roomId}?userId=${user.userId}`
+        `/room/${roomId}?userId=${user.userId}${hasJoined ? "&hasJoined=true" : ""}`
       );
       return data;
     },
-    { enabled: !!user && !!roomId, refetchOnWindowFocus: false, staleTime: 0 }
+    { enabled: !!user && !!roomId, refetchOnWindowFocus: false  }
   );
 
   const { isLoading: roomStatusLoading, data: roomStatus } =

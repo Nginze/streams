@@ -1,9 +1,7 @@
-import { Socket } from "socket.io";
-
 export const broadcastExcludeSender = (io: any, event: any) => {
   const clients = io.sockets.adapter.rooms.get(event.d.roomId);
-  if (!clients){
-    return
+  if (!clients) {
+    return;
   }
   for (const sid of clients) {
     if (event.peerId == sid) {

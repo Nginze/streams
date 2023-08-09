@@ -80,16 +80,9 @@ const RoomAvatar = ({ participant }: Props) => {
         {participant.raisedHand && !participant.isSpeaker && (
           <div
             style={{
-              borderRadius: "100%",
-              padding: "0.4rem",
               position: "absolute",
-              width: "25px",
-              height: "25px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              right: 17,
-              top: 1,
+              right: 22,
+              bottom: 5,
             }}
           >
             <span>✋</span>

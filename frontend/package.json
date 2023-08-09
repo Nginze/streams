@@ -38,6 +38,7 @@
     "react-mentions": "^4.4.9",
     "react-query": "^3.39.2",
     "react-responsive": "^9.0.2",
+    "react-select": "^5.7.4",
     "react-spinners": "^0.13.8",
     "socket.io-client": "^4.5.4",
     "tailwind-merge": "^1.14.0",

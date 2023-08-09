@@ -164,7 +164,7 @@ const CreateRoom = ({ conn }: Props) => {
       <div className="w-full">
         {createRoomMutation.isLoading || createRoomLoading ? (
           <div className="flex items-center justify-center space-x-2 w-full">
-            <Loader width={25} height={25} bgColor="white" />
+            <Loader width={25} height={25} bgColor="white" alt={true} />
           </div>
         ) : (
           <Button

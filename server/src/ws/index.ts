@@ -15,7 +15,7 @@ export const setupWs = (
 ) => {
   try {
     setupWsWorker(io);
-    io.use(wsAuthMiddleware)
+    io.use(wsAuthMiddleware);
     io.on("connection", async (socket: Socket) => {
       logger.info(`Peer (${socket.id}) connected to socket server`);
 

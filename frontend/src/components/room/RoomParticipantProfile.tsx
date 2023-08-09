@@ -44,7 +44,7 @@ const RoomParticipantProfile = ({
   const { conn } = useContext(WebSocketContext);
   const queryClient = useQueryClient();
 
-  const { nullify } = useVoiceStore();
+  const { nullify, mic } = useVoiceStore();
   const { closeAll } = useConsumerStore();
   const { close } = useProducerStore();
 
@@ -144,6 +144,7 @@ const RoomParticipantProfile = ({
     },
 
     onError: (error, variables, context) => {
+      console.log("Error when making you speaker");
       if (variables.userId === user.userId) {
         queryClient.setQueryData(
           ["room-status", room.roomId],
@@ -171,7 +172,7 @@ const RoomParticipantProfile = ({
     },
 
     onMutate: variables => {
-      conn?.emit("ban-list-change", {
+      conn?.emit("mod:ban_list_change", {
         roomId: room.roomId,
         bannedUser: {
           avatarUrl: participant?.avatarUrl,
@@ -186,7 +187,7 @@ const RoomParticipantProfile = ({
 
     onSuccess: async (data, variables) => {
       if (variables.banType === "room_ban") {
-        conn?.emit("kicked-from-room", {
+        conn?.emit("mod:kicked_from_room", {
           userId: participant?.userId,
           roomId: room.roomId,
         });
@@ -218,7 +219,7 @@ const RoomParticipantProfile = ({
 
   const handleAddSpeaker = async () => {
     try {
-      conn?.emit("rt:add_speaker", {
+      conn?.emit("rtc:add_speaker", {
         roomId: room.roomId,
         userId: participant!.userId,
       });
@@ -253,6 +254,7 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
         value: true,
       });
+
     } catch (error) {}
   };
 

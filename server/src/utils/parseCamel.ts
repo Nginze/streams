@@ -19,7 +19,16 @@ export function parseCamel<T>(obj: T): T {
     .sort()
     .forEach((key) => {
       const camelCaseKey = snakeToCamel(key);
-      (result as any)[camelCaseKey] = parseCamel((obj as any)[key]);
+      let value = (obj as any)[key];
+
+      if (value instanceof Date) { // Check if the value is a Date object
+        (result as any)[camelCaseKey] = value;
+      } else if (typeof value === 'object' && value !== null) {
+        value = parseCamel(value);
+        (result as any)[camelCaseKey] = value;
+      } else {
+        (result as any)[camelCaseKey] = value;
+      }
     });
 
   return result;

@@ -12,6 +12,7 @@ import { useQueryClient } from "react-query";
 import { userContext } from "../../contexts/UserContext";
 import { WebSocketContext } from "../../contexts/WebsocketContext";
 import { api } from "@/api";
+import { useSettingStore } from "@/store/useSettingStore";
 
 type Props = {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export const MainWsHandler = ({ children }: Props) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { nullify } = useVoiceStore();
+  const { nullify, mic } = useVoiceStore();
   const { closeAll } = useConsumerStore();
   const { close } = useProducerStore();
   const { setModalRoom, setModalUser, showInvite } = useRoomInviteModal();
@@ -81,7 +82,7 @@ export const MainWsHandler = ({ children }: Props) => {
       }));
     });
     conn.on("speaker-added", ({ userId, roomId }) => {
-      console.log("new-speaker-added", userId);
+      console.log("new-speaker-added", userId, roomId);
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
         participants: data.participants.map((p: RoomParticipant) =>
@@ -90,6 +91,7 @@ export const MainWsHandler = ({ children }: Props) => {
                 ...p,
                 raisedHand: false,
                 isSpeaker: true,
+                isMuted: true,
               }
             : p
         ),
@@ -107,10 +109,17 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("remove-speaker-permissions", ({ roomId }) => {
       console.log("i just received a request to remove speaker permissions");
+
       queryClient.setQueriesData(["room-status", roomId], (data: any) => ({
         ...data,
         isSpeaker: false,
       }));
+
+      if (!mic) {
+        return;
+      }
+
+      mic.enabled ? (mic.enabled = false) : (mic.enabled = true);
     });
 
     conn.on("user-left-room", ({ userId, roomId }) => {
@@ -144,6 +153,22 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("hand-raised", ({ userId, roomId }) => {
       console.log("You raised your hand");
+
+      queryClient.setQueryData(["room", roomId], (data: any) => ({
+        ...data,
+        participants: data.participants.map((p: RoomParticipant) =>
+          p.userId === userId
+            ? {
+                ...p,
+                raisedHand: !p.raisedHand,
+              }
+            : p
+        ),
+      }));
+    });
+
+    conn.on("hand-down", ({ userId, roomId }) => {
+      console.log("You lowered your hand");
 
       queryClient.setQueryData(["room", roomId], (data: any) => ({
         ...data,
@@ -222,6 +247,10 @@ export const MainWsHandler = ({ children }: Props) => {
       queryClient.refetchQueries(["room", roomId]);
     });
 
+    conn.on("invalidate-feed", () => {
+      queryClient.refetchQueries(["live-rooms"]);
+    });
+
     conn.on("toggle-room-chat", ({ roomId }) => {
       console.log("chat is about to be toggled");
       queryClient.setQueryData(["room", roomId], (data: any) => ({
@@ -238,97 +267,128 @@ export const MainWsHandler = ({ children }: Props) => {
       }));
     });
 
-    conn.on("leave-room-all", async ({ roomId, hostId }) => {
-      console.log("forced to leave room");
-
-      await api.post(`/room/leave?roomId=${roomId}`).then(res => {
-        conn?.emit("leave-room", { roomId });
-        nullify();
-        closeAll();
-        close();
-      });
-
-      if (user.userId == hostId) {
-        console.log("you are the host");
-        // await api.post(`/room/destroy?roomId=${roomId}`);
+    conn.on("leave-room", async ({ roomId, byHost }) => {
+      nullify();
+      closeAll();
+      close();
+      if (router.pathname != "/home") {
         await router.push("/");
-
-        toast("Meeting ended", {
-          icon: "ℹ",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
-      } else {
-        await router.push("/");
-
-        toast("Host ended meeting", {
-          icon: "🔔",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
       }
-
       queryClient.invalidateQueries(["user"]);
+      queryClient.refetchQueries(["live-rooms"]);
       queryClient.removeQueries(["room"]);
       queryClient.removeQueries(["room-status"]);
       queryClient.removeQueries(["room-chat"]);
-      queryClient.removeQueries(["room-bans"]);
+      // if (!byHost) {
+      // } else {
+      //   setTimeout(async () => {
+      //     await router.push("/");
+      //     queryClient.invalidateQueries(["user"]);
+      //     queryClient.removeQueries(["room"]);
+      //     queryClient.removeQueries(["room-status"]);
+      //     queryClient.removeQueries(["room-chat"]);
+      //   }, 10000);
+      // }
+    });
+
+    conn.on("leave-room-all", async ({ roomId, hostId }) => {
+      conn?.emit("action:leave_room", { roomId, byHost: true });
+      toast("Room ended", {
+        icon: "👋",
+      });
+      // console.log("forced to leave room");
+
+      // await api.post(`/room/leave?roomId=${roomId}`).then(res => {
+      //   conn?.emit("leave-room", { roomId });
+      //   nullify();
+      //   closeAll();
+      //   close();
+      // });
+
+      // if (user.userId == hostId) {
+      //   await router.push("/");
+      //   toast("Meeting ended", {
+      //     icon: "ℹ",
+      //     style: {
+      //       borderRadius: "10px",
+      //       background: "#333",
+      //       color: "#fff",
+      //     },
+      //   });
+      // } else {
+      //   await router.push("/");
+
+      //   toast("Host ended meeting", {
+      //     icon: "🔔",
+      //     style: {
+      //       borderRadius: "10px",
+      //       background: "#333",
+      //       color: "#fff",
+      //     },
+      //   });
+      // }
+
+      // queryClient.invalidateQueries(["user"]);
+      // queryClient.removeQueries(["room"]);
+      // queryClient.removeQueries(["room-status"]);
+      // queryClient.removeQueries(["room-chat"]);
+      // queryClient.removeQueries(["room-bans"]);
     });
 
     conn.on("room-invite", ({ room, user }) => {
       console.log("i was invited to a room");
-      playSoundEffect("roomInvite");
-      toast.custom(t => (
-        <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } max-w-md w-full bg-app_bg_deeper shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-        >
-          <div className="flex-1 w-full p-4 flex justify-between items-center">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 pt-0.5">
-                <img
-                  className="h-10 w-10 rounded-full"
-                  src={user.avatarUrl}
-                  alt=""
-                />
+      const { roomInvites: allowInvites } = useSettingStore.getState();
+      if (allowInvites) {
+        playSoundEffect("roomInvite");
+        toast.custom(t => (
+          <div
+            className={`${
+              t.visible ? "animate-enter" : "animate-leave"
+            } max-w-md w-full bg-app_bg_deeper shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          >
+            <div className="flex-1 w-full p-4 flex justify-between items-center">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <img
+                    className="h-10 w-10 rounded-full"
+                    src={user.avatarUrl}
+                    alt=""
+                  />
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-white">
+                    {user.userName}
+                  </p>
+                  <p className="mt-1 text-sm text-white w-52 truncate">
+                    invites you to {room.roomDesc}
+                  </p>
+                </div>
               </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-white">
-                  {user.userName}
-                </p>
-                <p className="mt-1 text-sm text-white w-52 truncate">
-                  invites you to {room.roomDesc}
-                </p>
+            </div>
+            <div className="flex items-center space-x-2 px-3">
+              <div>
+                <Button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    router.push(`/room/${room.roomId}`);
+                  }}
+                  className="bg-green-400 p-4"
+                >
+                  <Check size={12} />
+                </Button>
+              </div>
+              <div className="flex border-l border-app_bg_light py-2 px-2">
+                <Button
+                  onClick={() => toast.dismiss(t.id)}
+                  className="bg-[#FF5E5E] p-4"
+                >
+                  <X size={12} />
+                </Button>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2 px-3">
-            <div>
-              <Button
-                onClick={() => router.push(`/room/${room.roomId}`)}
-                className="bg-green-400 p-4"
-              >
-                <Check size={12} />
-              </Button>
-            </div>
-            <div className="flex border-l border-app_bg_light py-2 px-2">
-              <Button
-                onClick={() => toast.dismiss(t.id)}
-                className="bg-[#FF5E5E] p-4"
-              >
-                <X size={12} />
-              </Button>
-            </div>
-          </div>
-        </div>
-      ));
+        ));
+      }
     });
 
     conn.on("room-name-changed", ({ roomId, newRoomName }) => {
@@ -340,28 +400,28 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("ban-list-change", ({ roomId, banType, isBan, bannedUser }) => {
       if (bannedUser.userId == user.userId) {
-        toast(`You've been ${isBan ? "unbanned" : "banned"} from ${banType}`, {
-          icon: "ℹ",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        });
-      } else {
         toast(
-          `${bannedUser.userName} ${
-            isBan ? "unbanned" : "banned"
-          } from ${banType}`,
+          `You've been ${isBan ? "unbanned" : "banned"} from ${
+            banType.split("_")[0]
+          }`,
           {
-            icon: "ℹ",
+            // icon: "ℹ",
             style: {
-              borderRadius: "10px",
-              background: "#333",
-              color: "#fff",
+              // borderRadius: "10px",
+              // background: "#333",
+              // color: "#fff",
             },
           }
         );
+      } else {
+        toast(`${bannedUser.userName} ${isBan ? "unbanned" : "banned"}`, {
+          // icon: "ℹ",
+          // style: {
+          //   borderRadius: "10px",
+          //   background: "#333",
+          //   color: "#fff",
+          // },
+        });
       }
 
       if (isBan) {
@@ -374,18 +434,18 @@ export const MainWsHandler = ({ children }: Props) => {
           bannedUser,
         ]);
       }
-      // queryClient.invalidateQueries(["room-bans", roomId]);
+      queryClient.invalidateQueries(["room-bans", roomId]);
+      // queryClient.invalidateQueries(["room", roomId])
     });
 
     conn.on("kicked-from-room", async ({ roomId }) => {
       await api.post(`/room/leave?roomId=${roomId}`).then(async res => {
         await router.push("/");
         toast("Host kicked you ⚒", {
-          icon: "ℹ",
           style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
+            // borderRadius: "10px",
+            // background: "#333",
+            // color: "#fff",
           },
         });
         conn?.emit("leave-room", { roomId });
@@ -415,6 +475,7 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("user-left-room");
       conn.off("new-user-joined-room");
       conn.off("hand-raised");
+      conn.off("hand-down");
       conn.off("mute-changed");
       conn.off("add-speaker-permissions");
       conn.off("remove-speaker-permissions");
@@ -422,6 +483,8 @@ export const MainWsHandler = ({ children }: Props) => {
       conn.off("toggle-room-chat");
       conn.off("toggle-hand-raise-enabled");
       conn.off("leave-room-all");
+      conn.off("leave-room");
+      conn.off("invalidate-feed");
       conn.off("room-invite");
       conn.off("ban-list-change");
       conn.off("kicked-from-room");

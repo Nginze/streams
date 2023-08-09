@@ -16,6 +16,10 @@ import AppLayout from "@/components/global/AppLayout";
 import PeopleList from "@/components/global/PeopleList";
 import Feed from "@/components/home/Feed";
 import useScreenType from "@/hooks/useScreenType";
+import { Toast } from "@/components/ui/toast";
+import RoomMinimizedCard from "@/components/room/RoomMinimizedCard";
+import { useVoiceStore } from "@/engine/webrtc/store/useVoiceStore";
+import useLoadRoomMeta from "@/hooks/useLoadRoomMeta";
 
 interface IProps {}
 
@@ -32,6 +36,16 @@ const home: React.FC<IProps> = () => {
   const [newImgUrl, setImageUrl] = useState<string>("");
   const [newBio, setBio] = useState<string>("");
   const [autospeaker, setAutoSpeaker] = useState<boolean>(false);
+  const { roomId } = useVoiceStore();
+
+  const {
+    chatLoading,
+    roomLoading,
+    roomStatusLoading,
+    chatMessages,
+    room,
+    roomStatus,
+  } = useLoadRoomMeta(roomId as string, user, true);
 
   const screenType = useScreenType();
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery(
@@ -139,6 +153,17 @@ const home: React.FC<IProps> = () => {
         column1={<PeopleList />}
         column2={<Feed conn={conn!} />}
       />
+      {roomId ? (
+        <RoomMinimizedCard
+          conn={conn!}
+          user={user}
+          room={room as Room}
+          myRoomStatus={roomStatus!}
+        />
+      ) : (
+        <></>
+      )}
+      {/* <RoomMinimizedCard /> */}
     </>
     // <>
     //   <Head>
@@ -437,7 +462,7 @@ const home: React.FC<IProps> = () => {
     //                     <span className="text-sm">
     //                       {lr.participants.length}
     //                     </span>
-    //                   </span>
+    //                   </span { BiExit } from "react-icons/bi";>
     //                 </div>
     //               </div>
     //               <div className="flex flex-col items-start">

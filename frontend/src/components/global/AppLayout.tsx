@@ -1,6 +1,8 @@
 import Head from "next/head";
 import React from "react";
 import { Toaster } from "react-hot-toast";
+import RoomFooter from "../room/RoomFooter";
+import { useRouter } from "next/router";
 
 type Props = {
   navbar: React.ReactNode;
@@ -10,6 +12,7 @@ type Props = {
 };
 
 const AppLayout = ({ navbar, column1, column2, footer }: Props) => {
+  const { pathname } = useRouter();
   return (
     <>
       <Head>
@@ -24,14 +27,12 @@ const AppLayout = ({ navbar, column1, column2, footer }: Props) => {
         {navbar}
         <div className="w-3/4 m-auto space-y-16">
           <div className="grid grid-cols-4 gap-x-52 w-full max-h-96 h-96">
-            <div className="col-span-1 max-h-screen">
-              {column1}
-            </div>
+            <div className="col-span-1 max-h-screen ">{column1}</div>
             <div className="col-span-3">{column2}</div>
           </div>
         </div>
+        {/* {pathname.includes("/room") ? <RoomFooter /> : null} */}
       </main>
-      <footer>{footer}</footer>
     </>
   );
 };

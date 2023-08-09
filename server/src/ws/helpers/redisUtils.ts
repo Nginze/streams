@@ -16,7 +16,7 @@ export const getPeerId = async (userId: string) => {
   return peerId;
 };
 
-export const getUser = async (socket: Socket) => {
+export const getUser = (socket: Socket) => {
   //@ts-ignore
   return socket.request.user;
 };

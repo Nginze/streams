@@ -1,3 +1,4 @@
+import { useSettingStore } from "@/store/useSettingStore";
 import { useProducerStore } from "../store/useProducerStore";
 import { useVoiceStore } from "../store/useVoiceStore";
 
@@ -10,8 +11,12 @@ export const sendVoice = async () => {
   // eslint-disable-next-line init-declarations
   let micStream: MediaStream;
   try {
+    const { selectedMicDevice } = useSettingStore.getState();
+    console.log(selectedMicDevice)
     micStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
+      audio: {
+        deviceId: { exact: selectedMicDevice },
+      },
     });
   } catch (err) {
     set({ mic: null, micStream: null });
@@ -24,17 +29,15 @@ export const sendVoice = async () => {
   if (audioTracks.length) {
     console.log("creating producer...");
     const track = audioTracks[0];
-    track.enabled = false
+    track.enabled = false;
     useProducerStore.getState().add(
       await sendTransport.produce({
         track,
         appData: { mediaTag: "cam-audio" },
       })
     );
-    
 
     set({ mic: track, micStream });
-    
 
     return;
   }

@@ -1,15 +1,22 @@
 import React, { useContext } from "react";
 import { Button } from "../ui/button";
-import { useMutation, useQuery } from "react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "react-query";
 import { userContext } from "@/contexts/UserContext";
 import { WebSocketContext } from "@/contexts/WebsocketContext";
 import { useRouter } from "next/router";
 import { api } from "@/api";
+import Loader from "../global/Loader";
 
 const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
   const router = useRouter();
   const { conn } = useContext(WebSocketContext);
   const { id: roomId } = router.query;
+  const queryClient = useQueryClient();
 
   const banMutation = useMutation({
     mutationFn: async (params: {
@@ -37,17 +44,19 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
       });
     },
 
-    onSuccess: (data, variables) => {},
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["room-bans", roomId]);
+    },
 
     onError: (error, variables, context) => {},
   });
 
-  const handleChatBan = async () => {
+  const handleBan = async (banType: string) => {
     console.log("bann loading..");
     try {
       banMutation.mutate({
         isBan: checkIsBanned(bannedUser!.userId),
-        banType: "chat_ban",
+        banType: banType,
         userId: bannedUser!.userId,
       });
     } catch (error) {}
@@ -79,12 +88,17 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
           <span className="text-lg font-semibold leading-tight">
             {bannedUser?.userName}
           </span>
+          <span className="text-[12px] opacity-30">{bannedUser?.banType}</span>
         </div>
       </div>
       <div>
-        <Button onClick={handleChatBan} className="bg-app_bg_deepest p-3 h-10">
-          Unban
-        </Button>
+        {!banMutation.isLoading ? (
+          <Button onClick={() => handleBan(bannedUser?.banType)} className="bg-app_cta p-3 h-10">
+            Unban
+          </Button>
+        ) : (
+          <Loader width={15} alt={true} />
+        )}
       </div>
     </div>
   );
@@ -102,7 +116,7 @@ const RoomBanList = ({ roomId }: { roomId: string }) => {
   return (
     <div className="space-y-4">
       {roomBans && roomBans.length > 0 && (
-        <span className="font-bold text-lg">Banned Users</span>
+        <span className="font-semibold text-lg">Banned Users</span>
       )}
       <div>
         {roomBans.map((rb: any, idx: number) => (

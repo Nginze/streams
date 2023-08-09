@@ -1,5 +1,5 @@
 import { userContext } from "@/contexts/UserContext";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import { categories } from "../home/Constants";
@@ -26,10 +26,26 @@ import { useMutation } from "react-query";
 import { api } from "@/api";
 import { toast } from "react-hot-toast";
 import { Separator } from "../ui/separator";
+import Select from "react-select";
+import { useSettingStore } from "@/store/useSettingStore";
+import { useRouter } from "next/router";
 
 const ProfileSheet = () => {
   const { user, userLoading } = useContext(userContext);
   const [newBio, setBio] = useState(user.bio);
+  const [microphones, setMicrophones] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const router = useRouter();
+
+  const {
+    roomInvites,
+    soundEffects,
+    micAsObj,
+    updateRoomInvites,
+    updateSoundEffects,
+    updateSelectedMic,
+  } = useSettingStore();
 
   const profileMutation = useMutation({
     mutationFn: async () => {
@@ -52,6 +68,26 @@ const ProfileSheet = () => {
   const handleBlur = async (e: any) => {
     await handleBioChange();
   };
+
+  useEffect(() => {
+    async function fetchMicrophones() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputDevices = devices.filter(
+          device => device.kind === "audioinput"
+        );
+        const formattedMicrophones = audioInputDevices.map(device => ({
+          value: device.deviceId,
+          label: device.label || "Unknown microphone",
+        }));
+        setMicrophones(formattedMicrophones);
+      } catch (error) {
+        console.error("Error fetching microphones:", error);
+      }
+    }
+
+    fetchMicrophones();
+  }, []);
 
   return (
     <div className="mt-5 relative h-full px-3">
@@ -156,17 +192,42 @@ const ProfileSheet = () => {
           Preferences ⚙{/* <Settings2Icon className="ml-2" /> */}
         </span>
         <div className="flex flex-col items-start space-y-3">
+          <div className="w-full flex flex-col items-start space-y-2">
+            <Select
+              options={microphones}
+              isSearchable={true}
+              isDisabled={router.pathname.includes("/room")}
+              value={micAsObj}
+              defaultValue={microphones[0]}
+              onChange={newMic => {
+                console.log(newMic);
+                updateSelectedMic(newMic);
+              }}
+              className="text-black"
+            />
+            <span className="text-[13px] opacity-30">
+              Audio device selection should be done before joining a room
+            </span>
+          </div>
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer text-sm" htmlFor="sound-effects">
-              Sound FX 
+              Sound FX
             </label>
-            <Switch checked={false} id="sound-effects" />
+            <Switch
+              checked={soundEffects}
+              onCheckedChange={() => updateSoundEffects(!soundEffects)}
+              id="sound-effects"
+            />
           </div>
           <div className="flex items-center justify-between w-full">
             <label className="cursor-pointer text-sm" htmlFor="invites">
-              Receive room invites  
+              Receive room invites
             </label>
-            <Switch checked={false} id="invites" />
+            <Switch
+              checked={roomInvites}
+              onCheckedChange={() => updateRoomInvites(!roomInvites)}
+              id="invites"
+            />
           </div>
         </div>
       </div>

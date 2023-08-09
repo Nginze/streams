@@ -2,6 +2,9 @@ import { Server, Socket } from "socket.io";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { getPeerId } from "../helpers/redisUtils";
 import { logger } from "../../config/logger";
+import { cleanUp, getRoomParticipants } from "../helpers/cleanUp";
+import { sendQueue, wsQueue } from "../../config/bull";
+import { broadcastExcludeSender } from "../helpers/broadcastExcludeSender";
 
 type SocketDTO = {
   roomId: string;
@@ -80,12 +83,12 @@ const init = (
     }
   });
 
-  socket.on("action:invite", ({ userId, roomId }: SocketDTO) => {
-    // const peerId = await redisClient.get(to);
-    // io.to(peerId as string).emit("room-invite", {
-    //   room,
-    //   user,
-    // });
+  socket.on("action:invite", async ({ user, room, to }) => {
+    const peerId = await getPeerId(to);
+    io.to(peerId as string).emit("room-invite", {
+      room,
+      user,
+    });
   });
 
   /**
@@ -147,17 +150,73 @@ const init = (
     }
   });
 
-  socket.on("mod:change_room_name", async ({roomId, newRoomName}) => {
-    io.to(roomId).emit("room-name-changed", { roomId, newRoomName});
+  socket.on("mod:change_room_name", async ({ roomId, newRoomName }) => {
+    io.to(roomId).emit("room-name-changed", { roomId, newRoomName });
   });
 
-  // socket.on("moderation:leave_room_all", async () => {});
+  socket.on("action:leave_room", async ({ roomId, byHost }) => {
+    try {
+      //@ts-ignore
+      const user: UserDTO = socket.request?.user;
+      const currentRoom = Array.from(socket.rooms)[1];
 
-  // socket.on("ban-list-change", async () => {});
+      if (!currentRoom) {
+        return;
+      }
 
-  // socket.on("kicked-from-room", async () => {});
+      wsQueue.add("clean_up", {
+        userId: user.userId,
+        roomId: currentRoom ?? "",
+      });
 
-  // async cleanup events
+      socket.leave(currentRoom);
+
+      sendQueue.add("close_peer", {
+        op: "close-peer",
+        d: { peerId: socket.id, roomId: currentRoom, userId: user.userId },
+      });
+
+      const peerId = await getPeerId(user.userId!);
+
+      io.to(peerId as string).emit("leave-room", {
+        roomId,
+        byHost,
+      });
+
+      logger.info(`${socket.id} left room ${currentRoom}`);
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  socket.on("mod:leave_room_all", async ({ roomId, hostId }) => {
+    io.to(roomId).emit("leave-room-all", { roomId, hostId });
+  });
+
+  socket.on(
+    "mod:ban_list_change",
+    async ({ roomId, banType, bannedUser, isBan }) => {
+      io.to(roomId).emit("ban-list-change", {
+        roomId,
+        banType,
+        bannedUser,
+        isBan,
+      });
+    }
+  );
+
+  socket.on("mod:kicked_from_room", async ({ userId, roomId }) => {
+    const peerId = await getPeerId(userId);
+    io.to(peerId as string).emit("kicked-from-room", { userId, roomId });
+    broadcastExcludeSender(io, {
+      op: "user-left-room",
+      peerId,
+      d: {
+        userId,
+        roomId,
+      },
+    });
+  });
 };
 
 export { init };

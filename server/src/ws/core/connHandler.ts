@@ -3,7 +3,8 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { logger } from "../../config/logger";
 import { UserDTO } from "../../types/User";
 import { setUserOffline } from "../helpers/redisUtils";
-import { sendQueue } from "../../config/bull";
+import { sendQueue, wsQueue } from "../../config/bull";
+import { cleanUp, getRoomParticipants } from "../helpers/cleanUp";
 
 const init = (
   io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
@@ -17,7 +18,13 @@ const init = (
 
       setUserOffline(user.userId, socket.id);
 
+      wsQueue.add("clean_up", {
+        userId: user.userId,
+        roomId: currentRoom ?? '',
+      });
+
       if (!currentRoom) {
+        logger.info(`Disconnection socket wasn't in a room`);
         return;
       }
 
@@ -28,9 +35,7 @@ const init = (
         d: { peerId: socket.id, roomId: currentRoom, userId: user.userId },
       });
 
-      currentRoom
-        ? logger.info(`Disconnecting socket is in room, ${currentRoom}`)
-        : logger.info(`Disconnection socket wasn't in a room`);
+      logger.info(`Disconnecting socket is in room, ${currentRoom}`);
     } catch (error) {
       throw error;
     }

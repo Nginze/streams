@@ -26,6 +26,7 @@ const init = (
       console.log("join room");
       try {
         const user = getUser(socket);
+        console.log(user)
         socket.join(roomId);
 
         sendQueue.add("join_room", {
@@ -92,6 +93,7 @@ const init = (
   });
 
   socket.on("rtc:add_speaker", async ({ roomId, userId }) => {
+    console.log("adding speaker")
     try {
       const peerId = (await getPeerId(userId)) as string;
 
@@ -113,6 +115,7 @@ const init = (
   });
 
   socket.on("rtc:remove_speaker", async ({ roomId, userId }) => {
+    console.log("removing speaker")
     try {
       const peerId = (await getPeerId(userId)) as string;
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Oval } from "react-loader-spinner";
+import { Oval, RotatingLines } from "react-loader-spinner";
 
 type Props = {
   bgColor?: string;
@@ -8,6 +8,7 @@ type Props = {
   width?: number;
   height?: number;
   strokeWidth?: string;
+  alt?: boolean;
 };
 
 const Loader = ({
@@ -17,10 +18,24 @@ const Loader = ({
   width,
   height,
   strokeWidth,
+  alt,
 }: Props) => {
+  if (alt) {
+    return (
+      <>
+        <RotatingLines
+          width={width ? `${width}` : "70"}
+          animationDuration="0.75"
+          strokeColor="grey"
+          strokeWidth="5"
+          visible={true}
+        />
+      </>
+    );
+  }
   return (
     <>
-      <div className="flex justify-center mt-10 mx-auto">
+      <div className="flex justify-center mx-auto">
         <Oval
           height={height ? height : 70}
           width={width ? width : 70}

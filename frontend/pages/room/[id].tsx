@@ -41,6 +41,7 @@ import useSplitUsersIntoSections from "@/hooks/useSplitUsersIntoSections";
 import useLoadRoomMeta from "@/hooks/useLoadRoomMeta";
 import Loader from "@/components/global/Loader";
 import { GridOverlay } from "@/components/global/GridOverlay";
+import RoomFooter from "@/components/room/RoomFooter";
 
 const room = () => {
   const router = useRouter();
@@ -57,6 +58,8 @@ const room = () => {
   const [showSettings, setSettings] = useState<boolean>(false);
   const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
+  const hasJoined = useRef<boolean>(false)
+
   const { id: roomId } = router.query;
   const { conn } = useContext(WebSocketContext);
   const { user, userLoading } = useContext(userContext);
@@ -72,7 +75,7 @@ const room = () => {
     chatMessages,
     room,
     roomStatus,
-  } = useLoadRoomMeta(roomId as string, user);
+  } = useLoadRoomMeta(roomId as string, user, hasJoined.current);
 
   const handleCopy = async (link: string) => {
     await navigator.clipboard.writeText(link);
@@ -89,15 +92,15 @@ const room = () => {
     room as Room
   );
 
-  useEffect(() => {
-    const cleanup = async () => {
-      await api.post("/profile/ping?userId=" + user.userId);
-    };
-    window.addEventListener("beforeunload", cleanup);
-    return () => {
-      window.removeEventListener("beforeunload", cleanup);
-    };
-  }, []);
+  // useEffect(() => {
+  //   const cleanup = async () => {
+  //     await api.post("/profile/ping?userId=" + user.userId);
+  //   };
+  //   window.addEventListener("beforeunload", cleanup);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", cleanup);
+  //   };
+  // }, []);
 
   // useEffect(() => {
   //   const cleanupConn = async (e: Event) => {
@@ -162,15 +165,20 @@ const room = () => {
   }, [roomId]);
 
   useEffect(() => {
+    chatInputRef.current?.focus();
+
     if (
       !roomId ||
       !conn ||
       userLoading ||
       roomLoading ||
-      typeof room === "string"
+      typeof room === "string" ||
+      hasJoined.current
     ) {
       return;
     }
+    
+
     conn.emit("rtc:join_room", {
       roomId,
       roomMeta: {
@@ -179,7 +187,8 @@ const room = () => {
       },
     });
 
-    chatInputRef.current?.focus();
+    hasJoined.current = true
+
   }, [roomId, userLoading, conn, roomLoading]);
 
   if (typeof room === "string") {
@@ -258,6 +267,7 @@ const room = () => {
         navbar={<Navbar />}
         column1={<PeopleList />}
         column2={<RoomArea />}
+        footer={<RoomFooter/>}
       />
     </>
   ) : (

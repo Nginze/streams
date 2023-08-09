@@ -100,7 +100,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     myRoomStatus.isMuted ? playSoundEffect("unmute") : playSoundEffect("mute");
 
     conn.emit(event, { roomId, userId: user.userId });
-    mic?.enabled ? mic.enabled = false : mic.enabled = true;
+    mic?.enabled ? (mic.enabled = false) : (mic.enabled = true);
 
     try {
       statusMutation.mutate({
@@ -136,19 +136,19 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
   const handleLeave = async () => {
     try {
       if (room.creatorId == user.userId) {
-        conn?.emit("leave-room-all", { roomId, hostId: user.userId });
+        conn?.emit("mod:leave_room_all", { roomId, hostId: user.userId });
       } else {
-        await api.post(`/room/leave?roomId=${roomId}`).then(async res => {
-          conn?.emit("leave-room", { roomId });
-          nullify();
-          closeAll();
-          close();
-          await router.push("/");
-          queryClient.invalidateQueries(["user"]);
-          queryClient.removeQueries(["room"]);
-          queryClient.removeQueries(["room-status"]);
-          queryClient.removeQueries(["room-chat"]);
-        });
+        conn?.emit("action:leave_room", { roomId });
+        // await api.post(`/room/leave?roomId=${roomId}`).then(async res => {
+        //   // nullify();
+        //   // closeAll();
+        //   // close();
+        //   // await router.push("/");
+        //   // queryClient.invalidateQueries(["user"]);
+        //   // queryClient.removeQueries(["room"]);
+        //   // queryClient.removeQueries(["room-status"]);
+        //   // queryClient.removeQueries(["room-chat"]);
+        // });
       }
     } catch (error) {
       console.log(error);
@@ -191,8 +191,11 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
         </Button> */}
       </div>
       <div>
-        <Button onClick={handleLeave} className="w-28 bg-app_bg_deeper shadow-app_shadow">
-          {room!.creatorId == user.userId ? "End" : "Leave"}
+        <Button
+          onClick={handleLeave}
+          className="w-28 bg-app_bg_deeper shadow-app_shadow"
+        >
+          {room!.creatorId == user.userId ? "End" : "Leave ✌"}
         </Button>
       </div>
     </div>
