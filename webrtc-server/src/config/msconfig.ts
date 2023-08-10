@@ -38,7 +38,10 @@ export const config = {
           // ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           // announcedIp: "127.0.0.1",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          announcedIp:"127.0.0.1",
+          announcedIp:
+            process.env.NODE_ENV == "development"
+              ? "127.0.0.1"
+              : process.env.WEBRTC_LISTEN_IP,
         },
         // { ip: "192.168.42.68", announcedIp: null },
         // { ip: '10.10.23.101', announcedIp: null },
