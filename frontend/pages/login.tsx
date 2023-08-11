@@ -17,11 +17,14 @@ import { BiLock } from "react-icons/bi";
 import { MdLock } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { GridOverlay } from "@/components/global/GridOverlay";
+import useScreenType from "@/hooks/useScreenType";
 
 const width = 400;
 const height = 500;
 
 const Home: NextPage = () => {
+  const myDevice = useScreenType();
+
   const left =
     typeof window !== "undefined" && window.innerWidth / 2 - width / 2;
   const top =
@@ -56,17 +59,25 @@ const Home: NextPage = () => {
   };
 
   const githubLogin = () => {
-    window.open(
-      `${
-        process.env.NODE_ENV == "production"
-          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
-          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
-      }`,
-      "",
-      `toolbar=no, location=no, directories=no, status=no, menubar=no, 
+    myDevice == "isDesktop"
+      ? window.open(
+          `${
+            process.env.NODE_ENV == "production"
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
+          }`,
+          "",
+          `toolbar=no, location=no, directories=no, status=no, menubar=no, 
     scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
     height=${height}, top=${top}, left=${left}`
-    );
+        )
+      : window.location.replace(
+          `${
+            process.env.NODE_ENV == "production"
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
+          }`
+        );
   };
 
   const { conn } = useContext(WebSocketContext);
