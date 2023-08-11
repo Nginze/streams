@@ -25,7 +25,10 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URI,
+    origin:
+      process.env.NODE_ENV == "production"
+        ? process.env.CLIENT_URI_PROD
+        : process.env.CLIENT_URI,
     credentials: true,
   },
 });

@@ -41,6 +41,9 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
     async () => {
       const { data } = await api.get(`/room/ban/${room.roomId}`);
       return data;
+    },
+    {
+      staleTime: 60000,
     }
   );
 
@@ -62,7 +65,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   //   return parsedMessage;
   // };
 
-  const myDevice = useScreenType()
+  const myDevice = useScreenType();
 
   const parseMessage = (msg: string): React.ReactNode[] => {
     const tokens = msg.split(" ");
@@ -115,7 +118,7 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
       content: chatContent,
       createdAt: new Date(),
       color: userColor,
-      read: false
+      read: false,
     };
     conn?.emit("chat:global_new_message", { roomId: room.roomId, message });
     setMessage("");

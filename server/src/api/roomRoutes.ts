@@ -43,10 +43,10 @@ router.post(
 
       const { rows } = await client.query(
         `
-    INSERT INTO room (room_desc, is_private, auto_speaker, creator_id, chat_enabled, hand_raise_enabled)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING room_id;
-    `,
+      INSERT INTO room (room_desc, is_private, auto_speaker, creator_id, chat_enabled, hand_raise_enabled)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING room_id;
+        `,
         [
           roomDesc,
           isPrivate,
@@ -60,8 +60,8 @@ router.post(
       categories.forEach(async category => {
         await client.query(
           `
-    INSERT INTO room_category (room_id, category) VALUES ($1, $2) 
-    `,
+          INSERT INTO room_category (room_id, category) VALUES ($1, $2) 
+          `,
           [rows[0].room_id, category]
         );
       });
@@ -70,6 +70,8 @@ router.post(
 
       if (rows.length > 0) {
         res.status(200).json(parseCamel(rows[0]));
+      } else {
+        throw createHttpError(500, "Internal Server Error");
       }
     } catch (error) {
       next(error);
@@ -85,7 +87,6 @@ router.get(
     const { roomId } = req.params;
     const { userId } = req.query;
     const { hasJoined } = req.query;
-    console.log("joining room hasJoined: ", hasJoined)
 
     if (!roomId || !userId || hasJoined) {
       return res
@@ -104,22 +105,20 @@ router.get(
 
     const { rows: banned } = await pool.query(
       `
-    SELECT *
-    FROM room_ban
-    WHERE user_id = $1
-    AND room_id = $2
-    AND ban_type=$3
+      SELECT *
+      FROM room_ban
+      WHERE user_id = $1
+      AND room_id = $2
+      AND ban_type = $3
     `,
       [userId, roomId, "room_ban"]
     );
 
     if (!room[0]) {
-      console.log("no room found");
       return res.status(200).json("404");
     }
 
     if (banned[0]) {
-      console.log("no room found");
       return res.status(200).json("403");
     }
 
@@ -130,45 +129,45 @@ router.get(
 
       await client.query(
         `
-      UPDATE room
-      SET ended = false
-      WHERE room_id = $1
-      `,
+          UPDATE room
+          SET ended = false
+          WHERE room_id = $1
+        `,
         [roomId]
       );
 
       await client.query(
         `
-      UPDATE user_data
-      SET current_room_id = $1
-      WHERE user_id = $2;
-      `,
+          UPDATE user_data
+          SET current_room_id = $1
+          WHERE user_id = $2;
+        `,
         [roomId, userId]
       );
 
       const { rows: room } = await client.query(
         `
-      SELECT *
-      FROM room
-      WHERE room_id = $1;
-      `,
+          SELECT *
+          FROM room
+          WHERE room_id = $1;
+        `,
         [roomId]
       );
 
       await client.query(
         `
-      DELETE FROM room_status
-      WHERE user_id = $1
-      AND room_id = $2
-      `,
+          DELETE FROM room_status
+          WHERE user_id = $1
+          AND room_id = $2
+        `,
         [userId, roomId]
       );
 
       await client.query(
         `
-      INSERT INTO room_status (room_id, user_id, is_speaker, is_mod, raised_hand, is_muted)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      `,
+          INSERT INTO room_status (room_id, user_id, is_speaker, is_mod, raised_hand, is_muted)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `,
         [
           roomId,
           userId,
@@ -182,22 +181,22 @@ router.get(
 
       const { rows: categories } = await client.query(
         `
-      SELECT category FROM room_category 
-      WHERE room_id = $1
-      `,
+          SELECT category FROM room_category 
+          WHERE room_id = $1
+        `,
         [roomId]
       );
 
       const { rows: participants } = await client.query(
         `
-      SELECT *,
-          (SELECT COUNT(f.is_following) FROM user_follows f WHERE f.is_following = user_data.user_id) AS followers,
-          (SELECT COUNT(f.user_id) FROM user_follows f WHERE f.user_id = user_data.user_id) AS following,
-          EXISTS (SELECT 1 FROM user_follows f WHERE f.user_id = $2 AND f.is_following = user_data.user_id) AS follows_me 
-      FROM user_data
-      INNER JOIN room_status AS rs ON rs.user_id = user_data.user_id
-      WHERE rs.room_id = $1;
-      `,
+          SELECT *,
+              (SELECT COUNT(f.is_following) FROM user_follows f WHERE f.is_following = user_data.user_id) AS followers,
+              (SELECT COUNT(f.user_id) FROM user_follows f WHERE f.user_id = user_data.user_id) AS following,
+              EXISTS (SELECT 1 FROM user_follows f WHERE f.user_id = $2 AND f.is_following = user_data.user_id) AS follows_me 
+          FROM user_data
+          INNER JOIN room_status AS rs ON rs.user_id = user_data.user_id
+          WHERE rs.room_id = $1;
+        `,
         [roomId, userId]
       );
 
@@ -222,18 +221,18 @@ router.get(
     try {
       const { rows: rooms } = await pool.query(
         `
-    SELECT *,
-    (SELECT user_name FROM user_data WHERE user_id = room.creator_id) as creator,
-    (
-      SELECT json_agg(json_build_object('user_name', ud.user_name, 'avatar_url', ud.avatar_url))
-      FROM user_data ud
-      WHERE ud.current_room_id = room.room_id
-    ) AS participants,
-    ARRAY(SELECT category FROM room_category WHERE room_id = room.room_id) AS categories
-    FROM room
-    WHERE ended = false
-    LIMIT 5
-    `
+          SELECT *,
+          (SELECT user_name FROM user_data WHERE user_id = room.creator_id) as creator,
+          (
+            SELECT json_agg(json_build_object('user_name', ud.user_name, 'avatar_url', ud.avatar_url))
+            FROM user_data ud
+            WHERE ud.current_room_id = room.room_id
+          ) AS participants,
+          ARRAY(SELECT category FROM room_category WHERE room_id = room.room_id) AS categories
+          FROM room
+          WHERE ended = false
+          LIMIT 5
+        `
       );
 
       return res.status(200).json(parseCamel(rooms));
@@ -257,11 +256,11 @@ router.get(
 
       const { rows } = await pool.query(
         `
-      SELECT u.user_id, is_speaker, is_mod, raised_hand, is_muted
-      FROM room_status rs
-      INNER JOIN user_data u ON rs.user_id = u.user_id
-      WHERE rs.user_id = $1 AND room_id = $2
-      `,
+          SELECT u.user_id, is_speaker, is_mod, raised_hand, is_muted
+          FROM room_status rs
+          INNER JOIN user_data u ON rs.user_id = u.user_id
+          WHERE rs.user_id = $1 AND room_id = $2
+        `,
         [userId, roomId]
       );
 
@@ -282,8 +281,6 @@ router.post(
         : req.query;
       const { roomId } = req.query;
 
-      console.log("hit leave end point");
-
       if (!roomId || !userId) {
         return res
           .status(400)
@@ -296,18 +293,18 @@ router.post(
 
       await client.query(
         `
-      UPDATE user_data
-      SET current_room_id = $1,last_seen = NOW()
-      WHERE user_id = $2;
-      `,
+          UPDATE user_data
+          SET current_room_id = $1,last_seen = NOW()
+          WHERE user_id = $2;
+        `,
         [null, userId]
       );
 
       await client.query(
         `
-      DELETE FROM room_status
-      WHERE user_id = $1 AND room_id = $2;
-      `,
+          DELETE FROM room_status
+          WHERE user_id = $1 AND room_id = $2;
+        `,
         [userId, roomId]
       );
 
@@ -329,7 +326,6 @@ router.post(
     try {
       const { roomId } = req.query;
 
-      console.log("hit destroy end point");
       if (!roomId) {
         return res
           .status(400)
@@ -340,25 +336,25 @@ router.post(
 
       await client.query(
         `
-    DELETE FROM room_category
-    WHERE room_id = $1
-    `,
+          DELETE FROM room_category
+          WHERE room_id = $1
+        `,
         [roomId]
       );
 
       await client.query(
         `
-      DELETE FROM room_status
-      WHERE room_id = $1;
-      `,
+          DELETE FROM room_status
+          WHERE room_id = $1;
+        `,
         [roomId]
       );
 
       await client.query(
         `
-    DELETE FROM room
-    WHERE room_id = $1
-    `,
+          DELETE FROM room
+          WHERE room_id = $1
+        `,
         [roomId]
       );
 
@@ -377,7 +373,6 @@ router.post(
 router.post(`/soft-delete`, async (req: Request, res: Response) => {
   const { roomId } = req.query;
 
-  console.log("hit destroy end point");
   if (!roomId) {
     return res
       .status(400)
@@ -386,10 +381,10 @@ router.post(`/soft-delete`, async (req: Request, res: Response) => {
 
   await pool.query(
     `
-  UPDATE room
-  SET ended = true, room_ended_at = NOW()
-  WHERE room_id = $1
-  `,
+      UPDATE room
+      SET ended = true, room_ended_at = NOW()
+      WHERE room_id = $1
+    `,
     [roomId]
   );
 
@@ -403,7 +398,6 @@ router.put(
       const { state, value, roomId } = req.query;
       const { userId } = req.params;
 
-      console.log(state, value);
       if (!roomId || !userId || !state || !value) {
         return res
           .status(400)
@@ -412,10 +406,10 @@ router.put(
 
       await pool.query(
         `
-        UPDATE room_status
-        SET ${state} = $1
-        WHERE user_id = $2 AND room_id = $3
-      `,
+          UPDATE room_status
+          SET ${state} = $1
+          WHERE user_id = $2 AND room_id = $3
+        `,
         [value, userId, roomId]
       );
 
@@ -440,10 +434,10 @@ router.put(
 
       await pool.query(
         `
-      UPDATE room 
-      SET ${state} = $1
-      WHERE room_id = $2
-    `,
+          UPDATE room 
+          SET ${state} = $1
+          WHERE room_id = $2
+        `,
         [value, roomId]
       );
 
@@ -490,11 +484,11 @@ router.delete("/unban/:roomId", async (req: Request, res: Response) => {
 
   await pool.query(
     `
-    DELETE FROM 
-    room_ban
-    WHERE room_id = $1 
-    AND user_id = $2
-    AND ban_type = $3
+      DELETE FROM 
+      room_ban
+      WHERE room_id = $1 
+      AND user_id = $2
+      AND ban_type = $3
     `,
     [roomId, userId, banType]
   );

@@ -26,7 +26,6 @@ const init = (
       console.log("join room");
       try {
         const user = getUser(socket);
-        console.log(user)
         socket.join(roomId);
 
         sendQueue.add("join_room", {

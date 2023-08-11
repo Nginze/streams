@@ -9,7 +9,10 @@ router.get("/github", passport.authenticate("github"));
 router.get(
   "/github/callback",
   passport.authenticate("github", {
-    successRedirect: process.env.CLIENT_URI_CALLBACK,
+    successRedirect:
+      process.env.NODE_ENV == "production"
+        ? process.env.CLIENT_URI_CALLBACK_PROD
+        : process.env.CLIENT_URI_CALLBACK,
     failureRedirect: "/failure",
   })
 );

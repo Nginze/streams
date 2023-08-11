@@ -152,6 +152,8 @@ const PeopleList = () => {
       const { data } = await api.get("/profile/following/onlineList");
       return data;
     },
+
+    staleTime: 60000,
   });
 
   return (

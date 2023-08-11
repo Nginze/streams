@@ -30,7 +30,12 @@ export const WebSocketProvider = ({ children }: Props) => {
   const [isConnected, setConneted] = useState<boolean>(false);
 
   useEffect(() => {
-    const ws = io("http://localhost:8000", opts);
+    const ws = io(
+      process.env.NODE_ENV == "production"
+        ? (process.env.NEXT_PUBLIC_PROD_API as string)
+        : (process.env.NEXT_PUBLIC_DEV_API as string),
+      opts
+    );
     ws.on("connect", () => {
       setConn(ws);
       setConneted(true);
@@ -41,7 +46,6 @@ export const WebSocketProvider = ({ children }: Props) => {
     };
   }, []);
 
-  console.log(conn);
 
   if (!conn && pathname != "/login") {
     return (
@@ -63,13 +67,6 @@ export const WebSocketProvider = ({ children }: Props) => {
             rel="stylesheet"
           ></link>
         </Head>
-        {/* <div className="bg-app_bg_deepest w-screen h-screen flex items-center justify-center text-white font-logo">
-          <Loader />
-          <h1 className="font-logo text-[2rem] leading-[2.3rem] flex items-center relative">
-            <Activity size={30} className="mr-2" color="#7289da" />
-            chatterbox
-          </h1>
-        </div> */}
       </>
     );
   }

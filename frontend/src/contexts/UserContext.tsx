@@ -18,7 +18,10 @@ const UserProvider = ({ children }: Props) => {
     return user;
   };
 
-  const { data: user, isLoading: userLoading } = useQuery("user", getUser);
+  const { data: user, isLoading: userLoading } = useQuery("user", getUser, {
+    staleTime: 300000,
+    refetchOnWindowFocus: false,
+  });
 
   return (
     <userContext.Provider value={{ user, userLoading }}>

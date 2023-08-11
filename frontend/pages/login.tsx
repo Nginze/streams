@@ -18,7 +18,6 @@ import { MdLock } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { GridOverlay } from "@/components/global/GridOverlay";
 
-const BACKEND_URI = "http://localhost:8000";
 const width = 400;
 const height = 500;
 
@@ -30,7 +29,11 @@ const Home: NextPage = () => {
 
   const googleLogin = () => {
     window.open(
-      BACKEND_URI + "/auth/google",
+      `${
+        process.env.NODE_ENV == "production"
+          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
+          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
+      }`,
       "",
       `toolbar=no, location=no, directories=no, status=no, menubar=no, 
   scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
@@ -40,7 +43,11 @@ const Home: NextPage = () => {
 
   const discordLogin = () => {
     window.open(
-      BACKEND_URI + "/auth/discord",
+      `${
+        process.env.NODE_ENV == "production"
+          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/discord`
+          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/discord`
+      }`,
       "",
       `toolbar=no, location=no, directories=no, status=no, menubar=no, 
     scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
@@ -50,7 +57,11 @@ const Home: NextPage = () => {
 
   const githubLogin = () => {
     window.open(
-      BACKEND_URI + "/auth/github",
+      `${
+        process.env.NODE_ENV == "production"
+          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
+          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
+      }`,
       "",
       `toolbar=no, location=no, directories=no, status=no, menubar=no, 
     scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
@@ -59,7 +70,7 @@ const Home: NextPage = () => {
   };
 
   const { conn } = useContext(WebSocketContext);
-  console.log(conn);
+
   return (
     <>
       <Head>
@@ -128,7 +139,7 @@ const Home: NextPage = () => {
           </h1>
           <a
             target="_blank"
-            href="https://github.com/Nginze/drop-next"
+            href="https://github.com/Nginze/streams"
             className="text-sm flex items-center opacity-70"
           >
             <Code2 className="mr-1 opacity-70" size={17} />

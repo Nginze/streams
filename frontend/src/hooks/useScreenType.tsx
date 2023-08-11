@@ -22,10 +22,8 @@ const useScreenType = () => {
   } else if (isDesktopOrLaptop) {
     return "isDesktop";
   } else if (isTablet) {
-    console.log("isTablet")
     return "isTablet";
   } else if (isMobile) {
-    console.log("isMobile")
     return "isMobile";
   } else if (isPortrait) {
     return "isPortrait";

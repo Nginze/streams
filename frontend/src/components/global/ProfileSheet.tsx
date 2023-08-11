@@ -49,6 +49,7 @@ const ProfileSheet = () => {
       const { data } = await api.get(`/profile/me/metrics/followCount`);
       return data;
     },
+    staleTime: 300000
   });
 
   const {

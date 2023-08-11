@@ -66,10 +66,17 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
     isLoading: roomBansLoading,
     data: roomBans,
     isRefetching,
-  } = useQuery(["room-bans", roomId], async () => {
-    const { data } = await api.get(`/room/ban/${roomId}`);
-    return data;
-  });
+  } = useQuery(
+    ["room-bans", roomId],
+    async () => {
+      const { data } = await api.get(`/room/ban/${roomId}`);
+      return data;
+    },
+    {
+      staleTime: 60000,
+      enabled: !!roomId,
+    }
+  );
 
   const checkIsBanned = (userId: string) => {
     return roomBans.some((ban: any) => ban.userId === userId);
@@ -93,7 +100,10 @@ const RoomBanItem = ({ bannedUser }: { bannedUser: any }) => {
       </div>
       <div>
         {!banMutation.isLoading ? (
-          <Button onClick={() => handleBan(bannedUser?.banType)} className="bg-app_cta p-3 h-10">
+          <Button
+            onClick={() => handleBan(bannedUser?.banType)}
+            className="bg-app_cta p-3 h-10"
+          >
             Unban
           </Button>
         ) : (
@@ -110,6 +120,10 @@ const RoomBanList = ({ roomId }: { roomId: string }) => {
     async () => {
       const { data } = await api.get(`/room/ban/${roomId}`);
       return data;
+    },
+    {
+      enabled: !!roomId,
+      staleTime: 60000,
     }
   );
 
