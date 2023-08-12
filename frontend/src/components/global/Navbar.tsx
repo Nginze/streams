@@ -68,12 +68,12 @@ const Navbar = ({}: Props) => {
     (notification: any) => notification.isRead === false
   );
   return (
-    <div className="w-full shadow-app_shadow flex items-center py-3 bg-app_bg_deepest sticky top-0 z-10 font-display">
+    <div className="w-full shadow-app_shadow flex items-center py-2 bg-app_bg_nav sticky top-0 z-10 font-display">
       <div
         style={{
           width: myDevice != "isDesktop" ? "90%" : "75%",
         }}
-        className=" bg-app_bg_deepest flex itesm-center mx-auto justify-between "
+        className=" bg-app_bg_nav flex itesm-center mx-auto justify-between "
       >
         {/* {userLoading ? (
         <Skeleton className="h-6 w-1/4 rounded-sm bg-app_bg_deep" />
@@ -82,9 +82,9 @@ const Navbar = ({}: Props) => {
           onClick={() => {
             router.push("/home");
           }}
-          className="font-logo bg-app_bg_deepest text-[1rem] leading-[2.3rem] flex items-center relative cursor-pointer"
+          className="font-logo text-[1rem] leading-[2.3rem] flex items-center relative cursor-pointer"
         >
-          <img src="/logo.svg" width={30} className="mr-2" />
+          <img src="/logo.svg" width={25} className="mr-2" />
           <span className="relative">
             Streams
             <span className="absolute text-[8px] px-1 text-green-400">
@@ -157,19 +157,21 @@ const Navbar = ({}: Props) => {
                 {userLoading ? (
                   <Skeleton className="w-7 h-7 rounded-full" />
                 ) : (
-                  <div className="w-8 h-8">
+                  <div className="w-6 h-6">
                     <img
                       alt={`${user.userName}`}
                       src={user.avatarUrl}
-                      className="rounded-full ring-2 object-cover w-8 h-8"
+                      className="rounded-full ring-2 object-cover w-full h-full"
                     />
                   </div>
+              
                 )}
               </button>
             </SheetTrigger>
             <SheetContent
+              
               position={myDevice !== "isMobile" ? "right" : "bottom"}
-              size={myDevice !== "isMobile" ? "sm" : "content"}
+              size={myDevice !== "isMobile" ? "sm" : "full"}
             >
               <SheetHeader></SheetHeader>
               <ProfileSheet />

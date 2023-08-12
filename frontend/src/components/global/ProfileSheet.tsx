@@ -49,7 +49,7 @@ const ProfileSheet = () => {
       const { data } = await api.get(`/profile/me/metrics/followCount`);
       return data;
     },
-    staleTime: 300000
+    staleTime: 300000,
   });
 
   const {
@@ -105,7 +105,10 @@ const ProfileSheet = () => {
 
   return (
     <div className="mt-5 relative h-full px-3 ">
-      <div className="chat w-full">
+      <div
+        style={{ height: "calc(100vh - 6rem)" }}
+        className="chat w-full sheet overflow-auto"
+      >
         <div className="space-y-3 mb-5">
           <div className="flex items-center space-x-5">
             <div className="flex relative items-center h-16 w-16 rounded-3xl cursor-pointer group">
