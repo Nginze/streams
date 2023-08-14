@@ -1,16 +1,17 @@
 import cors from "cors";
-import "dotenv/config";
 import express from "express";
 import session from "express-session";
 import http from "http";
+import "dotenv/config";
 import passport from "passport";
 import { Server } from "socket.io";
 import { router as authRoutes } from "./api/authRoutes";
 import { router as roomRoutes } from "./api/roomRoutes";
 import { router as rootRoutes } from "./api/rootRoutes";
 import { router as userRoutes } from "./api/userRoutes";
+import { router as workerRoutes } from "./api/workerRoutes";
+
 import { logger } from "./config/logger";
-import "./jobs";
 import { authMiddleware } from "./middleware/authMiddleware";
 import { corsMiddleware } from "./middleware/corsMiddleware";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
@@ -23,7 +24,7 @@ import { limiter } from "./config/rate-limiter";
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin:
       process.env.NODE_ENV == "production"
@@ -50,6 +51,7 @@ app.use("/", rootRoutes);
 app.use("/auth", authRoutes);
 app.use("/room", roomRoutes);
 app.use("/profile", userRoutes);
+app.use("/worker", workerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -64,7 +66,6 @@ server.listen(process.env.PORT || 8000, () => {
       setupWs(io);
     } catch (error) {
       logger.error(error);
-      throw error;
     }
   })();
   logger.info(`listening on port ${8000}`);

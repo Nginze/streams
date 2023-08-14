@@ -113,6 +113,7 @@ export const MainWsHandler = ({ children }: Props) => {
       queryClient.setQueriesData(["room-status", roomId], (data: any) => ({
         ...data,
         isSpeaker: false,
+        isMuted: true,
       }));
 
       if (!mic) {
@@ -135,7 +136,6 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("new-user-joined-room", ({ user, roomId }) => {
       console.log("new user joined fired");
-      queryClient.invalidateQueries(["people"]);
       queryClient.setQueryData(["room", roomId], (data: any) => {
         const exists = data.participants.some(
           (p: RoomParticipant) => p.userId === user.userId
@@ -268,12 +268,11 @@ export const MainWsHandler = ({ children }: Props) => {
     });
 
     conn.on("leave-room", async ({ roomId, byHost }) => {
+      console.log("leaving room");
       nullify();
       closeAll();
       close();
-      if (router.pathname != "/home") {
-        await router.push("/");
-      }
+      await router.push("/home");
       queryClient.invalidateQueries(["user"]);
       queryClient.refetchQueries(["live-rooms"]);
       queryClient.removeQueries(["room"]);
@@ -293,9 +292,7 @@ export const MainWsHandler = ({ children }: Props) => {
 
     conn.on("leave-room-all", async ({ roomId, hostId }) => {
       conn?.emit("action:leave_room", { roomId, byHost: true });
-      toast("Room ended", {
-        icon: "👋",
-      });
+      toast("Room ended", {});
       // console.log("forced to leave room");
 
       // await api.post(`/room/leave?roomId=${roomId}`).then(res => {

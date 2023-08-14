@@ -41,7 +41,10 @@ const init = (
             roomId,
             user: {
               ...user,
-              isspeaker: isAutospeaker || isCreator,
+              isSpeaker: isAutospeaker || isCreator,
+              isMuted: true,
+              raisedHand: false,
+              isMod: isCreator
             },
           },
         };

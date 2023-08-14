@@ -1,0 +1,27 @@
+{
+  "name": "workers",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.4.10",
+    "axios": "^1.4.0",
+    "bullmq": "^4.7.2",
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.3.2",
+    "nodemon": "^3.0.1",
+    "pg": "^8.11.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6",
+    "winston": "^3.10.0"
+  },
+  "scripts": {
+    "tsc": "tsc",
+    "start:prod": "pm2 start dist/index.js",
+    "start": "ts-node index.ts",
+    "dev": "nodemon index.ts"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.2"
+  }
+}
