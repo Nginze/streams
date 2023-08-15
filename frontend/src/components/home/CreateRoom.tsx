@@ -13,6 +13,7 @@ import { api } from "@/api";
 import { ArrowRight, ArrowRightFromLine, MoveRight } from "lucide-react";
 import Loader from "../global/Loader";
 import { useRTCStore } from "@/engine/webrtc/store/useRTCStore";
+import { useVoiceStore } from "@/engine/webrtc/store/useVoiceStore";
 
 type Props = {
   conn: Socket;
@@ -65,6 +66,32 @@ const CreateRoom = ({ conn }: Props) => {
     },
   });
 
+  const validate = () => {
+    if (roomdesc.length > 50) {
+      toast.error("Exceeded minimum room description length");
+      return false;
+    }
+
+    if (roomdesc.length == 0) {
+      toast.error("Please enter a room description");
+      return false;
+    }
+
+    if (selectedToggles.length < 2) {
+      toast("You can only select a min of 2 categories");
+      return false;
+    }
+
+    if (selectedToggles.length > 3) {
+      toast("You can only select a max of 3 categories");
+      return false;
+    }
+
+    return true;
+  };
+
+  const { roomId: hasJoinedRoom } = useVoiceStore();
+
   return (
     <div className="w-full space-y-3 mt-5">
       <div>
@@ -77,7 +104,12 @@ const CreateRoom = ({ conn }: Props) => {
           placeholder="Describe topics shared in your room"
           className="outline-none border-none bg-app_bg_light shadow-app_shadow w-full py-3 px-3 text-sm font-semibold rounded-sm placeholder:text-sm placeholder:font-semibold"
         />
-        <div className="flex flex-1 justify-end text-[0.85em] py-1">
+        <div
+          style={{
+            color: roomdesc.length > 50 ? "red" : "white",
+          }}
+          className="flex flex-1 justify-end text-[0.85em] py-1"
+        >
           {roomdesc.length}/50
         </div>
       </div>
@@ -88,11 +120,19 @@ const CreateRoom = ({ conn }: Props) => {
             Topics make it easier for people with similar interests to find your
             rooms 🤩
           </span>
+          <div
+            style={{
+              color: selectedToggles.length > 3 ? "red" : "white",
+            }}
+            className="flex flex-1 justify-end text-[0.85em] py-1"
+          >
+            {selectedToggles.length}/3
+          </div>
         </div>
-        <div className="chat w-full space-y-1 max-h-[120px] overflow-y-auto">
+        <div className="chat w-full space-y-2 max-h-[120px] overflow-y-auto">
           {categories.map(category => (
             <Toggle
-              className="bg-app_bg_deep mr-1 rounded-sm shadow-app_shadow"
+              className="bg-app_bg_deep mr-2 rounded-full shadow-app_shadow"
               key={category}
               onClick={e => {
                 if (selectedToggles.includes(category)) {
@@ -100,7 +140,10 @@ const CreateRoom = ({ conn }: Props) => {
                     selectedToggles.filter(toggle => toggle !== category)
                   );
                 } else {
-                  setSelectedToggles([...selectedToggles, category]);
+                  if (selectedToggles.length <= 4) {
+                    setSelectedToggles([...selectedToggles, category]);
+                  } else {
+                  }
                 }
 
                 console.log(selectedToggles);
@@ -166,9 +209,12 @@ const CreateRoom = ({ conn }: Props) => {
           <div className="flex items-center justify-center space-x-2 w-full">
             <Loader width={25} height={25} bgColor="white" alt={true} />
           </div>
-        ) : (
+        ) : !hasJoinedRoom ? (
           <Button
             onClick={() => {
+              if (!validate()) {
+                return;
+              }
               setCreateLoading(true);
               createRoomMutation.mutate({
                 roomDesc: roomdesc,
@@ -184,6 +230,10 @@ const CreateRoom = ({ conn }: Props) => {
           >
             Start Room
           </Button>
+        ) : (
+          <span className="w-full flex items-center font-bold">
+            Currently a participant ✨
+          </span>
         )}
       </div>
     </div>

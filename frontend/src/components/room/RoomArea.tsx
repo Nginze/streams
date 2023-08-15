@@ -106,7 +106,8 @@ const RoomArea = ({}: Props) => {
                     </div>
                   </div>
                   <div>
-                    {(roomStatus!.isMod || (room as Room)?.creatorId == user.userId) && (
+                    {(roomStatus!.isMod ||
+                      (room as Room)?.creatorId == user.userId) && (
                       <AppDialog content={<RoomSettings room={room as Room} />}>
                         <Button className="p-1.5 h-7 bg-app_bg_light shadow-app_shadow">
                           <Settings size={16} />
@@ -118,8 +119,8 @@ const RoomArea = ({}: Props) => {
               </AccordionContent>
             </AccordionItem>
           </Accordion>
-          {/* <Separator className="bg-app_bg_light " /> */}
-          <div className=" h-[450px] p-5 flex-auto overflow-auto">
+          <Separator className="bg-app_bg_light " />
+          <div className=" h-[450px] p-5 flex-auto overflow-auto sheet">
             {roomStatus && room && (
               <>
                 <div className="mb-9 w-full">
@@ -133,7 +134,8 @@ const RoomArea = ({}: Props) => {
                 </div>
 
                 {askedToSpeak.length > 0 &&
-                  (roomStatus.isMod || (room as Room)?.creatorId == user.userId) && (
+                  (roomStatus.isMod ||
+                    (room as Room)?.creatorId == user.userId) && (
                     <div className="mb-6 w-full">
                       <p className="mb-4 text-sm font-bold flex items-center">
                         Requesting to speak
@@ -224,7 +226,8 @@ const RoomArea = ({}: Props) => {
                     </div>
                   </div>
                   <div>
-                    {(roomStatus!.isMod || (room as Room)?.creatorId == user.userId) && (
+                    {(roomStatus!.isMod ||
+                      (room as Room)?.creatorId == user.userId) && (
                       <Sheet>
                         <SheetTrigger asChild>
                           <Button className="p-1.5 h-7 bg-app_bg_light shadow-app_shadow">
@@ -262,7 +265,8 @@ const RoomArea = ({}: Props) => {
                 </div>
 
                 {askedToSpeak.length > 0 &&
-                  (roomStatus.isMod || (room as Room)?.creatorId == user.userId) && (
+                  (roomStatus.isMod ||
+                    (room as Room)?.creatorId == user.userId) && (
                     <div className="mb-6 w-full">
                       <p className="mb-4 text-sm font-bold flex items-center">
                         Requesting to speak

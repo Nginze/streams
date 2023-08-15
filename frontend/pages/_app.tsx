@@ -12,12 +12,14 @@ import UserProvider from "../src/contexts/UserContext";
 import { WebSocketProvider } from "../src/contexts/WebsocketContext";
 import "../styles/globals.css";
 import "@uploadthing/react/styles.css";
+import NextNProgress from "nextjs-progressbar";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
     <WebSocketProvider>
+      <NextNProgress />
       <QueryClientProvider client={queryClient}>
         <UserProvider>
           <MainWsHandler>

@@ -135,7 +135,7 @@ const RoomMinimizedCard = ({ conn, myRoomStatus, room, user }: Props) => {
       <div className="w-auto bg-app_bg_deepest rounded-lg p-3 text-center space-x-5 text-white flex items-center shadow-app_shadow cursor-pointer">
         <div className="flex items-start flex-col">
           <span className="text-[10px] opacity-50 ">Currently in</span>
-          <span className="opacity-70 text-[14px]">{room.roomDesc}</span>
+          <span className="opacity-70 text-[14px] abbrev">{room.roomDesc}</span>
         </div>
         <span className="flex items-center space-x-2">
           {(myRoomStatus.isSpeaker || room.handRaiseEnabled) && (

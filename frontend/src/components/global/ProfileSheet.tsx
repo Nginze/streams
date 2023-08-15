@@ -180,14 +180,13 @@ const ProfileSheet = () => {
           Joined April 25th 2023
         </div> */}
         </div>
-        <div className="mb-6 space-y-3">
+        {/* <div className="mb-6 space-y-3">
           <span className="font-semibold text-[15px] flex items-start flex-col">
             <span className="flex items-center flex-col">Topics ✨</span>
 
             <span className="text-[13px] opacity-30">
               Topics influence what you see on your feed
             </span>
-            {/* <PuzzleIcon className="ml-2" /> */}
           </span>
           <div className="chat w-full  space-y-1 max-h-[120px] overflow-y-auto">
             {categories.slice(1, 5).map(category => (
@@ -201,7 +200,7 @@ const ProfileSheet = () => {
               </Toggle>
             ))}
           </div>
-        </div>
+        </div> */}
 
         <div className="space-y-3">
           <span className="font-semibold text-[15px] flex items-center">
