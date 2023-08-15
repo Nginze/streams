@@ -21,6 +21,7 @@ const init = (
       wsQueue.add("clean_up", {
         userId: user.userId,
         roomId: currentRoom ?? '',
+        // io
       });
 
       if (!currentRoom) {

@@ -7,14 +7,12 @@ import * as roomHandler from "./core/roomHandler";
 import { logger } from "../config/logger";
 import { setUserOnline } from "./helpers/redisUtils";
 import { UserDTO } from "../types/User";
-import { setupWsWorker } from "../config/bull";
 import { wsAuthMiddleware } from "./middleware/wsAuth";
 
 export const setupWs = (
   io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
 ) => {
   try {
-    setupWsWorker(io);
     io.use(wsAuthMiddleware);
     io.on("connection", async (socket: Socket) => {
       logger.info(`Peer (${socket.id}) connected to socket server`);

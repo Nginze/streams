@@ -8,6 +8,9 @@ import { BeatLoader } from "react-spinners";
 import { useVoiceStore } from "@/engine/webrtc/store/useVoiceStore";
 import { useConsumerStore } from "@/engine/webrtc/store/useConsumerStore";
 import { useProducerStore } from "@/engine/webrtc/store/useProducerStore";
+import useScreenType from "@/hooks/useScreenType";
+import Loader from "../global/Loader";
+import { Button } from "../ui/button";
 
 type Props = {
   participantId: String;
@@ -69,7 +72,6 @@ const RoomParticipantProfile = ({
       queryClient.invalidateQueries(["room-participant", participant!.userId]);
       variables.isAFollow
         ? toast(`Started following ${participant!.userName}\n`, {
-            icon: "✔",
             style: {
               borderRadius: "10px",
               background: "#fff",
@@ -77,7 +79,6 @@ const RoomParticipantProfile = ({
             },
           })
         : toast(`Unfollowed ${participant!.userName}\n`, {
-            icon: "✔",
             style: {
               borderRadius: "10px",
               background: "#fff",
@@ -254,7 +255,6 @@ const RoomParticipantProfile = ({
         userId: participant!.userId,
         value: true,
       });
-
     } catch (error) {}
   };
 
@@ -316,35 +316,42 @@ const RoomParticipantProfile = ({
     return roomBans.some((ban: any) => ban.userId === userId);
   };
 
+  const myDevice = useScreenType();
+
   return myRoomStatus && participant ? (
     <>
-      <div className="mt-5">
+      <div
+        style={{
+          marginBottom: myDevice == "isMobile" ? "1rem" : "0rem",
+        }}
+        className="mt-5"
+      >
         <div>
           <div className="flex items-center space-x-3">
             <img
               className="inline-block h-14 w-14 rounded-2xl active:opacity-80 object-cover"
-              
               src={participant.avatarUrl}
               alt=""
             />
 
-            {/* {user.userId !== participant.userId &&
+            {user.userId !== participant.userId &&
               (!followMutation.isLoading ? (
-                <button
+                <Button
+                  size={"sm"}
                   onClick={
                     !participant.followsMe ? handleFollow : handleUnfollow
                   }
                   className={`${
                     !participant.followsMe
-                      ? "bg-gray-600"
-                      : "ring ring-gray-600"
-                  } px-2 py-1 flex items-center justify-center rounded-md w-1/4 active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300`}
+                      ? "bg-app_cta"
+                      : "bg-app_bg_deep"
+                  } flex items-center justify-center shadow-app_shadow rounded-sm active:bg-gray-800 focus:outline-none focus:ring focus:ring-gray-300`}
                 >
                   {!participant.followsMe ? "Follow" : "Unfollow"}
-                </button>
+                </Button>
               ) : (
-                <span>...</span>
-              ))} */}
+                <Loader alt={true} width={9}/>
+              ))}
           </div>
           <div className="flex flex-col items-start space-y-3 mt-2  text-sm">
             <div className="flex flex-col items-start">

@@ -9,7 +9,7 @@ import { BiMessageAltError } from "react-icons/bi";
 import { MentionsInput, Mention, SuggestionDataItem } from "react-mentions";
 import { HiReply } from "react-icons/hi";
 import { userColorContext } from "../global/UserColorProvider";
-import { Ban, MessageCircle } from "lucide-react";
+import { Ban, MessageCircle, Reply } from "lucide-react";
 import { api } from "@/api";
 import { useQuery } from "react-query";
 import useScreenType from "@/hooks/useScreenType";
@@ -188,8 +188,23 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
                       style={{ color: msg.color }}
                       className={`font-semibold text-sm `}
                     >
-                      {msg.userName}:{" "}
+                      {msg.userName}
+                      {msg.reply && (
+                        <span className="">
+                          <span
+                            style={{
+                              backgroundColor:
+                                msg.reply.userId == user.userId ? "#dd5a5b" : "",
+                            }}
+                            className="px-1 mx-1 text-[12px] inline rounded-sm text-white abbrev"
+                          >
+                            @{msg.reply?.userName}
+                          </span>
+                        </span>
+                      )}
+                      :{" "}
                     </span>
+
                     <span className=" mb-3 max-w-full break-words text-sm font-semibold">
                       {parseMessage(msg.content)}
                     </span>

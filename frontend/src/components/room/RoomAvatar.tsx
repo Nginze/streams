@@ -100,17 +100,17 @@ const RoomAvatar = ({ participant }: Props) => {
             )}
           </div>
         </AppDialog>
-        {participant.raisedHand && !participant.isSpeaker && (
+        {/* {participant.raisedHand && !participant.isSpeaker && (
           <div
             style={{
               position: "absolute",
-              right: 22,
-              bottom: 5,
+              right: "1%",
+              bottom: "5%",
             }}
           >
             <span>✋</span>
           </div>
-        )}
+        )} */}
         <span>
           <span className="text-xs font-semibold flex items-center">
             {participant.userId == (room as Room)?.creatorId && (

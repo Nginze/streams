@@ -3,6 +3,7 @@ import { RequestHandler } from "express";
 export const authMiddleware: RequestHandler = (req, res, next) => {
   if (
     req.originalUrl.startsWith("/auth") ||
+    req.originalUrl.startsWith("/worker") ||
     req.originalUrl.includes("/room/leave") ||
     req.originalUrl.includes("/room/destroy") ||
     req.originalUrl.includes("/ping") ||

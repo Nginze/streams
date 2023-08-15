@@ -35,7 +35,8 @@
     "rate-limit-redis": "^3.0.2",
     "socket.io": "^4.5.4",
     "typescript": "^4.9.4",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/connect-redis": "^0.0.19",

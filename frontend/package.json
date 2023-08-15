@@ -30,6 +30,7 @@
     "lucide-react": "^0.263.1",
     "mediasoup-client": "^3.6.71",
     "next": "latest",
+    "nextjs-progressbar": "^0.0.16",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-dropzone": "^14.2.3",

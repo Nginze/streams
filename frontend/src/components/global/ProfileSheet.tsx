@@ -49,7 +49,7 @@ const ProfileSheet = () => {
       const { data } = await api.get(`/profile/me/metrics/followCount`);
       return data;
     },
-    staleTime: 300000
+    staleTime: 300000,
   });
 
   const {
@@ -105,7 +105,10 @@ const ProfileSheet = () => {
 
   return (
     <div className="mt-5 relative h-full px-3 ">
-      <div className="chat w-full">
+      <div
+        style={{ height: "calc(100vh - 6rem)" }}
+        className="chat w-full sheet overflow-auto"
+      >
         <div className="space-y-3 mb-5">
           <div className="flex items-center space-x-5">
             <div className="flex relative items-center h-16 w-16 rounded-3xl cursor-pointer group">
@@ -177,14 +180,13 @@ const ProfileSheet = () => {
           Joined April 25th 2023
         </div> */}
         </div>
-        <div className="mb-6 space-y-3">
+        {/* <div className="mb-6 space-y-3">
           <span className="font-semibold text-[15px] flex items-start flex-col">
             <span className="flex items-center flex-col">Topics ✨</span>
 
             <span className="text-[13px] opacity-30">
               Topics influence what you see on your feed
             </span>
-            {/* <PuzzleIcon className="ml-2" /> */}
           </span>
           <div className="chat w-full  space-y-1 max-h-[120px] overflow-y-auto">
             {categories.slice(1, 5).map(category => (
@@ -198,7 +200,7 @@ const ProfileSheet = () => {
               </Toggle>
             ))}
           </div>
-        </div>
+        </div> */}
 
         <div className="space-y-3">
           <span className="font-semibold text-[15px] flex items-center">

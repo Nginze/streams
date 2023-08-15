@@ -111,10 +111,14 @@ const Home: NextPage = () => {
         <GridOverlay />
         <div className="w-[450px] h-auto rounded-lg p-6 z-20">
           <div className="text-white flex flex-col items-center space-y-2 ">
-            <span className="text-2xl font-bold text-center">Welcome ✨</span>
+            {/* <img src="/headphones.png" className="w-40" /> */}
+            <span className="text-2xl font-bold text-center">
+              Welcome to Streams ✨
+            </span>
             <span className="text-center text-[12px] opacity-90 w-4/5">
-              Create a new account on streams or log in to an existing account
-              to proceed
+              Create a new account on streams or{" "}
+              <span className="text-green-400 cursor-pointer">log in </span> to
+              an existing account to proceed
             </span>
           </div>
           <div className="text-white space-y-3 my-4">
@@ -138,9 +142,9 @@ const Home: NextPage = () => {
           </div>
         </div>
 
-        <footer className="py-7 px-10 fixed bottom-0 left-0 w-full flex justify-center items-center space-x-10">
+        <footer className="z-10 py-7 px-10 fixed bottom-0 left-0 w-full flex justify-center items-center space-x-10">
           <h1 className="font-logo text-[1rem] leading-[2.3rem] flex items-center relative cursor-pointer">
-            <img src="/logo.svg" width={30} className="mr-2" />
+            <img src="/logo.svg" width={25} className="mr-2" />
             <span className="relative">
               Streams
               <span className="absolute text-[8px] px-1 text-green-400">
