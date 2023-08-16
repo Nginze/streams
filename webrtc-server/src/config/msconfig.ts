@@ -28,6 +28,9 @@ export const config = {
       ] as RtpCodecCapability[],
     },
 
+    // rtp listenIps are the most important thing, below. you'll need
+    // to set these appropriately for your network for the demo to
+    // run anywhere but on localhost
     webRtcTransport: {
       listenIps: [
         {
