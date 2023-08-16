@@ -25,14 +25,17 @@ jobs:
           git status
           cd server
           npm install 
+          npm run tsc
           npm run start:prod
           cd ..
           cd workers
           npm install
+          npm run tsc
           npm run start:prod
           cd ..
           cd webrtc-server
           npm install
+          npm run tsc
           npm run start:prod
           
           
