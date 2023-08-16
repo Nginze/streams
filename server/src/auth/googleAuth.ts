@@ -1,9 +1,13 @@
 import "dotenv/config";
 import passport from "passport";
-import { Strategy as GithubStrategy, StrategyOptions } from "passport-github2";
+import {
+  Strategy as GoogleStrategy,
+  StrategyOptions,
+} from "passport-google-oauth20";
 import { pool } from "../config/psql";
 import { UserDTO } from "../types/User";
 import { logger } from "../config/logger";
+import { generateUsername } from "../utils/generateUsername";
 
 const parseToUserDTO = (params: Record<any, any>): UserDTO => {
   const parsed = {
@@ -21,21 +25,21 @@ const parseToUserDTO = (params: Record<any, any>): UserDTO => {
   return parsed;
 };
 
-const githubStrategyMiddleware = new GithubStrategy(
+const googleStrategyMiddleware = new GoogleStrategy(
   {
     clientID:
       process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CLIENT_ID_PROD
-        : process.env.GITHUB_CLIENT_ID,
+        ? process.env.GOOGLE_CLIENT_ID_PROD
+        : process.env.GOOGLE_CLIENT_ID_PROD,
     clientSecret:
       process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CLIENT_SECRET_PROD
-        : process.env.GITHUB_CLIENT_SECRET,
+        ? process.env.GOOGLE_CLIENT_SECRET_PROD
+        : process.env.GOOGLE_CLIENT_SECRET_PROD,
     callbackURL:
       process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CALLBACK_URL_PROD
-        : process.env.GITHUB_CALLBACK_URL,
-    scope: ["user"],
+        ? process.env.GOOGLE_CALLBACK_URL_PROD
+        : process.env.GOOGLE_CALLBACK_URL,
+    scope: ["profile", "email"],
   } as StrategyOptions,
   async (
     accessToken: string,
@@ -45,10 +49,10 @@ const githubStrategyMiddleware = new GithubStrategy(
   ) => {
     const { rows } = await pool.query(
       `
-      SELECT u.*, ap.github_id
+      SELECT u.*, ap.google_id
       FROM user_data u
       JOIN auth_provider ap ON u.user_id = ap.user_id 
-      WHERE ap.github_id = $1 or u.email = $2;
+      WHERE ap.google_id = $1 or u.email = $2;
       `,
       [profile.id, profile.emails[0].value]
     );
@@ -68,7 +72,7 @@ const githubStrategyMiddleware = new GithubStrategy(
             `,
             [
               profile.emails[0].value,
-              profile.username,
+              generateUsername(profile._json.family_name.toLowerCase()), //generte unique handle by default
               profile.photos[0].value,
               profile.displayName,
               profile._json.bio,
@@ -76,9 +80,9 @@ const githubStrategyMiddleware = new GithubStrategy(
           );
           const { rows: authProviderRows } = await client.query(
             `
-            INSERT INTO auth_provider (user_id, github_id)
+            INSERT INTO auth_provider (user_id, google_id)
             VALUES ($1, $2)
-            RETURNING github_id
+            RETURNING google_id 
             `,
             [userDataRows[0].user_id, profile.id]
           );
@@ -87,7 +91,7 @@ const githubStrategyMiddleware = new GithubStrategy(
 
           const unParsedUserData = {
             ...userDataRows[0],
-            github_id: authProviderRows[0].github_id,
+            google_id: authProviderRows[0].google_id,
           };
 
           const parsedUserData = parseToUserDTO(unParsedUserData);
@@ -113,7 +117,7 @@ const deserializeMiddleware = async (userId: string, done: any) => {
   try {
     const { rows } = await pool.query(
       `
-      SELECT u.*, ap.github_id 
+      SELECT u.*, ap.google_id
       FROM user_data u
       JOIN auth_provider ap
       ON u.user_id = ap.user_id
@@ -129,6 +133,6 @@ const deserializeMiddleware = async (userId: string, done: any) => {
   }
 };
 
-passport.use(githubStrategyMiddleware);
+passport.use(googleStrategyMiddleware);
 passport.serializeUser(serializeMiddleware);
 passport.deserializeUser(deserializeMiddleware);

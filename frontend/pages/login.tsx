@@ -31,17 +31,25 @@ const Home: NextPage = () => {
     typeof window !== "undefined" && window.innerHeight / 2 - height / 2;
 
   const googleLogin = () => {
-    window.open(
-      `${
-        process.env.NODE_ENV == "production"
-          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
-          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
-      }`,
-      "",
-      `toolbar=no, location=no, directories=no, status=no, menubar=no, 
+    myDevice == "isDesktop"
+      ? window.open(
+          `${
+            process.env.NODE_ENV == "production"
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
+          }`,
+          "",
+          `toolbar=no, location=no, directories=no, status=no, menubar=no, 
   scrollbars=no, resizable=no, copyhistory=no, width=${width}, 
   height=${height}, top=${top}, left=${left}`
-    );
+        )
+      : window.location.replace(
+          `${
+            process.env.NODE_ENV == "production"
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
+          }`
+        );
   };
 
   const discordLogin = () => {
@@ -131,7 +139,12 @@ const Home: NextPage = () => {
               <BsGithub size={17} style={{ marginRight: "1rem" }} />
               Continue with Github
             </Button>
-            <Button className="shadow-app_shadow bg-white p-3 font-semibold flex items-center justify-center  rounded-md w-full focus:outline-none focus:ring text-black hover:text-white">
+            <Button
+              onClick={() => {
+                googleLogin();
+              }}
+              className="shadow-app_shadow bg-white p-3 font-semibold flex items-center justify-center  rounded-md w-full focus:outline-none focus:ring text-black hover:text-white"
+            >
               <img src="/google.svg" width={"20px"} className="mr-[1rem]" />
               Continue with Google
             </Button>

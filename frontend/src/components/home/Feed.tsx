@@ -1,7 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   Archive,
   CalendarClock,
+  Gavel,
   Globe,
   Plug,
   Plug2,
@@ -44,9 +45,13 @@ type FeedProps = {
   conn: Socket;
 };
 
+type Tabs = "for-you" | "scheduled";
+
 const Feed = ({ conn }: FeedProps) => {
   const queryClient = useQueryClient();
   const myDevice = useScreenType();
+
+  const [currentTab, setCurrentTab] = useState<Tabs>("for-you");
   const { data: liveRooms, isLoading: liveRoomsLoading } = useQuery({
     queryKey: ["live-rooms"],
     queryFn: async () => {
@@ -81,9 +86,7 @@ const Feed = ({ conn }: FeedProps) => {
               </SheetContent>
             </Sheet>
           ) : (
-            <div>
-
-            </div>
+            <div></div>
           )}
           <div>
             <div className="space-x-2 flex items-center">
@@ -91,10 +94,18 @@ const Feed = ({ conn }: FeedProps) => {
                 <Tooltip>
                   <TooltipTrigger>
                     <Button
+                      style={{
+                        background:
+                          currentTab == "for-you" ? "white" : "#36393e",
+                      }}
                       size={"sm"}
-                      className="bg-app_bg_deep rounded-sm shadow-app_shadow"
+                      onClick={() => setCurrentTab("for-you")}
+                      className="rounded-sm shadow-app_shadow"
                     >
-                      <Sparkle size={20} />
+                      <Sparkle
+                        size={20}
+                        color={currentTab == "for-you" ? "black" : "white"}
+                      />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -107,10 +118,18 @@ const Feed = ({ conn }: FeedProps) => {
                 <Tooltip>
                   <TooltipTrigger>
                     <Button
+                      style={{
+                        background:
+                          currentTab == "scheduled" ? "white" : "#36393e",
+                      }}
+                      onClick={() => setCurrentTab("scheduled")}
                       size={"sm"}
-                      className="bg-app_bg_deep shadow-app_shadow rounded-sm"
+                      className="shadow-app_shadow rounded-sm"
                     >
-                      <CalendarClock size={20} />
+                      <CalendarClock
+                        size={20}
+                        color={currentTab == "scheduled" ? "black" : "white"}
+                      />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -121,33 +140,44 @@ const Feed = ({ conn }: FeedProps) => {
             </div>
           </div>
         </div>
-        <div className="space-y-4 overflow-auto ">
-          {liveRoomsLoading
-            ? Array.from({ length: 4 }, (_, index) => (
-                <FeedCardSkeleton key={index} />
-              ))
-            : liveRooms.map((room: RoomCard, index: any) => (
-                <FeedCard key={index} room={room} />
-              ))}
+        {currentTab == "for-you" ? (
+          <div className="space-y-4 overflow-auto ">
+            {liveRoomsLoading
+              ? Array.from({ length: 4 }, (_, index) => (
+                  <FeedCardSkeleton key={index} />
+                ))
+              : liveRooms.map((room: RoomCard, index: any) => (
+                  <FeedCard key={index} room={room} />
+                ))}
 
-          {(!liveRoomsLoading && !liveRooms) ||
-            (liveRooms?.length == 0 && (
-              <div className="text-center font-semibold mt-14 ">
-                <div className="flex flex-col items-center space-y-3">
-                  <RefreshCwIcon color="white" size={50} />
-                  <div className="text-white">No active rooms available</div>
-                  <Button
-                    onClick={() => {
-                      queryClient.resetQueries(["live-rooms"]);
-                    }}
-                    className="w-[250px] bg-app_bg_deeper p-3 h-12 font-bold shadow-app_shadow"
-                  >
-                    Reload Feed
-                  </Button>
+            {(!liveRoomsLoading && !liveRooms) ||
+              (liveRooms?.length == 0 && (
+                <div className="text-center font-semibold mt-14 ">
+                  <div className="flex flex-col items-center space-y-3">
+                    <RefreshCwIcon color="white" size={50} />
+                    <div className="text-white">No active rooms available</div>
+                    <Button
+                      onClick={() => {
+                        queryClient.resetQueries(["live-rooms"]);
+                      }}
+                      className="w-[250px] bg-app_bg_deeper p-3 h-12 font-bold shadow-app_shadow"
+                    >
+                      Reload Feed
+                    </Button>
+                  </div>
                 </div>
+              ))}
+          </div>
+        ) : (
+          <>
+            <div className="text-center font-semibold mt-14 ">
+              <div className="flex flex-col items-center space-y-3">
+                <Gavel color="white" size={50} />
+                <span>Scheduled rooms coming soon</span>
               </div>
-            ))}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
