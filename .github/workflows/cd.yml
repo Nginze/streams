@@ -20,7 +20,7 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}
         port: 22
         script: |
-          cd ~/home/azureuser/streams
+          cd /home/azureuser/streams
           git pull origin master
           git status
           cd server
