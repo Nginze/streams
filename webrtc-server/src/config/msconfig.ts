@@ -3,6 +3,7 @@ import {
   TransportListenIp,
   WorkerLogTag,
 } from "mediasoup/node/lib/types";
+import 'dotenv/config'
 
 export const config = {
   httpIp: "0.0.0.0",
