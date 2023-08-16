@@ -171,7 +171,7 @@ const Navbar = ({}: Props) => {
             <SheetContent
               
               position={myDevice !== "isMobile" ? "right" : "bottom"}
-              size={myDevice !== "isMobile" ? "sm" : "full"}
+              size={myDevice !== "isMobile" ? "sm" : "content"}
             >
               <SheetHeader></SheetHeader>
               <ProfileSheet />
