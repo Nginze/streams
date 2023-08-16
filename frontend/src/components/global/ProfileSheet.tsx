@@ -33,11 +33,14 @@ import { useRouter } from "next/router";
 import { UploadButton, Uploader } from "@/engine/fileupload/utils";
 import AppDialog from "./AppDialog";
 import FileUploader from "./FileUploader";
+import Loader from "./Loader";
+import useScreenType from "@/hooks/useScreenType";
 
 const ProfileSheet = () => {
   const { user, userLoading } = useContext(userContext);
   const [newBio, setBio] = useState(user.bio);
   const [uploaderOpen, setUploaderOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [microphones, setMicrophones] = useState<
     { value: string; label: string }[]
   >([]);
@@ -60,6 +63,8 @@ const ProfileSheet = () => {
     updateSoundEffects,
     updateSelectedMic,
   } = useSettingStore();
+
+  const myDevice = useScreenType();
 
   const profileMutation = useMutation({
     mutationFn: async () => {
@@ -103,6 +108,17 @@ const ProfileSheet = () => {
     fetchMicrophones();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      setLogoutLoading(true);
+      await api.post("/auth/logout");
+      router.push("/login");
+      setLogoutLoading(false);
+    } catch (error) {
+      toast.error("logout failed");
+      setLogoutLoading(false);
+    }
+  };
   return (
     <div className="mt-5 relative h-full px-3 ">
       <div
@@ -246,6 +262,17 @@ const ProfileSheet = () => {
             </div>
           </div>
         </div>
+        {myDevice == "isMobile" && (
+          <div className="w-full mt-4">
+            <Button
+              disabled={logoutLoading}
+              onClick={handleLogout}
+              className="w-full rounded-sm flex-1 py-1 px-2 bg-[#FF5E5E]"
+            >
+              {logoutLoading ? <Loader alt={true} width={15} /> : "Logout"}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="py-4 px-2 absolute bottom-0 w-full flex items-center justify-between">

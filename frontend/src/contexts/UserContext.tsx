@@ -1,6 +1,7 @@
 import { createContext } from "react";
 import { useQuery } from "react-query";
 import { api } from "../api";
+import { useRouter } from "next/router";
 
 type Props = {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ const UserProvider = ({ children }: Props) => {
     staleTime: 300000,
     refetchOnWindowFocus: false,
   });
+
 
   return (
     <userContext.Provider value={{ user, userLoading }}>

@@ -341,13 +341,13 @@ export const MainWsHandler = ({ children }: Props) => {
           <div
             className={`${
               t.visible ? "animate-enter" : "animate-leave"
-            } max-w-md w-full bg-app_bg_deeper shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            }  w-autobg-app_bg_deeper shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
           >
             <div className="flex-1 w-full p-4 flex justify-between items-center">
               <div className="flex items-start">
-                <div className="flex-shrink-0 pt-0.5">
+                <div className="flex-shrink-0 pt-0.5 h-10 w-10">
                   <img
-                    className="h-10 w-10 rounded-full"
+                    className="h-full w-full rounded-full object-cover"
                     src={user.avatarUrl}
                     alt=""
                   />
@@ -356,7 +356,7 @@ export const MainWsHandler = ({ children }: Props) => {
                   <p className="text-sm font-medium text-white">
                     {user.userName}
                   </p>
-                  <p className="mt-1 text-sm text-white w-52 truncate">
+                  <p className="mt-1 text-sm text-white w-52 truncate abbrev">
                     invites you to {room.roomDesc}
                   </p>
                 </div>
