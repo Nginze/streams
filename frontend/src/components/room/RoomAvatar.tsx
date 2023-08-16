@@ -183,7 +183,7 @@ const RoomAvatar = ({ participant }: Props) => {
             />
           </SheetContent>
         </Sheet>
-        {participant.raisedHand && !participant.isSpeaker && (
+        {/* {participant.raisedHand && !participant.isSpeaker && (
           <div
             style={{
               position: "absolute",
@@ -193,7 +193,7 @@ const RoomAvatar = ({ participant }: Props) => {
           >
             <span>✋</span>
           </div>
-        )}
+        )} */}
         <span>
           <span className="text-xs font-semibold flex items-center">
             {participant.userId == (room as Room)?.creatorId && (

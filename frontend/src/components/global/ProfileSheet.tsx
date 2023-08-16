@@ -36,7 +36,11 @@ import FileUploader from "./FileUploader";
 import Loader from "./Loader";
 import useScreenType from "@/hooks/useScreenType";
 
-const ProfileSheet = () => {
+type Props = {
+  setSheetOpen: any;
+};
+
+const ProfileSheet = ({ setSheetOpen }: Props) => {
   const { user, userLoading } = useContext(userContext);
   const [newBio, setBio] = useState(user.bio);
   const [uploaderOpen, setUploaderOpen] = useState(false);
@@ -263,13 +267,20 @@ const ProfileSheet = () => {
           </div>
         </div>
         {myDevice == "isMobile" && (
-          <div className="w-full mt-4">
+          <div className="w-full mt-4 space-y-3">
             <Button
               disabled={logoutLoading}
               onClick={handleLogout}
               className="w-full rounded-sm flex-1 py-1 px-2 bg-[#FF5E5E]"
             >
               {logoutLoading ? <Loader alt={true} width={15} /> : "Logout"}
+            </Button>
+
+            <Button
+              onClick={() => setSheetOpen(false)}
+              className="rounded-sm flex-1 py-1 px-2 bg-app_bg_light w-full shadow-app_shadow"
+            >
+              Close
             </Button>
           </div>
         )}
