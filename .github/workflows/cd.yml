@@ -23,6 +23,8 @@ jobs:
           cd /home/azureuser/streams
           git pull origin master
           git status
+          pm2 kill
+          export NODE_ENV=production
           cd server
           npm install 
           npm run tsc
