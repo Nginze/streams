@@ -1,0 +1,36 @@
+name: Streams CD
+
+on:
+
+  pull_request:
+    branches: [ master ]
+    
+jobs:
+
+  build:
+  
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd ~/home/azureuser/streams
+          git pull origin master
+          git status
+          cd server
+          npm install 
+          npm run start:prod
+          cd workers
+          npm install
+          npm run start:prod
+          cd webrtc-server
+          npm install
+          npm run start:prod
+          
+          
