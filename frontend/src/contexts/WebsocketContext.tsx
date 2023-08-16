@@ -57,9 +57,9 @@ export const WebSocketProvider = ({ children }: Props) => {
   }, []);
 
   useEffect(() => {
-    console.log(user, userLoading);
+    // console.log(user, userLoading);
     if (!userLoading && pathname !== "/login" && (!user || !user.userId)) {
-      toast("login to use streams");
+      // toast("login to use streams");
       router.push("/login");
     }
   }, [userLoading, pathname, user]);

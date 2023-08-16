@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { BsBell, BsCaretDownFill } from "react-icons/bs";
 import {
   DropdownMenu,
@@ -56,6 +56,7 @@ const Navbar = ({}: Props) => {
   const router = useRouter();
   const myDevice = useScreenType();
 
+  const [profileOpen, setProfileSheetOpen] = useState(false);
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
     async () => {
@@ -151,7 +152,7 @@ const Navbar = ({}: Props) => {
           </Sheet>
           {/* <DropdownMenu>
           <DropdownMenuTrigger asChild> */}
-          <Sheet>
+          <Sheet open={profileOpen} onOpenChange={setProfileSheetOpen}>
             <SheetTrigger asChild>
               <button disabled={!user} className="hover:opacity-60">
                 {userLoading ? (
@@ -174,7 +175,7 @@ const Navbar = ({}: Props) => {
               size={myDevice !== "isMobile" ? "sm" : "content"}
             >
               <SheetHeader></SheetHeader>
-              <ProfileSheet />
+              <ProfileSheet setSheetOpen={setProfileSheetOpen}/>
             </SheetContent>
           </Sheet>
           {/* </DropdownMenuTrigger>
