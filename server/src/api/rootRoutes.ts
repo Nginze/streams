@@ -8,5 +8,5 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 router.get("/user", (req: Request, res: Response) => {
-  res.status(200).json({ ...req.user });
+  res.status(200).json(req.user ? { ...req.user } : {});
 });

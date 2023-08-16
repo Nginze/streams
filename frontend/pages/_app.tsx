@@ -18,10 +18,10 @@ function MyApp({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <WebSocketProvider>
-      <NextNProgress />
-      <QueryClientProvider client={queryClient}>
-        <UserProvider>
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
+        <NextNProgress />
+        <WebSocketProvider>
           <MainWsHandler>
             <WebrtcApp />
             <UserColorProvider>
@@ -30,11 +30,11 @@ function MyApp({ Component, pageProps }: AppProps) {
           </MainWsHandler>
           <ChatWsHandler />
           <SoundEffectPlayer />
-        </UserProvider>
+        </WebSocketProvider>
         <Toaster position="bottom-center" reverseOrder={true} />
         <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </WebSocketProvider>
+      </UserProvider>
+    </QueryClientProvider>
   );
 }
 

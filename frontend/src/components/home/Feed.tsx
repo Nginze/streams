@@ -172,7 +172,6 @@ const Feed = ({ conn }: FeedProps) => {
           <>
             <div className="text-center font-semibold mt-14 ">
               <div className="flex flex-col items-center space-y-3">
-                <Gavel color="white" size={50} />
                 <span>Scheduled rooms coming soon</span>
               </div>
             </div>
