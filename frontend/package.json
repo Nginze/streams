@@ -19,6 +19,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.6",
     "@uploadthing/react": "^5.2.1",
+    "@vercel/analytics": "^1.0.2",
     "axios": "^1.2.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
