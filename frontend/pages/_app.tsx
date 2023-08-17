@@ -10,6 +10,7 @@ import SoundEffectPlayer from "../src/engine/room/sound/SoundEffectPlayer";
 import WebrtcApp from "../src/engine/webrtc/WebrtcApp";
 import UserProvider from "../src/contexts/UserContext";
 import { WebSocketProvider } from "../src/contexts/WebsocketContext";
+import { Analytics } from "@vercel/analytics/react";
 import "../styles/globals.css";
 import "@uploadthing/react/styles.css";
 import NextNProgress from "nextjs-progressbar";
@@ -34,6 +35,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <Toaster position="bottom-center" reverseOrder={true} />
         <ReactQueryDevtools initialIsOpen={false} />
       </UserProvider>
+      <Analytics />
     </QueryClientProvider>
   );
 }
