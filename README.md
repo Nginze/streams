@@ -2,6 +2,11 @@
   <img alt="Streams-Join & create engaging voice conversations" src="https://raw.githubusercontent.com/Nginze/Anispace/master/uploads/streams_banner2.png">
   <h1 align="center">Streams</h1>
 </a>
+
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/tailwindcss-hotpink.svg?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Nodejs](https://img.shields.io/badge/nodejs-%23E34F26.svg?style=for-the-badge&logo=nodejs&logoColor=white)
+
 <p align="center">
   Join and create engaging audio conversations ✨.
 </p>
@@ -23,6 +28,15 @@
 - [Mediasoup](https://mediasoup.org/) – voice server
 - [Postgresql](https://www.postgresql.org/) – database
 - [Node.js](https://nodejs.org/en) – server
+
+## Features
+  - realtime audio 
+  - realtime drop-in invites from friends
+  - active twitch-esque text chats with ( emotes, emojis, replies, mentions etc)
+  - minimal UI design, showing you only what you need
+  - intuitive room controls for listeners & mods
+  - customizable user profiles and preferences
+    
 
 ### Audio Feed
 
