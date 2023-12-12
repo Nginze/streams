@@ -8,7 +8,7 @@
 ![Nodejs](https://img.shields.io/badge/nodejs-%23E34F26.svg?style=for-the-badge&logo=nodejs&logoColor=white)
 
 <p align="center">
-  Join and create engaging audio conversations ✨.
+  Better Productivity with the Help of AI✨.
 </p>
 
 
@@ -20,39 +20,15 @@
 
 ## Tech Stack
 
-- [Next.js](https://nextjs.org/) – framework
-- [Typescript](https://www.typescriptlang.org/) – language
+- [React.js](https://react.dev/) – framework
+- [Javascript](https://www.typescriptlang.org/) – language
 - [Tailwind](https://tailwindcss.com/) – CSS
 - [Redis](https://upstash.com/) – redis
-- [Bullmq](https://upstash.com/) – message queue
-- [Mediasoup](https://mediasoup.org/) – voice server
-- [Postgresql](https://www.postgresql.org/) – database
-- [Node.js](https://nodejs.org/en) – server
-
-## Features
-  - realtime audio 
-  - realtime drop-in invites from friends
-  - active twitch-esque text chats with ( emotes, emojis, replies, mentions etc)
-  - minimal UI design, showing you only what you need
-  - intuitive room controls for listeners & mods
-  - customizable user profiles and preferences
-    
-
-### Audio Feed
-
-Streams provides you with audio content curated to your preferences & interests. Eg sports, anime, music, current events etc
-
-![](https://raw.githubusercontent.com/Nginze/Anispace/master/uploads/Feed2.png)
-
-### Room Area
-
-You can easily interact with others in rooms via voice chat or have fun with our built-in realtime chat system & handy moderation tools for room creators and mods
-
-![](https://raw.githubusercontent.com/Nginze/Anispace/master/uploads/RoomArea.png)
-
+- [Flask](https://flask.palletsprojects.com/en/3.0.x/) – server
+- [Firebase](https://firebase.google.com/) – server
 
 
 
 ## Author
 
-- Nginze ([@Nginze](https://github.com/nginze))
+- EducAid ([@EducAid](https://github.com/SWE-Final-Project-1))
