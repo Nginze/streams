@@ -41,17 +41,17 @@
 
 Streams provides you with audio content curated to your preferences & interests. Eg sports, anime, music, current events etc
 
-![](https://raw.githubusercontent.com/Nginze/Anispace/master/uploads/Feed2.png)
+![](https://res-console.cloudinary.com/hack-0/media_explorer_thumbnails/52a290043436ae713c1dbb4fd0927b01/detailed)
 
 ### Room Area
 
 You can easily interact with others in rooms via voice chat or have fun with our built-in realtime chat system & handy moderation tools for room creators and mods
 
-![](https://raw.githubusercontent.com/Nginze/Anispace/master/uploads/RoomArea.png)
+![](https://res-console.cloudinary.com/hack-0/media_explorer_thumbnails/612795785b64c53563553d71de02f1b1/detailed)
 
 
 
 
-## Author
+## Authors
 
-- Nginze ([@Nginze](https://github.com/nginze))
+- Kuug & Torto ([@Nginze](https://github.com/nginze))
