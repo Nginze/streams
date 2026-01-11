@@ -22,8 +22,8 @@ const CreateRoom = ({ conn }: Props) => {
   const [roomdesc, setRoomDesc] = useState<string>("");
   const [enableAutoSpeaker, setAutoSpeaker] = useState<boolean>(false);
   const [isPrivate, setPrivate] = useState<boolean>(false);
-  const [enableRoomChat, setRoomChat] = useState<boolean>(false);
-  const [enableHandRaise, setHandRaise] = useState<boolean>(false);
+  const [enableRoomChat, setRoomChat] = useState<boolean>(true);
+  const [enableHandRaise, setHandRaise] = useState<boolean>(true);
   const [selectedToggles, setSelectedToggles] = useState<string[]>([]);
 
   const { user } = useContext(userContext);

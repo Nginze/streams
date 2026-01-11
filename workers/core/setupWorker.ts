@@ -58,7 +58,6 @@ export const setupWsWorker = () => {
     {
       connection,
       concurrency: 5,
-      sharedConnection: true,
     }
   );
 

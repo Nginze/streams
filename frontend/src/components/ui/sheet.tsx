@@ -69,7 +69,7 @@ const sheetVariants = cva(
       size: {
         content: "",
         default: "",
-        sm: "",
+        sm: "w-[10px]",
         lg: "",
         xl: "",
         full: "",
@@ -156,7 +156,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ position, size }), className)}
+      className={cn(sheetVariants({ position, size }), className, "w-full md:w-[350px] lg:w-[350px]")}
       {...props}
     >
       {children}

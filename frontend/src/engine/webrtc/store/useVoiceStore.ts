@@ -1,5 +1,5 @@
-import { Device } from "mediasoup-client";
-import { detectDevice, Transport } from "mediasoup-client/lib/types";
+import { detectDevice, Device } from "mediasoup-client";
+import { Transport } from "mediasoup-client/lib/Transport";
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
@@ -28,7 +28,7 @@ export const useVoiceStore = create(
       sendTransport: null as Transport | null,
       device: getDevice(),
     },
-    set => ({
+    (set) => ({
       nullify: () =>
         set({
           recvTransport: null,

@@ -25,7 +25,7 @@ const AppLayout = ({ navbar, column1, column2, footer }: Props) => {
           rel="stylesheet"
         ></link>
       </Head>
-      {myDevice == "isDesktop" || myDevice == "isTablet" ? (
+      {myDevice == "isDesktop" || myDevice == "isTablet" || myDevice == "isBigScreen" ? (
         <main className="w-screen h-screen bg-app_bg_deepest text-white font-display overflow-auto space-y-8 chat">
           {navbar}
           <div

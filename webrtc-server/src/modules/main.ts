@@ -1,5 +1,5 @@
-import { Router } from "mediasoup/node/lib/Router";
-import { Worker } from "mediasoup/node/lib/Worker";
+import { Router } from "mediasoup/node/lib/RouterTypes";
+import { Worker } from "mediasoup/node/lib/WorkerTypes";
 import { Rooms } from "../types/RoomState";
 import { closePeer } from "../utils/closePeer";
 import { createConsumer } from "../utils/createConsumer";
@@ -11,7 +11,7 @@ import {
   MediaKind,
   RtpCapabilities,
   RtpParameters,
-} from "mediasoup/node/lib/RtpParameters";
+} from "mediasoup/node/lib/rtpParametersTypes";
 import { startBull } from "../utils/startBull";
 
 export async function main() {
@@ -260,7 +260,7 @@ export async function main() {
       try {
         if (previousProducer) {
           previousProducer.close();
-          consumers.forEach(c => c.close());
+          consumers.forEach((c) => c.close());
           send({
             op: "close_consumer",
             d: { producerId: previousProducer!.id, roomId },

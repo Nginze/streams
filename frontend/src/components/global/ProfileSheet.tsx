@@ -27,7 +27,14 @@ import { useMutation, useQuery } from "react-query";
 import { api } from "@/api";
 import { toast } from "react-hot-toast";
 import { Separator } from "../ui/separator";
-import Select from "react-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
 import { useSettingStore } from "@/store/useSettingStore";
 import { useRouter } from "next/router";
 import { UploadButton, Uploader } from "@/engine/fileupload/utils";
@@ -124,7 +131,7 @@ const ProfileSheet = ({ setSheetOpen }: Props) => {
     }
   };
   return (
-    <div className="mt-5 relative h-full px-3 ">
+    <div className="mt-5 relative h-full px-3">
       <div
         style={{ height: "calc(100vh - 6rem)" }}
         className="chat w-full sheet overflow-auto"
@@ -187,8 +194,9 @@ const ProfileSheet = ({ setSheetOpen }: Props) => {
             </span>
           </span>
           <div>
-            <textarea
-              className="chat cursor-text bg-transparent text-white outline-none  border-none w-full rounded-md hover:shadow-sm"
+            <Textarea
+              className="bg-app_bg_deep border-app_bg_light cursor-text text-white placeholder:text-gray-400 placeholder:text-sm focus-visible:ring-app_bg_light"
+              placeholder="Tell us about you ..."
               value={newBio}
               onChange={e => {
                 setBio(e.target.value);
@@ -222,24 +230,38 @@ const ProfileSheet = ({ setSheetOpen }: Props) => {
           </div>
         </div> */}
 
-        <div className="space-y-3">
+        <div className="space-y-3 mt-3">
           <span className="font-semibold text-[15px] flex items-center">
-            Preferences ⚙{/* <Settings2Icon className="ml-2" /> */}
+            Preferences ⚙
           </span>
           <div className="flex flex-col items-start space-y-3">
             <div className="w-full flex flex-col items-start space-y-2">
               <Select
-                options={microphones}
-                isSearchable={true}
-                isDisabled={router.pathname.includes("/room")}
-                value={micAsObj}
-                defaultValue={microphones[0]}
-                onChange={newMic => {
-                  console.log(newMic);
-                  updateSelectedMic(newMic);
+                disabled={router.pathname.includes("/room")}
+                value={micAsObj?.value}
+                defaultValue={microphones[0]?.value}
+                onValueChange={(value) => {
+                  const selectedMic = microphones.find(mic => mic.value === value);
+                  if (selectedMic) {
+                    updateSelectedMic(selectedMic);
+                  }
                 }}
-                className="text-black"
-              />
+              >
+                <SelectTrigger className="w-full bg-app_bg_deep text-white border-app_bg_light">
+                  <SelectValue placeholder="Select microphone" />
+                </SelectTrigger>
+                <SelectContent className="bg-app_bg_deep text-white border-app_bg_light">
+                  {microphones.map((mic) => (
+                    <SelectItem
+                      key={mic.value}
+                      value={mic.value}
+                      className="hover:bg-app_bg_light focus:bg-app_bg_light"
+                    >
+                      {mic.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <span className="text-[13px] opacity-30">
                 Audio device selection should be done before joining a room
               </span>

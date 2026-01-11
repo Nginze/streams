@@ -72,7 +72,9 @@ const Navbar = ({}: Props) => {
     <div className="w-full shadow-app_shadow flex items-center py-2 bg-app_bg_nav sticky top-0 z-10 font-display">
       <div
         style={{
-          width: myDevice != "isDesktop" ? "90%" : "75%",
+          width: !(myDevice == "isDesktop" || myDevice == "isBigScreen")
+            ? "90%"
+            : "75%",
         }}
         className=" bg-app_bg_nav flex itesm-center mx-auto justify-between "
       >
@@ -165,17 +167,15 @@ const Navbar = ({}: Props) => {
                       className="rounded-full ring-2 object-cover w-full h-full"
                     />
                   </div>
-              
                 )}
               </button>
             </SheetTrigger>
             <SheetContent
-              
               position={myDevice !== "isMobile" ? "right" : "bottom"}
               size={myDevice !== "isMobile" ? "sm" : "content"}
             >
               <SheetHeader></SheetHeader>
-              <ProfileSheet setSheetOpen={setProfileSheetOpen}/>
+              <ProfileSheet setSheetOpen={setProfileSheetOpen} />
             </SheetContent>
           </Sheet>
           {/* </DropdownMenuTrigger>
