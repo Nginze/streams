@@ -1,14 +1,14 @@
-import {
-  MediaKind,
-  RtpCapabilities,
-  RtpParameters,
-} from "mediasoup/node/lib/RtpParameters";
-import { Transport } from "mediasoup/node/lib/Transport";
-import { DtlsParameters } from "mediasoup/node/lib/WebRtcTransport";
+import { types } from "mediasoup";
 import { TransportOptions } from "../utils/createTransport";
 import { Consumer } from "../utils/createConsumer";
 import { VoiceSendDirection } from "./VoiceSendDirection";
-import { ConsumerType } from "mediasoup/node/lib/Consumer";
+
+type MediaKind = types.MediaKind;
+type RtpCapabilities = types.RtpCapabilities;
+type RtpParameters = types.RtpParameters;
+type Transport = types.Transport;
+type DtlsParameters = types.DtlsParameters;
+type ConsumerType = types.ConsumerType;
 
 export type RecvDTO = {
   roomId: string;

@@ -11,7 +11,7 @@ type OperationHandler = (
 
 export type HandlerMap = Record<string, OperationHandler>;
 
-const cleanup = async (channel: Channel, conn: Connection) => {
+const cleanup = async (channel: any, conn: any) => {
   const sendQueue = "sendqueue";
   const recvQueue = "recvqueue";
 
@@ -37,7 +37,7 @@ export const startRabbit = async (handler: HandlerMap) => {
   `,
   });
 
-  let conn: Connection | null = null;
+  let conn: any = null;
   try {
     conn = await amqplib.connect(
       process.env.RABBITMQ_URL || "amqp://localhost"
@@ -50,7 +50,7 @@ export const startRabbit = async (handler: HandlerMap) => {
 
   logger.log({ level: "info", message: "rabbitmq connected" });
 
-  const channel = await conn.createChannel();
+  const channel: any = await conn.createChannel();
   await Promise.all([
     channel.assertQueue(recvQueue),
     channel.assertQueue(sendQueue),
