@@ -8,11 +8,11 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml* ./
-# Enable pnpm and install with build scripts allowed for mediasoup
+# Enable pnpm and install dependencies
 RUN corepack enable pnpm && \
-    echo "unsafe-perm=true" > .npmrc && \
-    pnpm i --frozen-lockfile || \
-    (pnpm install && cd node_modules/.pnpm/mediasoup@*/node_modules/mediasoup && node npm-scripts.mjs postinstall)
+    pnpm i --frozen-lockfile && \
+    cd node_modules/.pnpm/mediasoup@*/node_modules/mediasoup && \
+    node npm-scripts.mjs postinstall
 
 # Build the application
 FROM base AS builder
