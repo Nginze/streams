@@ -162,8 +162,8 @@ const Navbar = ({}: Props) => {
                 ) : (
                   <div className="w-6 h-6">
                     <img
-                      alt={`${user.userName}`}
-                      src={user.avatarUrl}
+                      alt={`${user?.userName}`}
+                      src={user?.avatarUrl}
                       className="rounded-full ring-2 object-cover w-full h-full"
                     />
                   </div>

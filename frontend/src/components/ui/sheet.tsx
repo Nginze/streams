@@ -69,7 +69,7 @@ const sheetVariants = cva(
       size: {
         content: "",
         default: "",
-        sm: "w-[10px]",
+        sm: "",
         lg: "",
         xl: "",
         full: "",

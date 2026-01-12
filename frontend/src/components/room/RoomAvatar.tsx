@@ -53,7 +53,7 @@ const RoomAvatar = ({ participant }: Props) => {
   };
 
   const myDevice = useScreenType();
-  return myDevice == "isDesktop" ? (
+  return myDevice == "isDesktop" || myDevice === "isBigScreen" ? (
     <>
       <div
         // onClick={handleModalOpen}

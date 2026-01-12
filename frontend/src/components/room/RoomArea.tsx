@@ -63,10 +63,10 @@ const RoomArea = ({}: Props) => {
     p => p.userId == (room as Room)?.creatorId
   );
 
-  return myDevice == "isDesktop" ? (
+  return myDevice === "isDesktop" || myDevice === "isBigScreen" ? (
     <>
       <div className="grid grid-cols-3 gap-10">
-        <div className="bg-app_bg_deeper col-span-2 rounded-lg flex flex-col h-[570px] shadow-app_shadow">
+        <div className="bg-app_bg_deeper col-span-2 rounded-lg flex flex-col h-[570px] lg:h-[800px] shadow-app_shadow">
           <Accordion type="single" collapsible className="w-full px-5 py-0">
             <AccordionItem value="item-1" className="w-full">
               <AccordionTrigger className="w-full">

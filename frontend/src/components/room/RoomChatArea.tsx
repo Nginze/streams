@@ -135,9 +135,9 @@ const RoomChatArea = ({ conn, room, chatMessages, chatOpen, user }: Props) => {
   };
 
   return chatOpen ? (
-    <div className="h-[570px] flex flex-col items-center">
+    <div className="h-full flex flex-col justify-between">
       <div
-        className={`chat w-full px-2  overflow-y-auto overflow-x-hidden flex  flex-col-reverse flex-1 items-start space-y-1`}
+        className={`chat w-full px-2 overflow-y-auto overflow-x-hidden flex flex-col-reverse flex-1 items-start space-y-1`}
       >
         {chatMessages
           ? (chatMessages as any).messages

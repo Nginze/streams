@@ -68,7 +68,7 @@ const PeopleListItem = ({ person }: PeopleListItemProps) => {
   const myDevice = useScreenType();
   return (
     <div className="flex items-center space-x-4 cursor-pointer">
-      {myDevice == "isDesktop" ? (
+      {myDevice == "isDesktop" || myDevice === "isBigScreen" ? (
         <div className="min-w-[38px] relative">
           <img
             className="w-[38px] h-[38px] rounded-full object-cover"
@@ -93,7 +93,7 @@ const PeopleListItem = ({ person }: PeopleListItemProps) => {
           )}
         </div>
       )}
-      {myDevice == "isDesktop" ? (
+      {myDevice == "isDesktop" || myDevice === "isBigScreen" ? (
         <div className="flex flex-col item-start ">
           <span className="font-semibold">{person?.userName}</span>
           <span className={`text-sm w-32 truncate`}>
@@ -114,7 +114,7 @@ const PeopleListItemSkeleton = () => {
       <div className="min-w-12">
         <Skeleton className="h-12 w-12 rounded-full bg-app_bg_deep" />
       </div>
-      {myDevice == "isDesktop" ? (
+      {myDevice == "isDesktop" || myDevice === "isBigScreen" ? (
         <div className="space-y-2">
           <Skeleton className="h-4 w-[150px] rounded-sm bg-app_bg_deep" />
           <Skeleton className="h-4 w-[100px] rounded-sm bg-app_bg_deep" />

@@ -207,7 +207,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     }
   }, [chatMessages])
 
-  return myDevice == "isDesktop" ? (
+  return myDevice == "isDesktop" || myDevice == "isBigScreen" ? (
     <div className="bg-app_bg_deep w-full rounded-b-lg flex items-center justify-between p-3">
       <div className="space-x-1.5 flex items-center">
         {(myRoomStatus.isSpeaker || room.handRaiseEnabled) && (
@@ -304,6 +304,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
             </Button>
           </SheetTrigger>
           <SheetContent
+            className="h-4/5"
             position={myDevice !== "isMobile" ? "right" : "bottom"}
             size={myDevice !== "isMobile" ? "sm" : "content"}
           >
