@@ -29,7 +29,7 @@ const RoomParticipantProfile = ({
     useQuery<RoomParticipant>({
       queryKey: ["room-participant", participantId],
       queryFn: async () => {
-        const { data } = await api.get(`/profile/${participantId}`);
+        const { data } = await api.get(`/user/${participantId}`);
         return data;
       },
     });
@@ -62,10 +62,10 @@ const RoomParticipantProfile = ({
       userToUnFollow?: String;
     }) => {
       params.isAFollow
-        ? await api.post("/profile/follow", {
+        ? await api.post("/user/follow", {
             userToFollow: params.userToFollow,
           })
-        : await api.delete(`/profile/unfollow/${params.userToUnFollow}`);
+        : await api.delete(`/user/unfollow/${params.userToUnFollow}`);
     },
 
     onSuccess: async (data, variables) => {
@@ -228,7 +228,7 @@ const RoomParticipantProfile = ({
       // toggleDialog(false);
 
       statusMutation.mutate({
-        state: "is_speaker",
+        state: "isSpeaker",
         userId: participant!.userId,
         value: true,
       });
@@ -245,13 +245,13 @@ const RoomParticipantProfile = ({
       // toggleDialog(false);
 
       statusMutation.mutate({
-        state: "is_speaker",
+        state: "isSpeaker",
         userId: participant!.userId,
         value: false,
       });
 
       statusMutation.mutate({
-        state: "is_muted",
+        state: "isMuted",
         userId: participant!.userId,
         value: true,
       });
@@ -268,7 +268,7 @@ const RoomParticipantProfile = ({
       // toggleDialog(false);
 
       statusMutation.mutate({
-        state: "is_mod",
+        state: "isMod",
         userId: participant!.userId,
         value: true,
       });
@@ -285,7 +285,7 @@ const RoomParticipantProfile = ({
       // toggleDialog(false);
 
       statusMutation.mutate({
-        state: "is_mod",
+        state: "isMod",
         userId: participant!.userId,
         value: false,
       });

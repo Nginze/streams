@@ -58,7 +58,7 @@ const home: React.FC<IProps> = () => {
   const { data: followingOnline, isLoading: onlineLoading } = useQuery(
     ["following-online"],
     async () => {
-      const { data } = await api.get("/profile/following/onlineList");
+      const { data } = await api.get("/user/following/onlineList");
       return data;
     }
   );

@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # API Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: streams-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CLIENT_URI=${CLIENT_URI}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+    networks:
+      - streams-network
+    depends_on:
+      - workers
+
+  # WebRTC Server - Uses host network for proper IP announcement
+  webrtc-server:
+    build:
+      context: ./webrtc-server
+      dockerfile: Dockerfile
+    container_name: streams-webrtc
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - NODE_ENV=production
+      - PORT=${WEBRTC_PORT:-4000}
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - WEBRTC_LISTEN_IP=${PUBLIC_IP}
+      - MEDIASOUP_MIN_PORT=${MEDIASOUP_MIN_PORT:-10000}
+      - MEDIASOUP_MAX_PORT=${MEDIASOUP_MAX_PORT:-10100}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  # Background Workers
+  workers:
+    build:
+      context: ./workers
+      dockerfile: Dockerfile
+    container_name: streams-workers
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    networks:
+      - streams-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_PROD_API=${NEXT_PUBLIC_PROD_API}
+        - NEXT_PUBLIC_UPLOADTHING_APP_ID=${NEXT_PUBLIC_UPLOADTHING_APP_ID}
+    container_name: streams-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - streams-network
+    depends_on:
+      - server
+
+networks:
+  streams-network:
+    driver: bridge

@@ -159,10 +159,12 @@ const RoomShare = ({ room }: RoomShareProps) => {
   const { isLoading: peopleLoading, data: people } = useQuery({
     queryKey: ["invites"],
     queryFn: async () => {
-      const { data } = await api.get("/profile/invite/online");
+      const { data } = await api.get("/user/invite/online");
       return data;
     },
   });
+
+  const roomUrl = `${window.location.origin}/room/${room.roomId}`;
 
   const handleCopy = async (link: string) => {
     await navigator.clipboard.writeText(link);
@@ -182,18 +184,18 @@ const RoomShare = ({ room }: RoomShareProps) => {
         <span className="font-semibold text-lg">Share with others 🤙</span>
       </div>
       <div
-        onClick={() => handleCopy("http://drop.tv/room/alkajsdflkasl")}
+        onClick={() => handleCopy(roomUrl)}
         className="w-full"
       >
         <div className="flex items-center justify-center shadow-app_shadow outline-none border-none bg-app_bg_deep w-full p-3.5 rounded-sm text-center cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500">
-          http://drop.tv/room/alkajsdflkasl
+          <span className="truncate flex-1">{roomUrl}</span>
           {!copied ? (
             <Copy
               size="16"
-              className="ml-5 copy-icon opacity-0 group-hover:opacity-100"
+              className="ml-5 copy-icon opacity-0 group-hover:opacity-100 flex-shrink-0"
             />
           ) : (
-            <CheckCheck size={"16"} className="ml-5 text-green-400" />
+            <CheckCheck size={"16"} className="ml-5 text-green-400 flex-shrink-0" />
           )}
         </div>
       </div>

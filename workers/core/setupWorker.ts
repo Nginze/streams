@@ -30,7 +30,7 @@ export const setupWsWorker = () => {
 
           const peerId = await getPeerId(userId!);
 
-          await api.post("/worker/invalidate", {
+          await api.post("/api/worker/invalidate", {
             peerId,
           });
 
@@ -44,9 +44,10 @@ export const setupWsWorker = () => {
             await deleteRoom(roomId);
           }
         } else {
+
           const event = job.data;
 
-          await api.post("/worker/process", {
+          await api.post("/api/worker/process", {
             event,
           });
         }

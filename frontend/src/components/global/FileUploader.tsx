@@ -16,7 +16,7 @@ const FileUploader = ({ setUploaderOpen }: Props) => {
       <UploadDropzone
         endpoint="imageUploader"
         onClientUploadComplete={async res => {
-          await api.patch("/profile/update/avatar", {
+          await api.patch("/user/update/avatar", {
             avatarUrl: (res as UploadFileResponse[])[0].url,
           });
           setUploaderOpen(false);

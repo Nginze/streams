@@ -60,7 +60,7 @@ const ProfileSheet = ({ setSheetOpen }: Props) => {
   const { data: followMetrics, isLoading: followMetricsLoading } = useQuery({
     queryKey: ["follow-count", user.userId],
     queryFn: async () => {
-      const { data } = await api.get(`/profile/me/metrics/followCount`);
+      const { data } = await api.get(`/user/me/metrics/followCount`);
       return data;
     },
     staleTime: 300000,
@@ -79,7 +79,7 @@ const ProfileSheet = ({ setSheetOpen }: Props) => {
 
   const profileMutation = useMutation({
     mutationFn: async () => {
-      await api.patch("/profile/update/bio", {
+      await api.patch("/user/update/bio", {
         bio: newBio,
       });
     },

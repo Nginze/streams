@@ -12,14 +12,14 @@ const NotificationsSheet = () => {
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
     async () => {
-      const { data } = await api.get(`/profile/notification/${user.userId}`);
+      const { data } = await api.get(`/user/notification/${user.userId}`);
       return data;
     },
     { enabled: !!user, staleTime: 20000 }
   );
 
   useEffect(() => {
-    api.patch(`/profile/notification/markAsRead/${user.userId}`).then(() => {
+    api.patch(`/user/notification/markAsRead/${user.userId}`).then(() => {
       queryClient.invalidateQueries(["notifications", user?.userId]);
     });
   });

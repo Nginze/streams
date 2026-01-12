@@ -45,7 +45,7 @@ const Notification = ({
               <div className="my-2 space-x-2">
                 <Button
                   onClick={async () => {
-                    await api.delete(`/profile/notification/${notificationId}`);
+                    await api.delete(`/user/notification/${notificationId}`);
                     await router.push(`/room/${roomId}`);
                   }}
                   className="p-2 h-auto bg-app_cta rounded-sm"
@@ -54,7 +54,7 @@ const Notification = ({
                 </Button>
                 <Button
                   onClick={async () => {
-                    await api.delete(`/profile/notification/${notificationId}`);
+                    await api.delete(`/user/notification/${notificationId}`);
                     await queryClient.invalidateQueries(["notifications"]);
                   }}
                   className="p-2 h-auto bg-app_bg_deep rounded-sm"

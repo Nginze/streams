@@ -60,7 +60,7 @@ const Navbar = ({}: Props) => {
   const { data: notifications, isLoading: notificationsLoading } = useQuery(
     ["notifications", user?.userId],
     async () => {
-      const { data } = await api.get(`/profile/notification/${user.userId}`);
+      const { data } = await api.get(`/user/notification/${user.userId}`);
       return data;
     },
     { enabled: !!user }

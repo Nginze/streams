@@ -71,7 +71,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     return snake.replace(/_([a-z])/g, (_, char) => char.toUpperCase());
   };
 
-  const playSoundEffect = useSoundEffectStore(x => x.playSoundEffect);
+  const playSoundEffect = useSoundEffectStore((x) => x.playSoundEffect);
 
   const { chatMessages } = useLoadRoomMeta(roomId as string, user, true);
 
@@ -86,7 +86,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
       );
     },
 
-    onMutate: async variables => {
+    onMutate: async (variables) => {
       await queryClient.cancelQueries(["room-status", roomId]);
 
       const previousRoomStatus = queryClient.getQueryData([
@@ -128,7 +128,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
 
     try {
       statusMutation.mutate({
-        state: "is_muted",
+        state: "isMuted",
         value: !myRoomStatus.isMuted,
         userId: user.userId,
       });
@@ -150,7 +150,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     conn.emit(event, { roomId, userId: user.userId });
     try {
       statusMutation.mutate({
-        state: "raised_hand",
+        state: "raisedHand",
         value: !myRoomStatus.raisedHand,
         userId: user.userId,
       });
@@ -205,7 +205,7 @@ const RoomControls = ({ conn, myRoomStatus, roomId, room, user }: Props) => {
     if (chatOpen) {
       markAllAsRead();
     }
-  }, [chatMessages])
+  }, [chatMessages]);
 
   return myDevice == "isDesktop" || myDevice == "isBigScreen" ? (
     <div className="bg-app_bg_deep w-full rounded-b-lg flex items-center justify-between p-3">

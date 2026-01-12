@@ -31,12 +31,12 @@ const Home: NextPage = () => {
     typeof window !== "undefined" && window.innerHeight / 2 - height / 2;
 
   const googleLogin = () => {
-    myDevice == "isDesktop"
+    myDevice == "isDesktop" || myDevice === "isBigScreen"
       ? window.open(
           `${
             process.env.NODE_ENV == "production"
-              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
-              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/google`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/api/auth/google`
           }`,
           "",
           `toolbar=no, location=no, directories=no, status=no, menubar=no, 
@@ -46,8 +46,8 @@ const Home: NextPage = () => {
       : window.location.replace(
           `${
             process.env.NODE_ENV == "production"
-              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/google`
-              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/google`
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/google`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/api/auth/google`
           }`
         );
   };
@@ -56,8 +56,8 @@ const Home: NextPage = () => {
     window.open(
       `${
         process.env.NODE_ENV == "production"
-          ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/discord`
-          : `${process.env.NEXT_PUBLIC_DEV_API}/auth/discord`
+          ? `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/discord`
+          : `${process.env.NEXT_PUBLIC_DEV_API}/api/auth/discord`
       }`,
       "",
       `toolbar=no, location=no, directories=no, status=no, menubar=no, 
@@ -71,8 +71,8 @@ const Home: NextPage = () => {
       ? window.open(
           `${
             process.env.NODE_ENV == "production"
-              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
-              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/github`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/api/auth/github`
           }`,
           "",
           `toolbar=no, location=no, directories=no, status=no, menubar=no, 
@@ -82,8 +82,8 @@ const Home: NextPage = () => {
       : window.location.replace(
           `${
             process.env.NODE_ENV == "production"
-              ? `${process.env.NEXT_PUBLIC_PROD_API}/auth/github`
-              : `${process.env.NEXT_PUBLIC_DEV_API}/auth/github`
+              ? `${process.env.NEXT_PUBLIC_PROD_API}/api/auth/github`
+              : `${process.env.NEXT_PUBLIC_DEV_API}/api/auth/github`
           }`
         );
   };

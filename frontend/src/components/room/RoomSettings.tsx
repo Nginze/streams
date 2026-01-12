@@ -57,7 +57,7 @@ const RoomSettings = ({ room }: Props) => {
       await toast.promise(
         RoomSettingMutation.mutateAsync({
           roomId: room.roomId,
-          state: "chat_enabled",
+          state: "chatEnabled",
           value: !room.chatEnabled,
         }),
         {
@@ -81,7 +81,7 @@ const RoomSettings = ({ room }: Props) => {
       await toast.promise(
         RoomSettingMutation.mutateAsync({
           roomId: room.roomId,
-          state: "hand_raise_enabled",
+          state: "handRaiseEnabled",
           value: !room.handRaiseEnabled,
         }),
         {
@@ -134,7 +134,7 @@ const RoomSettings = ({ room }: Props) => {
       await toast.promise(
         RoomSettingMutation.mutateAsync({
           roomId: room.roomId,
-          state: "room_desc",
+          state: "roomDesc",
           value: updatedRoomDesc,
         }),
         {

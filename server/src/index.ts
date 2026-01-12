@@ -48,7 +48,7 @@ app.use(httpLogger);
 app.use("/api/", rootRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/room", roomRoutes);
-app.use("/api/profile", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/worker", workerRoutes);
 
 app.use(notFoundHandler);
