@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "packageManager": "pnpm@10.15.1",
   "scripts": {
     "tsc": "tsc",
     "start:prod": "pm2 start dist/index.js",

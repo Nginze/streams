@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@types/node": "^20.4.10",
     "axios": "^1.4.0",
