@@ -49,11 +49,21 @@
 # CMD ["node", "dist/index.js"]
 
 # WebRTC Server Dockerfile
-FROM node:18-alpine AS base
+FROM node:18-bullseye AS base
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++ py3-pip meson ninja
 WORKDIR /app
+
+# mediasoup native deps
+RUN apt-get update && apt-get install -y \
+  python3 \
+  python3-pip \
+  make \
+  g++ \
+  pkg-config \
+  curl \
+  ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -68,10 +78,12 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y \
+  python3 \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 streams
+RUN groupadd -g 1001 nodejs
+RUN useradd -u 1001 -g nodejs streams
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
@@ -84,4 +96,3 @@ EXPOSE 10000-10100/udp
 EXPOSE 10000-10100/tcp
 
 CMD ["node", "dist/index.js"]
-
