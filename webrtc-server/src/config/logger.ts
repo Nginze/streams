@@ -20,7 +20,9 @@ const transport =
     ? new transports.Console({
         format: combine(colorize(), simple()),
       })
-    : new transports.File({ filename: "file.log" });
+    : new transports.Console({
+        format: combine(colorize(), simple()),
+      });
 
 export const logger = createLogger({
   levels: logLevels.levels,

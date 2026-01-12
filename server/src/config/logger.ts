@@ -16,7 +16,7 @@ addColors(config.colors);
 const transport =
   process.env.NODE_ENV !== "production"
     ? new transports.Console()
-    : new transports.File({ filename: "file.log" });
+    : new transports.Console();
 
 const f = format.combine(
   format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
