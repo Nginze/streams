@@ -21,7 +21,7 @@ importers:
         specifier: ^16.0.3
         version: 16.6.1
       mediasoup:
-        specifier: ^3.11.8
+        specifier: ^3.19.14
         version: 3.19.14
       mediasoup-client:
         specifier: ^3.6.98

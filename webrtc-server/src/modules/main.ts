@@ -1,5 +1,3 @@
-import { Router } from "mediasoup/node/lib/RouterTypes";
-import { Worker } from "mediasoup/node/lib/WorkerTypes";
 import { Rooms } from "../types/RoomState";
 import { closePeer } from "../utils/closePeer";
 import { createConsumer } from "../utils/createConsumer";
@@ -7,12 +5,8 @@ import { createTransport, transportToOptions } from "../utils/createTransport";
 import { deleteRoom } from "../utils/deleteRoom";
 import { startMediasoup } from "../utils/startMediasoup";
 import { HandlerMap, startRabbit } from "../utils/startRabbit";
-import {
-  MediaKind,
-  RtpCapabilities,
-  RtpParameters,
-} from "mediasoup/node/lib/rtpParametersTypes";
 import { startBull } from "../utils/startBull";
+import { Router, Worker } from "mediasoup/node/lib/types";
 
 export async function main() {
   let workers: Array<{ worker: Worker; router: Router }> = [];
@@ -212,7 +206,7 @@ export async function main() {
             await createConsumer(
               router,
               producer,
-              rtpCapabilities as RtpCapabilities,
+              rtpCapabilities,
               transport,
               peerId,
               state[theirPeerId]
@@ -268,8 +262,8 @@ export async function main() {
         }
 
         const producer = await transport.produce({
-          kind: kind as MediaKind,
-          rtpParameters: rtpParameters as RtpParameters,
+          kind: kind ,
+          rtpParameters: rtpParameters, 
           paused,
           appData: { ...appData, peerId, transportId },
         });
@@ -287,7 +281,7 @@ export async function main() {
             const consumer = await createConsumer(
               rooms[roomId].router,
               producer,
-              rtpCapabilities as RtpCapabilities,
+              rtpCapabilities,
               peerTransport,
               peerId,
               state[theirPeerId]

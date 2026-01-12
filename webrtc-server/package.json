@@ -27,7 +27,7 @@
     "amqplib": "^0.10.3",
     "bullmq": "^4.4.0",
     "dotenv": "^16.0.3",
-    "mediasoup": "^3.11.8",
+    "mediasoup": "^3.19.14",
     "mediasoup-client": "^3.6.98",
     "socket.io": "^4.6.0",
     "winston": "^3.8.2"
