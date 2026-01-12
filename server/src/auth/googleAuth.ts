@@ -27,18 +27,9 @@ const parseToUserDTO = (params: Record<any, any>): UserDTO => {
 
 const googleStrategyMiddleware = new GoogleStrategy(
   {
-    clientID:
-      process.env.NODE_ENV == "production"
-        ? process.env.GOOGLE_CLIENT_ID_PROD
-        : process.env.GOOGLE_CLIENT_ID_PROD,
-    clientSecret:
-      process.env.NODE_ENV == "production"
-        ? process.env.GOOGLE_CLIENT_SECRET_PROD
-        : process.env.GOOGLE_CLIENT_SECRET_PROD,
-    callbackURL:
-      process.env.NODE_ENV == "production"
-        ? process.env.GOOGLE_CALLBACK_URL_PROD
-        : process.env.GOOGLE_CALLBACK_URL,
+    clientID: process.env.GOOGLE_CLIENT_ID_PROD,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET_PROD,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
     scope: ["profile", "email"],
   } as StrategyOptions,
   async (

@@ -12,9 +12,7 @@ router.get(
   "/github/callback",
   passport.authenticate("github", {
     successRedirect:
-      process.env.NODE_ENV == "production"
-        ? process.env.CLIENT_URI_CALLBACK_PROD
-        : process.env.CLIENT_URI_CALLBACK,
+         process.env.CLIENT_URI_CALLBACK,
     failureRedirect: "/failure",
   })
 );
@@ -24,9 +22,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     successRedirect:
-      process.env.NODE_ENV == "production"
-        ? process.env.CLIENT_URI_CALLBACK_PROD
-        : process.env.CLIENT_URI_CALLBACK,
+         process.env.CLIENT_URI_CALLBACK,
     failureRedirect: "/failure",
   })
 );

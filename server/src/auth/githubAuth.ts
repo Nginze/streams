@@ -23,18 +23,9 @@ const parseToUserDTO = (params: Record<any, any>): UserDTO => {
 
 const githubStrategyMiddleware = new GithubStrategy(
   {
-    clientID:
-      process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CLIENT_ID_PROD
-        : process.env.GITHUB_CLIENT_ID,
-    clientSecret:
-      process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CLIENT_SECRET_PROD
-        : process.env.GITHUB_CLIENT_SECRET,
-    callbackURL:
-      process.env.NODE_ENV == "production"
-        ? process.env.GITHUB_CALLBACK_URL_PROD
-        : process.env.GITHUB_CALLBACK_URL,
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: process.env.GITHUB_CALLBACK_URL,
     scope: ["user"],
   } as StrategyOptions,
   async (
