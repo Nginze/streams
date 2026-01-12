@@ -13,16 +13,36 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8000
+      # Database
       - DATABASE_URL=${DATABASE_URL}
+      - PGHOST=${PGHOST}
+      - PGPORT=${PGPORT}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+      # Redis
+      - REDIS_URI=${REDIS_URI}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - CLIENT_URI=${CLIENT_URI}
+      # Queue
+      - QUEUE_HOST=${QUEUE_HOST}
+      - QUEUE_PORT=${QUEUE_PORT}
+      - QUEUE_PASSWORD=${QUEUE_PASSWORD}
+      # RabbitMQ
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      # Session & Client
       - SESSION_SECRET=${SESSION_SECRET}
+      - CLIENT_URI=${CLIENT_URI}
+      - CLIENT_URI_CALLBACK=${CLIENT_URI_CALLBACK}
+      # OAuth - Google
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      # OAuth - GitHub
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL}
     networks:
       - streams-network
     depends_on:
@@ -38,15 +58,22 @@ services:
     network_mode: "host"
     environment:
       - NODE_ENV=production
-      - PORT=${WEBRTC_PORT:-4000}
-      - MEDIASOUP_LISTEN_IP=0.0.0.0
-      - WEBRTC_LISTEN_IP=${PUBLIC_IP}
-      - MEDIASOUP_MIN_PORT=${MEDIASOUP_MIN_PORT:-10000}
-      - MEDIASOUP_MAX_PORT=${MEDIASOUP_MAX_PORT:-10100}
+      - PORT=${WEBRTC_PORT}
+      # WebRTC Configuration
+      - WEBRTC_LISTEN_IP=${WEBRTC_LISTEN_IP}
+      - PUBLIC_IP=${PUBLIC_IP}
+      - MEDIASOUP_LISTEN_IP=${MEDIASOUP_LISTEN_IP}
+      - MEDIASOUP_MIN_PORT=${MEDIASOUP_MIN_PORT}
+      - MEDIASOUP_MAX_PORT=${MEDIASOUP_MAX_PORT}
+      # RabbitMQ
       - RABBITMQ_URL=${RABBITMQ_URL}
+      # Redis/Queue
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - QUEUE_HOST=${QUEUE_HOST}
+      - QUEUE_PORT=${QUEUE_PORT}
+      - QUEUE_PASSWORD=${QUEUE_PASSWORD}
 
   # Background Workers
   workers:
@@ -57,10 +84,25 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      # Database
       - DATABASE_URL=${DATABASE_URL}
+      - PGHOST=${PGHOST}
+      - PGPORT=${PGPORT}
+      - PGUSER=${PGUSER}
+      - PGPASSWORD=${PGPASSWORD}
+      - PGDATABASE=${PGDATABASE}
+      # Redis
+      - REDIS_URI=${REDIS_URI}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      # Queue
+      - QUEUE_HOST=${QUEUE_HOST}
+      - QUEUE_PORT=${QUEUE_PORT}
+      - QUEUE_PASSWORD=${QUEUE_PASSWORD}
+      # API endpoints
+      - DEV_API=${DEV_API}
+      - PROD_API=${PROD_API}
     networks:
       - streams-network
 
@@ -78,6 +120,11 @@ services:
       - "5173:5173"
     environment:
       - NODE_ENV=production
+      - PORT=5173
+      # Frontend Public API URLs
+      - NEXT_PUBLIC_PROD_API=${NEXT_PUBLIC_PROD_API}
+      - NEXT_PUBLIC_DEV_API=${NEXT_PUBLIC_DEV_API}
+      - NEXT_PUBLIC_UPLOADTHING_APP_ID=${NEXT_PUBLIC_UPLOADTHING_APP_ID}
     networks:
       - streams-network
     depends_on:
