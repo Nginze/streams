@@ -3,12 +3,16 @@ FROM node:18-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++
+RUN apk add --no-cache libc6-compat python3 make g++ py3-pip meson ninja
 WORKDIR /app
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+# Enable pnpm and install with build scripts allowed for mediasoup
+RUN corepack enable pnpm && \
+    echo "unsafe-perm=true" > .npmrc && \
+    pnpm i --frozen-lockfile || \
+    (pnpm install && cd node_modules/.pnpm/mediasoup@*/node_modules/mediasoup && node npm-scripts.mjs postinstall)
 
 # Build the application
 FROM base AS builder
